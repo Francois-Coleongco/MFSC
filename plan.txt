@@ -1,3 +1,9 @@
 extensions:
 
 could use this as a means of encrypted file transfer to server of my own
+
+
+client must send encrypted data only in chunks of four kibibytes (4096 bytes)
+
+
+explodes after a certain amount of time. the server will delete everything after a certain amount of time after inactivity

@@ -130,11 +130,23 @@ int send_credentials(int client_sock, unsigned char *client_tx) {
     recv(client_sock, &received_username, sizeof(received_username), 0);
   }
 
-  send(client_sock, password_ciphertext, password_ciphertext_len, 0);
+  int received_password = -1;
 
-  std::cout << "finished sending password" << std::endl;
+  while (received_password == -1) {
+    send(client_sock, password_ciphertext, password_ciphertext_len, 0);
+    recv(client_sock, &received_password, sizeof(received_password), 0);
+  }
 
-  std::cout << "this was my size: " << password_ciphertext_len << std::endl;
+  int auth_stat = -1;
+
+  recv(client_sock, &auth_stat, sizeof(auth_stat), 0);
+
+  if (auth_stat == -1) {
+    std::cout << "you sir/madam are not authenticated." << std::endl;
+    exit(-1);
+  }
+
+  // communications with the server are now authenticated to this point
 
   return 0;
 }

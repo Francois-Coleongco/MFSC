@@ -89,9 +89,6 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
   //
   int username_nonce_bytes = recv(client_sock, username_nonce,
                                   crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-  std::cout << "received username, sending acknowledgement reply" << std::endl;
-
-  send(client_sock, ACK_SUC, sizeof(ACK_SUC), 0);
 
   std::cerr << "received username nonce" << std::endl;
 
@@ -104,16 +101,16 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
   std::cerr << "read username YIPPIEEE this was how many bytes it was: "
             << username_bytes_read << std::endl;
 
-  send(client_sock, (unsigned char *)username_buffer.data(),
-       username_bytes_read, 0);
+  send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
 
   int password_bytes_read = recv(client_sock, &password_buffer, buffer_size, 0);
   std::cerr << "read password YIPPIEEE this was how many bytes it was: "
             << password_bytes_read << std::endl;
+  send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
 
-  if (/* username_bytes_read < 0 || */ password_bytes_read < 0) {
+  if (/* username_bytes_read <= 0 || */ password_bytes_read <= 0) {
     std::cerr << "one of these username_bytes_read or password_bytes_read "
-                 "returned a value less than 0"
+                 "returned a value less than or equal to 0"
               << std::endl;
     return 1;
   }
@@ -211,6 +208,8 @@ void handle_conn(int client_sock) {
   if (verify_creds(client_sock, server_rx)) {
     std::cerr << "couldn't verify creds, ignoring";
     return;
+  } else {
+    service(client_sock);
   }
 }
 
