@@ -1,12 +1,13 @@
 #include "authed_entry.h"
-#include <array>
 #include <cassert>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <netinet/in.h>
 #include <sodium/crypto_aead_chacha20poly1305.h>
+#include <sodium/crypto_box.h>
 #include <sodium/crypto_kx.h>
+#include <sodium/crypto_pwhash.h>
 #include <sodium/randombytes.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -88,7 +89,8 @@ int encrypt_buffer(unsigned char *client_tx, unsigned char *msg_box,
   return 0;
 }
 
-int send_credentials(int client_sock, unsigned char *client_tx) {
+int send_credentials(int client_sock, unsigned char *client_tx,
+                     std::string &pswd_tmp) {
 
   std::string username;
   std::string password;
@@ -146,12 +148,33 @@ int send_credentials(int client_sock, unsigned char *client_tx) {
     exit(-1);
   }
 
+  pswd_tmp = password;
+
   // communications with the server are now authenticated to this point
+
+  std::memset(password.data(), 0, password.size());
+  std::memset(username.data(), 0, username.size());
 
   return 0;
 }
 
-int read_and_create(std::string &file_name) { return 0; }
+int read_and_create(std::string &file_name) {
+
+  std::ifstream file(file_name, std::ios::binary);
+  // the file that is passed must be an already encrypted file done by another
+  // func;
+
+  if (!file) {
+    std::cerr << "couldn't open the file" << std::endl;
+    return -1;
+  }
+
+  while (file) {
+    // process it
+  }
+
+  return 0;
+}
 
 int main() {
 
@@ -182,11 +205,30 @@ int main() {
 
   std::cerr << std::endl;
 
-  if (send_credentials(client_sock, client_tx)) {
+  std::string pswd_tmp;
+
+  if (send_credentials(client_sock, client_tx, pswd_tmp)) {
     std::cerr << "couldn't verify credentials" << std::endl;
   }
 
   Sender s = Sender(client_sock);
+
+  unsigned char salt[crypto_pwhash_SALTBYTES];
+  unsigned char key[crypto_box_SEEDBYTES];
+
+  randombytes_buf(salt, sizeof salt);
+
+  if (crypto_pwhash(key, sizeof key, pswd_tmp.data(), pswd_tmp.length(), salt,
+                    crypto_pwhash_OPSLIMIT_INTERACTIVE,
+                    crypto_pwhash_MEMLIMIT_INTERACTIVE,
+                    crypto_pwhash_ALG_DEFAULT) != 0) {
+    /* out of memory */
+    std::cerr << "out of mem" << std::endl;
+  }
+
+  std::memset(pswd_tmp.data(), 0, pswd_tmp.size());
+
+  s.set_key(key);
 
   std::cout << "enter file name to send to server" << std::endl;
 
@@ -207,9 +249,9 @@ int main() {
               << std::endl;
   }
 
-  // create an encrypted file here using a key derived from the user's password.
-  // user auths into the server, then the password (client side) is used to
-  // derive an encryption key to encrypt and decrypt the files.
+  // create an encrypted file here using a key derived from the user's
+  // password. user auths into the server, then the password (client side) is
+  // used to derive an encryption key to encrypt and decrypt the files.
 
   file_name.append(".enc");
 

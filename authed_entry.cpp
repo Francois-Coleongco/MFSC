@@ -1,7 +1,9 @@
 // everything in this file contains resources for the server after a user is
 // authenticated.
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sodium/crypto_box.h>
 #include <sys/socket.h>
 
 const int chunk_size = 4096;
@@ -12,6 +14,7 @@ class Sender {
   char *buffer; // buffer capacity is always 4096
   size_t
       size; // the size here refers to the amount of the buffer that is filled
+  unsigned char key[crypto_box_SEEDBYTES];
 
 private:
   int send_size() {
@@ -52,7 +55,13 @@ public:
     return 0;
   }
 
-  Sender(int client_sock) : client_sock{client_sock}, buffer(new char[4096]) {};
+  void set_key(unsigned char new_key[crypto_box_SEEDBYTES]) {
+    std::memcpy(this->key, new_key, crypto_box_SEEDBYTES);
+    std::memset(new_key, 0, crypto_box_SEEDBYTES);
+  }
+
+  Sender(int client_sock)
+      : client_sock{client_sock}, buffer(new char[4096]), size{0}, key{} {};
 
   ~Sender() { delete[] this->buffer; }
   // copy constructor is kinda weird for here, same as move, i dont think we
