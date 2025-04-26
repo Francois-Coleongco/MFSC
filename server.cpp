@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "authed_entry.h"
 #include <array>
 #include <cstddef>
 #include <cstdio>
@@ -8,6 +9,7 @@
 #include <netinet/in.h>
 #include <ostream>
 #include <sodium/crypto_kx.h>
+#include <string>
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
@@ -33,8 +35,6 @@ int crypt_gen(int client_sock, unsigned char *server_pk,
   }
 
   std::cout << std::endl;
-
-  // send server_pk to client
 
   send(client_sock, server_pk, crypto_kx_PUBLICKEYBYTES, 0);
 
@@ -122,8 +122,9 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
 
   if (crypto_aead_chacha20poly1305_decrypt(
           decrypted_username, &decrypted_username_len, NULL,
-          (unsigned char *)username_buffer.data(), username_bytes_read, NULL, 0,
-          username_nonce, server_rx) != 0) {
+          static_cast<unsigned char *>(
+              static_cast<void *>(username_buffer.data())),
+          username_bytes_read, NULL, 0, username_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the username" << std::endl;
   } else {
     std::cerr << decrypted_username << std::endl;
@@ -136,8 +137,9 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
 
   if (crypto_aead_chacha20poly1305_decrypt(
           decrypted_password, &decrypted_password_len, NULL,
-          (unsigned char *)password_buffer.data(), password_bytes_read, NULL, 0,
-          password_nonce, server_rx) != 0) {
+          static_cast<unsigned char *>(
+              static_cast<void *>(password_buffer.data())),
+          password_bytes_read, NULL, 0, password_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the password" << std::endl;
   } else {
     std::cerr << decrypted_password << std::endl;
@@ -199,18 +201,32 @@ void handle_conn(int client_sock) {
 
   std::array<char, buffer_size> buffer{0};
 
-  std::cout << "this is data\n";
-
   // make sure the last character the 4095th index is not overwritten
   // cuz this is the null pointer for you cstring
-  std::cout << "reading firs time\n";
-
   if (verify_creds(client_sock, server_rx)) {
     std::cerr << "couldn't verify creds, ignoring";
     return;
-  } else {
-    service(client_sock);
   }
+
+  Sender s = Sender(client_sock);
+
+  std::cout << "enter file name to send to server" << std::endl;
+
+  std::string file_name;
+
+  std::cin >> file_name;
+
+  while (std::cin.fail()) {
+    std::cin.clear();
+    std::cin.ignore();
+    std::cin >> file_name;
+  }
+
+  std::string enc_file_name = file_name;
+
+  file_name.append(".enc");
+
+  s.fill_and_send(enc_file_name);
 }
 
 int main() {

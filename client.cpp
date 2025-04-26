@@ -1,3 +1,4 @@
+#include "authed_entry.h"
 #include <array>
 #include <cassert>
 #include <cstdio>
@@ -8,7 +9,6 @@
 #include <sodium/crypto_kx.h>
 #include <sodium/randombytes.h>
 #include <sys/socket.h>
-#include <thread>
 #include <unistd.h>
 
 const size_t buffer_size = 4096;
@@ -151,23 +151,7 @@ int send_credentials(int client_sock, unsigned char *client_tx) {
   return 0;
 }
 
-void read_msg(int client_sock) {
-
-  std::cout << "called me maybe?" << client_sock << std::endl;
-
-  std::array<char, buffer_size> buffer{0};
-
-  while (true) {
-    int bytes_read = recv(client_sock, &buffer, buffer_size, 0);
-
-    // problem: cant find out which client it is based onthe client_sock for
-    // some reason
-    // std::cout << "ECHOOO in " << client_sock << std::endl;
-
-    std::cout.write(buffer.data(), buffer_size) << std::endl;
-  }
-  std::fill(buffer.data(), buffer.data() + buffer_size, '\0');
-}
+int read_and_create(std::string &file_name) { return 0; }
 
 int main() {
 
@@ -202,14 +186,32 @@ int main() {
     std::cerr << "couldn't verify credentials" << std::endl;
   }
 
-  std::array<char, buffer_size> buffer{0};
+  Sender s = Sender(client_sock);
 
-  std::array<char, buffer_size> msg_box{0};
-  std::array<char, buffer_size> encrypted_msg_box{0};
+  std::cout << "enter file name to send to server" << std::endl;
 
-  size_t msg_char_idx = 0;
+  std::string file_name;
 
-  std::cout << "starting reader" << std::endl;
-  std::thread reader(read_msg, client_sock);
-  reader.detach();
+  std::cin >> file_name;
+
+  while (std::cin.fail()) {
+    std::cin.clear();
+    std::cin.ignore();
+    std::cin >> file_name;
+  }
+
+  int enc_stat = read_and_create(file_name);
+
+  if (enc_stat != 0) {
+    std::cerr << "error enc_stat was not 0. error in read_and_create"
+              << std::endl;
+  }
+
+  // create an encrypted file here using a key derived from the user's password.
+  // user auths into the server, then the password (client side) is used to
+  // derive an encryption key to encrypt and decrypt the files.
+
+  file_name.append(".enc");
+
+  s.fill_and_send(file_name);
 }

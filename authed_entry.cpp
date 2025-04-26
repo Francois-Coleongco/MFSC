@@ -6,8 +6,6 @@
 
 const int chunk_size = 4096;
 
-void service(int client_sock) {}
-
 class Sender {
 
   int client_sock;
@@ -15,7 +13,7 @@ class Sender {
   size_t
       size; // the size here refers to the amount of the buffer that is filled
 
-public:
+private:
   int send_size() {
     int sent_bytes =
         send(this->client_sock, &(this->size), sizeof(this->size), 0);
@@ -29,10 +27,14 @@ public:
     return sent_bytes;
   }
 
+public:
   // add functionality for directories later
-  int fill_and_send(char *file_name) {
+  int fill_and_send(std::string &file_name) { // this takes in a file containing
+                                              // already encrypted data.
 
     std::ifstream file(file_name, std::ios::binary);
+    // the file that is passed must be an already encrypted file done by another
+    // func;
 
     if (!file) {
       std::cerr << "couldn't open the file" << std::endl;
@@ -42,6 +44,7 @@ public:
     while (file) {
       file.read(this->buffer, chunk_size);
       this->size = file.gcount();
+      this->send_size(); // always send size of buffer before the actual buffer
       this->send_buffer();
     }
 
@@ -50,6 +53,7 @@ public:
   }
 
   Sender(int client_sock) : client_sock{client_sock}, buffer(new char[4096]) {};
+
   ~Sender() { delete[] this->buffer; }
   // copy constructor is kinda weird for here, same as move, i dont think we
   // will need multiple Senders for the same user
