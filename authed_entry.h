@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <sodium/crypto_box.h>
+#include <sodium/crypto_pwhash.h>
 #include <sys/socket.h>
 
 // need header guardss
@@ -18,6 +19,7 @@ class Sender {
   size_t
       size; // the size here refers to the amount of the buffer that is filled
   unsigned char key[crypto_box_SEEDBYTES];
+  unsigned char salt[crypto_pwhash_SALTBYTES];
 
 private:
   int send_buffer();
@@ -26,7 +28,10 @@ private:
 public:
   // add functionality for directories later
   int fill_and_send(std::string &file_name);
+
   void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);
+  void set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]);
+  int encrypt_buffer(char *plain_buf);
   Sender(int client_sock);
 
   ~Sender();

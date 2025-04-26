@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <sodium/crypto_box.h>
+#include <sodium/crypto_pwhash.h>
 #include <sys/socket.h>
 
 const int chunk_size = 4096;
@@ -15,6 +16,7 @@ class Sender {
   size_t
       size; // the size here refers to the amount of the buffer that is filled
   unsigned char key[crypto_box_SEEDBYTES];
+  unsigned char salt[crypto_pwhash_SALTBYTES];
 
 private:
   int send_size() {
@@ -31,6 +33,7 @@ private:
   }
 
 public:
+  int encrypt_buffer(char *plain_buf) { this->key }
   // add functionality for directories later
   int fill_and_send(std::string &file_name) { // this takes in a file containing
                                               // already encrypted data.
@@ -58,6 +61,11 @@ public:
   void set_key(unsigned char new_key[crypto_box_SEEDBYTES]) {
     std::memcpy(this->key, new_key, crypto_box_SEEDBYTES);
     std::memset(new_key, 0, crypto_box_SEEDBYTES);
+  }
+
+  void set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]) {
+    std::memcpy(this->salt, new_salt, crypto_pwhash_SALTBYTES);
+    std::memset(new_salt, 0, crypto_pwhash_SALTBYTES);
   }
 
   Sender(int client_sock)

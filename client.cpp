@@ -100,6 +100,16 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   std::cout << "enter password:" << std::endl;
   std::cin >> password;
 
+  char hashed_password[crypto_pwhash_STRBYTES];
+
+  if (crypto_pwhash_str(hashed_password, password.data(), password.length() + 1,
+                        crypto_pwhash_OPSLIMIT_SENSITIVE,
+                        crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
+    /* out of memory */
+
+    std::cerr << "out of mem" << std::endl;
+  }
+
   // encrypt the username and password and send it over to the server and wait
   // for a resposne
 
@@ -112,15 +122,19 @@ int send_credentials(int client_sock, unsigned char *client_tx,
 
   unsigned long long password_ciphertext_len;
 
-  if (encrypt_buffer(client_tx, (unsigned char *)username.data(),
-                     username.length() + 1, username_ciphertext,
-                     &username_ciphertext_len, client_sock)) {
+  if (encrypt_buffer(
+          client_tx,
+          static_cast<unsigned char *>(static_cast<void *>(username.data())),
+          username.length() + 1, username_ciphertext, &username_ciphertext_len,
+          client_sock)) {
     std::cerr << "couldn't encrypt error in encrypt_buffer" << std::endl;
   }
 
-  if (encrypt_buffer(client_tx, (unsigned char *)password.data(),
-                     password.length() + 1, password_ciphertext,
-                     &password_ciphertext_len, client_sock)) {
+  if (encrypt_buffer(
+          client_tx,
+          static_cast<unsigned char *>(static_cast<void *>(hashed_password)),
+          password.length() + 1, password_ciphertext, &password_ciphertext_len,
+          client_sock)) {
     std::cerr << "couldn't encrypt error in encrypt_buffer" << std::endl;
   }
 
@@ -213,7 +227,9 @@ int main() {
 
   Sender s = Sender(client_sock);
 
-  unsigned char salt[crypto_pwhash_SALTBYTES];
+  unsigned char
+      salt[crypto_pwhash_SALTBYTES]; // needs to be stored in the sqlite db.
+
   unsigned char key[crypto_box_SEEDBYTES];
 
   randombytes_buf(salt, sizeof salt);
