@@ -1,4 +1,4 @@
 #!/bin/env bash
 
-g++ server.cpp  -o server
-g++ client.cpp  -o client
+g++ server.cpp -lsodium -o server
+g++ client.cpp authed_entry.cpp -lsodium -o client

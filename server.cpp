@@ -1,5 +1,4 @@
 #include "auth.h"
-#include "authed_entry.h"
 #include <array>
 #include <cstddef>
 #include <cstdio>
@@ -16,7 +15,8 @@
 #include <vector>
 
 const size_t buffer_size = 4096;
-const int ACK_SUC = 1;
+const int ACK_SUC = 0;
+const int ACK_FAIL = -1;
 
 std::vector<std::thread> threads;
 std::vector<int> clients;
@@ -205,28 +205,10 @@ void handle_conn(int client_sock) {
   // cuz this is the null pointer for you cstring
   if (verify_creds(client_sock, server_rx)) {
     std::cerr << "couldn't verify creds, ignoring";
+    send(client_sock, &ACK_FAIL, sizeof(int), 0);
     return;
   }
-
-  Sender s = Sender(client_sock);
-
-  std::cout << "enter file name to send to server" << std::endl;
-
-  std::string file_name;
-
-  std::cin >> file_name;
-
-  while (std::cin.fail()) {
-    std::cin.clear();
-    std::cin.ignore();
-    std::cin >> file_name;
-  }
-
-  std::string enc_file_name = file_name;
-
-  file_name.append(".enc");
-
-  s.fill_and_send(enc_file_name);
+  send(client_sock, &ACK_SUC, sizeof(int), 0);
 }
 
 int main() {

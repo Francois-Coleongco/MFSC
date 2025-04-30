@@ -1,4 +1,3 @@
-
 // everything in this file contains resources for the server after a user is
 // authenticated.
 #include <cstring>
@@ -12,7 +11,7 @@
 
 const int chunk_size = 4096;
 
-class Sender {
+class Sender_Agent {
 
   int client_sock;
   char *buffer; // buffer capacity is always 4096
@@ -31,12 +30,13 @@ public:
 
   void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);
   void set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]);
-  int encrypt_buffer(char *plain_buf);
-  Sender(int client_sock);
+  // int encrypt_buffer(char *plain_buf);
 
-  ~Sender();
+  Sender_Agent(int client_sock);
+
+  ~Sender_Agent();
   // copy constructor is kinda weird for here, same as move, i dont think we
-  // will need multiple Senders for the same user
+  // will need multiple Sender_Agents for the same user
 };
 
 class Receiver {
