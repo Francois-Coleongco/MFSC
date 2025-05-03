@@ -8,11 +8,13 @@
 #include <sodium/crypto_box.h>
 #include <sodium/crypto_kx.h>
 #include <sodium/crypto_pwhash.h>
+#include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sodium/randombytes.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-const size_t buffer_size = 4096;
+const int CONFUSION = -420;
+const int LOGIN = 1;
 
 int crypt_gen(int client_sock, unsigned char *client_pk,
               unsigned char *client_sk, unsigned char *client_rx,
@@ -64,6 +66,8 @@ int crypt_gen(int client_sock, unsigned char *client_pk,
   std::cerr << "DIDNT BAIL WE HAVE VALID KEYSSS YAYAYYYYY" << std::endl;
   return 0;
 }
+
+int create_new_user() {}
 
 int encrypt_stream_buffer(unsigned char *client_tx, unsigned char *msg_box,
                           int message_len, unsigned char *ciphertext,
@@ -172,30 +176,7 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   return 0;
 }
 
-int read_and_create(std::string &file_name) {
-
-  std::ifstream file(file_name, std::ios::binary);
-  // the file that is passed must be an already encrypted file done by another
-  // func;
-
-  if (!file) {
-    std::cerr << "couldn't open the file" << std::endl;
-    return -1;
-  }
-
-  while (file) {
-    char test_buffer[buffer_size];
-    file.read(test_buffer, buffer_size);
-    std::cout << "this is a chunk" << test_buffer << std::endl;
-    // process it
-  }
-
-  return 0;
-}
-
 int main() {
-
-  const size_t buffer_size = 4096;
 
   int client_sock = socket(AF_INET, SOCK_STREAM, 0);
   sockaddr_in server_address;
@@ -224,6 +205,25 @@ int main() {
 
   std::string pswd_tmp;
 
+  int intention = CONFUSION;
+
+  do {
+    std::cin.clear();
+    std::cin.ignore();
+    std::cin >> intention;
+  } while (std::cin.fail());
+
+  if (intention == CONFUSION) {
+    return -2;
+  } else if (intention == LOGIN) {
+    login_handle() // this will contain the rest of the follwoing after
+  } else if (intention == SIGN_UP) {
+    signup_handle() // not implemented at all yet, but it's simple. just send
+                    // over the creds as in the username and the pswd hash NOT
+                    // THE KEY a separate password hash with the salt and save
+                    // it to the sqlite db
+  }
+
   if (send_credentials(client_sock, client_tx, pswd_tmp)) {
     std::cerr << "couldn't verify credentials" << std::endl;
   }
@@ -251,6 +251,7 @@ int main() {
   std::memset(pswd_tmp.data(), 0, pswd_tmp.size());
 
   s.set_key(key);
+
   std::cout << "set key!" << std::endl;
 
   std::cout << "enter file name to send to server" << std::endl;
@@ -265,7 +266,7 @@ int main() {
     std::cin >> file_name;
   }
 
-  int enc_stat = read_and_create(file_name);
+  int enc_stat = s.read_and_create(file_name);
 
   if (enc_stat != 0) {
     std::cerr << "error enc_stat was not 0. error in read_and_create"

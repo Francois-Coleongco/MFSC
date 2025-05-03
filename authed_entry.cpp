@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sodium/crypto_box.h>
 #include <sodium/crypto_pwhash.h>
+#include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sys/socket.h>
 
 int Sender_Agent::send_size() {
@@ -23,6 +24,36 @@ int Sender_Agent::send_buffer() {
 
 // int encrypt_buffer(char *plain_buf) { this->key }
 // add functionality for directories later
+int Sender_Agent::read_and_create(std::string &file_name) {
+
+  std::ifstream file(file_name, std::ios::binary);
+  // the file that is passed must be an already encrypted file done by another
+  // func;
+
+  if (!file) {
+    std::cerr << "couldn't open the file" << std::endl;
+    return -1;
+  }
+
+  crypto_secretstream_xchacha20poly1305_state state;
+
+  unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
+  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+
+  while (file) {
+    char test_buffer[chunk_size];
+    file.read(test_buffer, chunk_size);
+
+    crypto_secretstream_xchacha20poly1305_push(
+        crypto_secretstream_xchacha20poly1305_state * state, unsigned char *c,
+        unsigned long long *clen_p, const unsigned char *m,
+        unsigned long long mlen, const unsigned char *ad,
+        unsigned long long adlen, unsigned char tag) std::cout
+        << "this is a chunk" << test_buffer << std::endl;
+  }
+
+  return 0;
+}
 
 int Sender_Agent::fill_and_send(
     std::string &file_name) { // this takes in a file containing

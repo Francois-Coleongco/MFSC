@@ -8,7 +8,6 @@
 #include <netinet/in.h>
 #include <ostream>
 #include <sodium/crypto_kx.h>
-#include <string>
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
@@ -180,6 +179,14 @@ void kill_yourself_listen(char *c, int server_sock) {
   exit(1);
 }
 
+void logger() {
+  while (true) {
+    std::cerr << "total connections ==== " << numConnections
+              << "\n"; // so you can filter logs from std::cout if you need to
+    sleep(1);
+  }
+}
+
 void handle_conn(int client_sock) {
 
   unsigned char server_pk[crypto_kx_PUBLICKEYBYTES],
@@ -209,6 +216,8 @@ void handle_conn(int client_sock) {
     return;
   }
   send(client_sock, &ACK_SUC, sizeof(int), 0);
+
+  --numConnections;
 }
 
 int main() {
@@ -259,6 +268,7 @@ int main() {
 
   // start a thread to listen for 'q'
   std::thread(kill_yourself_listen, &c, server_sock).detach();
+  std::thread(logger).detach();
 
   while (true) {
 

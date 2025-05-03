@@ -9,7 +9,7 @@
 
 // need header guardss
 
-const int chunk_size = 4096;
+const size_t chunk_size = 4096;
 
 class Sender_Agent {
 
@@ -26,6 +26,7 @@ private:
 
 public:
   // add functionality for directories later
+  int read_and_create(std::string &file_name);
   int fill_and_send(std::string &file_name);
 
   void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);
