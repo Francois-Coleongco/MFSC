@@ -1,4 +1,5 @@
 #include "auth.h"
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdio>
@@ -121,8 +122,7 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
 
   if (crypto_aead_chacha20poly1305_decrypt(
           decrypted_username, &decrypted_username_len, NULL,
-          static_cast<unsigned char *>(
-              static_cast<void *>(username_buffer.data())),
+          reinterpret_cast<unsigned char *>((username_buffer.data())),
           username_bytes_read, NULL, 0, username_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the username" << std::endl;
   } else {
@@ -136,8 +136,8 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
 
   if (crypto_aead_chacha20poly1305_decrypt(
           decrypted_password, &decrypted_password_len, NULL,
-          static_cast<unsigned char *>(
-              static_cast<void *>(password_buffer.data())),
+          reinterpret_cast<unsigned char *>(
+              password_buffer.data()),
           password_bytes_read, NULL, 0, password_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the password" << std::endl;
   } else {
@@ -217,6 +217,7 @@ void handle_conn(int client_sock) {
   }
   send(client_sock, &ACK_SUC, sizeof(int), 0);
 
+  threads.erase(std::find(threads.begin(), threads.end(), client_sock));
   --numConnections;
 }
 

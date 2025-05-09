@@ -8,6 +8,7 @@
 #include <sodium/crypto_pwhash.h>
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sys/socket.h>
+#include <vector>
 
 int Sender_Agent::send_size() {
   int sent_bytes =
@@ -39,18 +40,26 @@ int Sender_Agent::read_and_create(std::string &file_name) {
 
   unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  crypto_secretstream_xchacha20poly1305_init_push(&state, header, this->key);
 
-  while (file) {
-    char test_buffer[chunk_size];
-    file.read(test_buffer, chunk_size);
 
-    crypto_secretstream_xchacha20poly1305_push(
-        crypto_secretstream_xchacha20poly1305_state * state, unsigned char *c,
-        unsigned long long *clen_p, const unsigned char *m,
-        unsigned long long mlen, const unsigned char *ad,
-        unsigned long long adlen, unsigned char tag) std::cout
-        << "this is a chunk" << test_buffer << std::endl;
-  }
+  do {
+    unsigned char message_buffer[chunk_size];
+    file.read(reinterpret_cast<char *>(message_buffer), chunk_size);
+
+    crypto_secretstream_xchacha20poly1305_state state;
+
+    unsigned long long message_buffer_len = file.gcount();
+
+    unsigned long long ciphertext_len = crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
+
+    std::vector<unsigned char> ciphertext(ciphertext_len);
+
+    int tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
+
+    crypto_secretstream_xchacha20poly1305_push(&state, ciphertext.data(), &ciphertext_len, message_buffer, message_buffer_len, NULL, 0, tag);
+
+  } while (!file.eof());
 
   return 0;
 }
