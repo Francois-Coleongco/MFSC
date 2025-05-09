@@ -176,58 +176,16 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   return 0;
 }
 
-int main() {
-
-  int client_sock = socket(AF_INET, SOCK_STREAM, 0);
-  sockaddr_in server_address;
-  server_address.sin_family = AF_INET;
-  server_address.sin_port = htons(8080);
-  server_address.sin_addr.s_addr = INADDR_ANY;
-
-  int conn_stat = connect(client_sock, (struct sockaddr *)&server_address,
-                          sizeof(server_address));
-
-  unsigned char client_pk[crypto_kx_PUBLICKEYBYTES],
-      client_sk[crypto_kx_SECRETKEYBYTES];
-  unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-      client_tx[crypto_kx_SESSIONKEYBYTES];
-
-  if (crypt_gen(client_sock, client_pk, client_sk, client_rx, client_tx)) {
-    std::cerr << "error generating keys :(" << std::endl;
+int login_handle(int client_sock, unsigned char *client_tx, std::string &pswd_tmp) {
+    if (send_credentials(client_sock, client_tx, pswd_tmp)) {
+    std::cerr << "couldn't verify credentials" << std::endl;
     return 1;
   }
+  return 0;
+}
 
-  for (int i = 0; i < crypto_kx_SESSIONKEYBYTES; ++i) {
-    printf("%c", client_tx[i]);
-  }
-
-  std::cerr << std::endl;
-
-  std::string pswd_tmp;
-
-  int intention = CONFUSION;
-
-  do {
-    std::cin.clear();
-    std::cin.ignore();
-    std::cin >> intention;
-  } while (std::cin.fail());
-
-  if (intention == CONFUSION) {
-    return -2;
-  } else if (intention == LOGIN) {
-    login_handle() // this will contain the rest of the follwoing after
-  } else if (intention == SIGN_UP) {
-    signup_handle() // not implemented at all yet, but it's simple. just send
-                    // over the creds as in the username and the pswd hash NOT
-                    // THE KEY a separate password hash with the salt and save
-                    // it to the sqlite db
-  }
-
-  if (send_credentials(client_sock, client_tx, pswd_tmp)) {
-    std::cerr << "couldn't verify credentials" << std::endl;
-  }
-
+int authed_comms(int client_sock, std::string &pswd_tmp) {
+  
   Sender_Agent s = Sender_Agent(client_sock);
 
   unsigned char
@@ -273,11 +231,51 @@ int main() {
               << std::endl;
   }
 
-  // create an encrypted file here using a key derived from the user's
-  // password. user auths into the server, then the password (client side) is
-  // used to derive an encryption key to encrypt and decrypt the files.
+}
 
-  // file_name.append(".enc");
+int main() {
 
-  // s.fill_and_send(file_name);
+  int client_sock = socket(AF_INET, SOCK_STREAM, 0);
+  sockaddr_in server_address;
+  server_address.sin_family = AF_INET;
+  server_address.sin_port = htons(8080);
+  server_address.sin_addr.s_addr = INADDR_ANY;
+
+  int conn_stat = connect(client_sock, (struct sockaddr *)&server_address,
+                          sizeof(server_address));
+
+  unsigned char client_pk[crypto_kx_PUBLICKEYBYTES],
+      client_sk[crypto_kx_SECRETKEYBYTES];
+  unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+      client_tx[crypto_kx_SESSIONKEYBYTES];
+
+  if (crypt_gen(client_sock, client_pk, client_sk, client_rx, client_tx)) {
+    std::cerr << "error generating keys :(" << std::endl;
+    return 1;
+  }
+
+  for (int i = 0; i < crypto_kx_SESSIONKEYBYTES; ++i) {
+    printf("%c", client_tx[i]);
+  }
+
+  std::cerr << std::endl;
+
+  std::string pswd_tmp;
+
+  int intention = CONFUSION;
+
+  do {
+    std::cin.clear();
+    std::cin.ignore();
+    std::cin >> intention;
+  } while (std::cin.fail());
+
+  if (intention == CONFUSION) {
+    return -2;
+  } else if (intention == LOGIN) {
+    if (login_handle(client_sock, client_tx, pswd_tmp)) {
+      authed_comms(client_sock, pswd_tmp);
+    }; // this will contain the rest of the follwoing after
+  } // no signup, this is only done by the admin of the server who can add themselves to the sql db
+
 }

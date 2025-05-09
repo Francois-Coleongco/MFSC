@@ -7,3 +7,6 @@ client must send encrypted data only in chunks of four kibibytes (4096 bytes)
 
 
 explodes after a certain amount of time. the server will delete everything after a certain amount of time after inactivity
+
+
+when doing the encryption, we are doing it in 4096 byte chunks. so essentially 4 kibibytes. before the encryption happens, we can implement compression but that can be at a later date.

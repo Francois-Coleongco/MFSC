@@ -14,18 +14,18 @@ const size_t chunk_size = 4096;
 class Sender_Agent {
 
   int client_sock;
-  char *buffer; // buffer capacity is always 4096
+  unsigned char *buffer; // buffer capacity is always 4096
   size_t
       size; // the size here refers to the amount of the buffer that is filled
   unsigned char key[crypto_box_SEEDBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
 
 private:
-  int send_buffer();
   int send_size();
 
 public:
   // add functionality for directories later
+  int send_buffer();
   int read_and_create(std::string &file_name);
   int fill_and_send(std::string &file_name);
 

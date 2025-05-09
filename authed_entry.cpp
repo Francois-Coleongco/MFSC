@@ -44,6 +44,7 @@ int Sender_Agent::read_and_create(std::string &file_name) {
 
 
   do {
+
     unsigned char message_buffer[chunk_size];
     file.read(reinterpret_cast<char *>(message_buffer), chunk_size);
 
@@ -53,38 +54,14 @@ int Sender_Agent::read_and_create(std::string &file_name) {
 
     unsigned long long ciphertext_len = crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
 
-    std::vector<unsigned char> ciphertext(ciphertext_len);
+    this->size = ciphertext_len;
 
     int tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
 
-    crypto_secretstream_xchacha20poly1305_push(&state, ciphertext.data(), &ciphertext_len, message_buffer, message_buffer_len, NULL, 0, tag);
+    crypto_secretstream_xchacha20poly1305_push(&state, this->buffer, &ciphertext_len, message_buffer, message_buffer_len, NULL, 0, tag); // encrypt it straight into the buffer
 
   } while (!file.eof());
 
-  return 0;
-}
-
-int Sender_Agent::fill_and_send(
-    std::string &file_name) { // this takes in a file containing
-                              // already encrypted data.
-
-  std::ifstream file(file_name, std::ios::binary);
-  // the file that is passed must be an already encrypted file done by another
-  // func;
-
-  if (!file) {
-    std::cerr << "couldn't open the file" << std::endl;
-    return -1;
-  }
-
-  while (file) {
-    file.read(this->buffer, chunk_size);
-    this->size = file.gcount();
-    this->send_size(); // always send size of buffer before the actual buffer
-    this->send_buffer();
-  }
-
-  // start by sending the size, then send the encrypted bytes
   return 0;
 }
 
@@ -99,7 +76,7 @@ void Sender_Agent::set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]) {
 }
 
 Sender_Agent::Sender_Agent(int client_sock)
-    : client_sock{client_sock}, buffer(new char[4096]), size{0}, key{} {};
+    : client_sock{client_sock}, buffer(new unsigned char[chunk_size + crypto_secretstream_xchacha20poly1305_ABYTES]), size{0}, key{} {}; // remember the buffer here holds the ciphertext not the message
 
 Sender_Agent::~Sender_Agent() {
   delete[] this->buffer;
