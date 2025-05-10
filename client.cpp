@@ -14,7 +14,8 @@
 #include <unistd.h>
 
 const int CONFUSION = -420;
-const int LOGIN = 1;
+const int READ_FROM_FILESYSTEM = 1;
+const int WRITE_TO_FILESYSTEM = 2;
 
 int crypt_gen(int client_sock, unsigned char *client_pk,
               unsigned char *client_sk, unsigned char *client_rx,
@@ -176,17 +177,8 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   return 0;
 }
 
-int login_handle(int client_sock, unsigned char *client_tx, std::string &pswd_tmp) {
-    if (send_credentials(client_sock, client_tx, pswd_tmp)) {
-    std::cerr << "couldn't verify credentials" << std::endl;
-    return 1;
-  }
-  return 0;
-}
-
-int authed_comms(int client_sock, std::string &pswd_tmp) {
-  
-  Sender_Agent s = Sender_Agent(client_sock);
+int WTFS_Handler(int client_sock, std::string &pswd_tmp) {
+    Sender_Agent s = Sender_Agent(client_sock);
 
   unsigned char
       salt[crypto_pwhash_SALTBYTES]; // needs to be stored in the sqlite db.
@@ -224,12 +216,41 @@ int authed_comms(int client_sock, std::string &pswd_tmp) {
     std::cin >> file_name;
   }
 
-  int enc_stat = s.read_and_create(file_name);
+  int enc_stat = s.read_and_send(file_name);
 
   if (enc_stat != 0) {
     std::cerr << "error enc_stat was not 0. error in read_and_create"
               << std::endl;
+
   }
+
+}
+
+int authed_comms(int client_sock, std::string &pswd_tmp) {
+  
+  std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
+  int intention = CONFUSION;
+
+  do {
+    std::cin.clear();
+    std::cin.ignore();
+    std::cin >> intention;
+  } while (std::cin.fail());
+
+  // when writing files, we use pswd_tmp to create a hash with a random salt. then we encrypt the data, and send it along with the random salt to store.
+  //
+  // when reading files, we use pswd_tmp to create a hash with the random salt attached to the encrypted data on the server, and use this derived key to decrypt on the client side.
+  //
+  // NO KEYS SHOULD EVER BE IN THE HANDS OF THE SERVER
+
+  if (intention == CONFUSION) {
+    return -2;
+  } else if (intention == READ_FROM_FILESYSTEM) {
+    // to be implemented
+  } else if (intention == WRITE_TO_FILESYSTEM) {
+    WTFS_Handler(client_sock, pswd_tmp);
+  }
+
 
 }
 
@@ -264,18 +285,12 @@ int main() {
 
   int intention = CONFUSION;
 
-  do {
-    std::cin.clear();
-    std::cin.ignore();
-    std::cin >> intention;
-  } while (std::cin.fail());
 
-  if (intention == CONFUSION) {
-    return -2;
-  } else if (intention == LOGIN) {
-    if (login_handle(client_sock, client_tx, pswd_tmp)) {
+    if (send_credentials(client_sock, client_tx, pswd_tmp)) {
+      std::cerr << "exiting login_handle" << std::endl;
+    } else {
       authed_comms(client_sock, pswd_tmp);
     }; // this will contain the rest of the follwoing after
-  } // no signup, this is only done by the admin of the server who can add themselves to the sql db
+   // no signup, this is only done by the admin of the server who can add themselves to the sql db
 
 }

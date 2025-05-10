@@ -22,6 +22,11 @@ std::vector<std::thread> threads;
 std::vector<int> clients;
 int numConnections = 0;
 
+void cleanup(int client_sock) {
+  threads.erase(std::find(threads.begin(), threads.end(), client_sock));
+  --numConnections;
+}
+
 int crypt_gen(int client_sock, unsigned char *server_pk,
               unsigned char *server_sk, unsigned char *server_rx,
               unsigned char *server_tx) {
@@ -217,9 +222,13 @@ void handle_conn(int client_sock) {
   }
   send(client_sock, &ACK_SUC, sizeof(int), 0);
 
-  threads.erase(std::find(threads.begin(), threads.end(), client_sock));
-  --numConnections;
+  // intention reading
+  //
+  // reading stream and writing to filesystem
+
+  cleanup(client_sock);
 }
+
 
 int main() {
 

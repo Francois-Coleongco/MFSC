@@ -22,11 +22,10 @@ class Sender_Agent {
 
 private:
   int send_size();
-
+  int send_buffer();
 public:
   // add functionality for directories later
-  int send_buffer();
-  int read_and_create(std::string &file_name);
+  int read_and_send(std::string &file_name);
   int fill_and_send(std::string &file_name);
 
   void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);

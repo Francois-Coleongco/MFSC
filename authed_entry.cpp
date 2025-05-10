@@ -8,7 +8,6 @@
 #include <sodium/crypto_pwhash.h>
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sys/socket.h>
-#include <vector>
 
 int Sender_Agent::send_size() {
   int sent_bytes =
@@ -25,7 +24,7 @@ int Sender_Agent::send_buffer() {
 
 // int encrypt_buffer(char *plain_buf) { this->key }
 // add functionality for directories later
-int Sender_Agent::read_and_create(std::string &file_name) {
+int Sender_Agent::read_and_send(std::string &file_name) {
 
   std::ifstream file(file_name, std::ios::binary);
   // the file that is passed must be an already encrypted file done by another
@@ -60,6 +59,9 @@ int Sender_Agent::read_and_create(std::string &file_name) {
 
     crypto_secretstream_xchacha20poly1305_push(&state, this->buffer, &ciphertext_len, message_buffer, message_buffer_len, NULL, 0, tag); // encrypt it straight into the buffer
 
+    this->send_size();
+    this->send_buffer();
+
   } while (!file.eof());
 
   return 0;
@@ -80,6 +82,8 @@ Sender_Agent::Sender_Agent(int client_sock)
 
 Sender_Agent::~Sender_Agent() {
   delete[] this->buffer;
+  this->size = 0;
+  memset(this->key, 0, 32);
 }
 // copy constructor is kinda weird for here, same as move, i dont think we
 // will need multiple Sender_Agents for the same user
