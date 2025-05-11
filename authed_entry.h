@@ -6,6 +6,7 @@
 #include <sodium/crypto_box.h>
 #include <sodium/crypto_pwhash.h>
 #include <sys/socket.h>
+#include <sodium/crypto_kx.h>
 
 // need header guardss
 
@@ -14,6 +15,7 @@ const size_t chunk_size = 4096;
 class Sender_Agent {
 
   int client_sock;
+  unsigned char client_tx[crypto_kx_SESSIONKEYBYTES];
   unsigned char *buffer; // buffer capacity is always 4096
   size_t
       size; // the size here refers to the amount of the buffer that is filled
@@ -21,18 +23,17 @@ class Sender_Agent {
   unsigned char salt[crypto_pwhash_SALTBYTES];
 
 private:
-  int send_size();
   int send_buffer();
+
 public:
   // add functionality for directories later
-  int read_and_send(std::string &file_name);
+  int encrypt_and_send_to_server(std::string &file_name);
   int fill_and_send(std::string &file_name);
 
   void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);
   void set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]);
-  // int encrypt_buffer(char *plain_buf);
 
-  Sender_Agent(int client_sock);
+  Sender_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES], int client_sock);
 
   ~Sender_Agent();
   // copy constructor is kinda weird for here, same as move, i dont think we

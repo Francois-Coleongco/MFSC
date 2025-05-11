@@ -1,4 +1,5 @@
 #include "authed_entry.h"
+#include "encryption_utils.h"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -65,32 +66,6 @@ int crypt_gen(int client_sock, unsigned char *client_pk,
   }
 
   std::cerr << "DIDNT BAIL WE HAVE VALID KEYSSS YAYAYYYYY" << std::endl;
-  return 0;
-}
-
-int create_new_user() {}
-
-int encrypt_stream_buffer(unsigned char *client_tx, unsigned char *msg_box,
-                          int message_len, unsigned char *ciphertext,
-                          unsigned long long *ciphertext_len, int client_sock) {
-
-  unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
-
-  randombytes_buf(nonce, sizeof nonce);
-
-  send(client_sock, nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-
-  std::cerr << "sent the nonce" << std::endl;
-
-  crypto_aead_chacha20poly1305_encrypt(ciphertext, ciphertext_len, msg_box,
-                                       message_len, NULL, 0, NULL, nonce,
-                                       client_tx);
-
-  std::cerr << "this is the ciphertext_len" << ciphertext_len << std::endl;
-
-  std::cerr << "okay so i sent with client_tx which is " << client_tx
-            << "and nonce was " << nonce << std::endl;
-
   return 0;
 }
 
@@ -177,15 +152,22 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   return 0;
 }
 
-int WTFS_Handler(int client_sock, std::string &pswd_tmp) {
-    Sender_Agent s = Sender_Agent(client_sock);
+int WTFS_Handler(int client_sock,
+                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                 std::string &pswd_tmp) {
+  Sender_Agent s = Sender_Agent(client_tx, client_sock);
 
   unsigned char
       salt[crypto_pwhash_SALTBYTES]; // needs to be stored in the sqlite db.
 
   unsigned char key[crypto_box_SEEDBYTES];
 
-  randombytes_buf(salt, sizeof salt);
+  randombytes_buf(
+      salt,
+      sizeof salt); // this salt is for encryption NOT logging in. for logging
+                    // in, the salt is stored with the hash on the server. user
+                    // supplies password which is combined with salt to create
+                    // hash and if it matches they are in
 
   std::cout << "made salt, creating key" << std::endl;
 
@@ -196,6 +178,7 @@ int WTFS_Handler(int client_sock, std::string &pswd_tmp) {
     /* out of memory */
     std::cerr << "out of mem" << std::endl;
   }
+
   std::cout << "made key!" << std::endl;
 
   std::memset(pswd_tmp.data(), 0, pswd_tmp.size());
@@ -208,26 +191,27 @@ int WTFS_Handler(int client_sock, std::string &pswd_tmp) {
 
   std::string file_name;
 
-  std::cin >> file_name;
-
-  while (std::cin.fail()) {
+  do {
     std::cin.clear();
     std::cin.ignore();
     std::cin >> file_name;
-  }
+  } while (std::cin.fail());
 
-  int enc_stat = s.read_and_send(file_name);
+  int enc_stat = s.encrypt_and_send_to_server(file_name);
 
   if (enc_stat != 0) {
     std::cerr << "error enc_stat was not 0. error in read_and_create"
               << std::endl;
-
+    return -1;
   }
 
+  return 0;
 }
 
-int authed_comms(int client_sock, std::string &pswd_tmp) {
-  
+int authed_comms(int client_sock,
+                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                 std::string &pswd_tmp) {
+
   std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
   int intention = CONFUSION;
 
@@ -237,21 +221,23 @@ int authed_comms(int client_sock, std::string &pswd_tmp) {
     std::cin >> intention;
   } while (std::cin.fail());
 
-  // when writing files, we use pswd_tmp to create a hash with a random salt. then we encrypt the data, and send it along with the random salt to store.
+  // when writing files, we use pswd_tmp to create a hash with a random salt.
+  // then we encrypt the data, and send it along with the random salt to store.
   //
-  // when reading files, we use pswd_tmp to create a hash with the random salt attached to the encrypted data on the server, and use this derived key to decrypt on the client side.
+  // when reading files, we use pswd_tmp to create a hash with the random salt
+  // attached to the encrypted data on the server, and use this derived key to
+  // decrypt on the client side.
   //
   // NO KEYS SHOULD EVER BE IN THE HANDS OF THE SERVER
 
   if (intention == CONFUSION) {
-    return -2;
+    return -1;
   } else if (intention == READ_FROM_FILESYSTEM) {
     // to be implemented
   } else if (intention == WRITE_TO_FILESYSTEM) {
-    WTFS_Handler(client_sock, pswd_tmp);
+    WTFS_Handler(client_sock, client_tx, pswd_tmp);
   }
-
-
+  return 0;
 }
 
 int main() {
@@ -285,12 +271,11 @@ int main() {
 
   int intention = CONFUSION;
 
-
-    if (send_credentials(client_sock, client_tx, pswd_tmp)) {
-      std::cerr << "exiting login_handle" << std::endl;
-    } else {
-      authed_comms(client_sock, pswd_tmp);
-    }; // this will contain the rest of the follwoing after
-   // no signup, this is only done by the admin of the server who can add themselves to the sql db
-
+  if (send_credentials(client_sock, client_tx, pswd_tmp)) {
+    std::cerr << "exiting login_handle" << std::endl;
+  } else {
+    authed_comms(client_sock, client_tx, pswd_tmp);
+  }; // this will contain the rest of the follwoing after
+  // no signup, this is only done by the admin of the server who can add
+  // themselves to the sql db
 }

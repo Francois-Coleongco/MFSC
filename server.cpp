@@ -20,11 +20,12 @@ const int ACK_FAIL = -1;
 
 std::vector<std::thread> threads;
 std::vector<int> clients;
-int numConnections = 0;
+int total_connections = 0;
+int current_connections = 0;
 
 void cleanup(int client_sock) {
-  threads.erase(std::find(threads.begin(), threads.end(), client_sock));
-  --numConnections;
+  // figure out why this doesn't work: threads.erase(std::find(threads.begin(), threads.end(), client_sock));
+  --current_connections;
 }
 
 int crypt_gen(int client_sock, unsigned char *server_pk,
@@ -179,14 +180,15 @@ void forward_to_all(std::array<char, buffer_size> buffer, int sender) {
 void kill_yourself_listen(char *c, int server_sock) {
   std::cout << "press q then ENTER to shutdown server" << std::endl;
   std::cin >> *c;
-  std::cout << "connections spawned: " << numConnections << std::endl;
+  std::cout << "total connections spawned: " << total_connections << std::endl;
+  std::cout << "live connections interrupted: " << current_connections << std::endl;
   close(server_sock);
   exit(1);
 }
 
 void logger() {
   while (true) {
-    std::cerr << "total connections ==== " << numConnections
+    std::cerr << "total connections ==== " << total_connections
               << "\n"; // so you can filter logs from std::cout if you need to
     sleep(1);
   }
@@ -293,7 +295,8 @@ int main() {
 
     threads.push_back(std::thread(handle_conn, client_sock));
     clients.push_back(client_sock);
-    ++numConnections;
+    ++total_connections;
+    ++current_connections;
 
     threads.back().detach();
   }

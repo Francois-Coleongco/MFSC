@@ -1,30 +1,39 @@
 // everything in this file contains resources for the server after a user is
 // authenticated.
 #include "authed_entry.h"
+#include "encryption_utils.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sodium/crypto_aead_chacha20poly1305.h> // for session encryption
 #include <sodium/crypto_box.h>
 #include <sodium/crypto_pwhash.h>
-#include <sodium/crypto_secretstream_xchacha20poly1305.h>
+#include <sodium/crypto_secretstream_xchacha20poly1305.h> // for file encryption
 #include <sys/socket.h>
-
-int Sender_Agent::send_size() {
-  int sent_bytes =
-      send(this->client_sock, &(this->size), sizeof(this->size), 0);
-  // just sends the size
-  return sent_bytes;
-}
 
 int Sender_Agent::send_buffer() {
   // just sends the buffer
-  int sent_bytes = send(this->client_sock, buffer, this->size, 0);
-  return sent_bytes;
+
+  unsigned char
+      buffer_ciphertext[this->size + crypto_aead_chacha20poly1305_ABYTES];
+  unsigned long long buffer_ciphertext_len;
+
+  encrypt_stream_buffer(this->client_tx, this->buffer, this->size,
+                        buffer_ciphertext, &buffer_ciphertext_len,
+                        this->client_sock);
+
+  int bytes_to_send_stat =
+      send(this->client_sock, &buffer_ciphertext_len,
+           sizeof(buffer_ciphertext_len), 0); // must be in the clear
+  int buffer_bytes_stat = send(this->client_sock, buffer_ciphertext,
+                               buffer_ciphertext_len, 0); // this is not
+
+  return buffer_bytes_stat;
 }
 
 // int encrypt_buffer(char *plain_buf) { this->key }
 // add functionality for directories later
-int Sender_Agent::read_and_send(std::string &file_name) {
+int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   std::ifstream file(file_name, std::ios::binary);
   // the file that is passed must be an already encrypted file done by another
@@ -37,12 +46,12 @@ int Sender_Agent::read_and_send(std::string &file_name) {
 
   crypto_secretstream_xchacha20poly1305_state state;
 
-  unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   crypto_secretstream_xchacha20poly1305_init_push(&state, header, this->key);
 
-
   do {
+
+    std::cout << "encrypting a chunk wee woo" << std::endl;
 
     unsigned char message_buffer[chunk_size];
     file.read(reinterpret_cast<char *>(message_buffer), chunk_size);
@@ -51,15 +60,20 @@ int Sender_Agent::read_and_send(std::string &file_name) {
 
     unsigned long long message_buffer_len = file.gcount();
 
-    unsigned long long ciphertext_len = crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
+    unsigned long long ciphertext_len =
+        crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
 
     this->size = ciphertext_len;
 
     int tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
 
-    crypto_secretstream_xchacha20poly1305_push(&state, this->buffer, &ciphertext_len, message_buffer, message_buffer_len, NULL, 0, tag); // encrypt it straight into the buffer
+    crypto_secretstream_xchacha20poly1305_push(
+        &state, this->buffer, &ciphertext_len, message_buffer,
+        message_buffer_len, NULL, 0,
+        tag); // encrypt it straight into the buffer
 
-    this->send_size();
+    // send_size and send_buffer should be modified to use the session
+    // encryption
     this->send_buffer();
 
   } while (!file.eof());
@@ -77,8 +91,15 @@ void Sender_Agent::set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]) {
   std::memset(new_salt, 0, crypto_pwhash_SALTBYTES);
 }
 
-Sender_Agent::Sender_Agent(int client_sock)
-    : client_sock{client_sock}, buffer(new unsigned char[chunk_size + crypto_secretstream_xchacha20poly1305_ABYTES]), size{0}, key{} {}; // remember the buffer here holds the ciphertext not the message
+Sender_Agent::Sender_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                           int client_sock)
+    : client_sock{client_sock},
+      buffer(new unsigned char[chunk_size +
+                               crypto_secretstream_xchacha20poly1305_ABYTES]),
+      size{0}, key{} {
+  std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
+  std::memset(client_tx, 0, crypto_kx_SESSIONKEYBYTES);
+}; // remember the buffer here holds the ciphertext not the message
 
 Sender_Agent::~Sender_Agent() {
   delete[] this->buffer;
