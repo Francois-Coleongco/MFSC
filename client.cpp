@@ -1,5 +1,6 @@
 #include "authed_entry.h"
 #include "encryption_utils.h"
+#include <array>
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -17,6 +18,14 @@
 const int CONFUSION = -420;
 const int READ_FROM_FILESYSTEM = 1;
 const int WRITE_TO_FILESYSTEM = 2;
+
+template <typename T> void get_stuff(T &stuff_holder) {
+  do {
+    std::cin.clear();
+    std::cin.ignore();
+    std::cin >> stuff_holder;
+  } while (std::cin.fail());
+}
 
 int crypt_gen(int client_sock, unsigned char *client_pk,
               unsigned char *client_sk, unsigned char *client_rx,
@@ -102,20 +111,24 @@ int send_credentials(int client_sock, unsigned char *client_tx,
 
   unsigned long long password_ciphertext_len;
 
-  if (encrypt_stream_buffer(
+  if (encrypt_and_send_stream_buffer_with_nonce(
           client_tx,
           static_cast<unsigned char *>(static_cast<void *>(username.data())),
           username.length() + 1, username_ciphertext, &username_ciphertext_len,
           client_sock)) {
-    std::cerr << "couldn't encrypt error in encrypt_stream_buffer" << std::endl;
+    std::cerr
+        << "couldn't encrypt error in encrypt_and_send_stream_buffer_with_nonce"
+        << std::endl;
   }
 
-  if (encrypt_stream_buffer(
+  if (encrypt_and_send_stream_buffer_with_nonce(
           client_tx,
           static_cast<unsigned char *>(static_cast<void *>(hashed_password)),
           password.length() + 1, password_ciphertext, &password_ciphertext_len,
           client_sock)) {
-    std::cerr << "couldn't encrypt error in encrypt_stream_buffer" << std::endl;
+    std::cerr
+        << "couldn't encrypt error in encrypt_and_send_stream_buffer_with_nonce"
+        << std::endl;
   }
 
   int received_username = -1;
@@ -148,6 +161,26 @@ int send_credentials(int client_sock, unsigned char *client_tx,
 
   std::memset(password.data(), 0, password.size());
   std::memset(username.data(), 0, username.size());
+
+  return 0;
+}
+
+int Send_Intention(unsigned char *client_tx, int client_sock, int intent) {
+
+  std::array<unsigned char, sizeof(intent)> arr;
+
+  std::array<unsigned char,
+             sizeof(intent) + crypto_aead_chacha20poly1305_ABYTES>
+      cipher_arr;
+  std::memcpy(arr.data(), &intent, sizeof(intent));
+
+  unsigned long long cipher_size;
+
+  if (encrypt_and_send_stream_buffer_with_nonce(client_tx, arr.data(),
+                                                arr.size(), cipher_arr.data(),
+                                                &cipher_size, client_sock)) {
+    return -1;
+  }
 
   return 0;
 }
@@ -191,11 +224,7 @@ int WTFS_Handler(int client_sock,
 
   std::string file_name;
 
-  do {
-    std::cin.clear();
-    std::cin.ignore();
-    std::cin >> file_name;
-  } while (std::cin.fail());
+  get_stuff(file_name);
 
   int enc_stat = s.encrypt_and_send_to_server(file_name);
 
@@ -215,11 +244,7 @@ int authed_comms(int client_sock,
   std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
   int intention = CONFUSION;
 
-  do {
-    std::cin.clear();
-    std::cin.ignore();
-    std::cin >> intention;
-  } while (std::cin.fail());
+  get_stuff(intention);
 
   // when writing files, we use pswd_tmp to create a hash with a random salt.
   // then we encrypt the data, and send it along with the random salt to store.
@@ -230,11 +255,17 @@ int authed_comms(int client_sock,
   //
   // NO KEYS SHOULD EVER BE IN THE HANDS OF THE SERVER
 
+  // can store the bits of the intention as a char array and send it down the
+  // wire
+
   if (intention == CONFUSION) {
     return -1;
   } else if (intention == READ_FROM_FILESYSTEM) {
     // to be implemented
+    // Send_Intention(unsigned char *client_tx, int client_sock, int intent)
+    // RFFS_Handler(client_sock, client_tx, pswd_tmp);
   } else if (intention == WRITE_TO_FILESYSTEM) {
+    Send_Intention(client_tx, client_sock, intention);
     WTFS_Handler(client_sock, client_tx, pswd_tmp);
   }
   return 0;
@@ -274,7 +305,21 @@ int main() {
   if (send_credentials(client_sock, client_tx, pswd_tmp)) {
     std::cerr << "exiting login_handle" << std::endl;
   } else {
-    authed_comms(client_sock, client_tx, pswd_tmp);
+
+    char stat;
+
+    do {
+      authed_comms(client_sock, client_tx, pswd_tmp);
+      std::cout
+          << "would you like to perform another action? yY/<any_other_key>"
+          << std::endl;
+      get_stuff(stat);
+    } while (stat == 'y' || stat == 'Y');
+
+    // stat = authed_comms(int client_sock, unsigned char *client_tx,
+    // std::string &pswd_tmp) // goal is to call the function again to ask for
+    // intention and stuff
+
   }; // this will contain the rest of the follwoing after
   // no signup, this is only done by the admin of the server who can add
   // themselves to the sql db
