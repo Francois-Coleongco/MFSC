@@ -5,4 +5,4 @@
 
 int encrypt_stream_buffer(unsigned char *client_tx, unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES], unsigned char *msg_box,
                           int message_len, unsigned char *ciphertext,
-                          unsigned long long *ciphertext_len, int client_sock);
+                          unsigned long long *ciphertext_len);

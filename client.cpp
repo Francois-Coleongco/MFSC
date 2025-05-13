@@ -117,8 +117,7 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   if (encrypt_stream_buffer(
           client_tx, username_nonce,
           static_cast<unsigned char *>(static_cast<void *>(username.data())),
-          username.length() + 1, username_ciphertext, &username_ciphertext_len,
-          client_sock)) {
+          username.length() + 1, username_ciphertext, &username_ciphertext_len)) {
     std::cerr
         << "couldn't encrypt error in encrypt_and_send_stream_buffer_with_nonce"
         << std::endl;
@@ -127,8 +126,7 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   if (encrypt_stream_buffer(
           client_tx, password_nonce,
           static_cast<unsigned char *>(static_cast<void *>(hashed_password)),
-          password.length() + 1, password_ciphertext, &password_ciphertext_len,
-          client_sock)) {
+          password.length() + 1, password_ciphertext, &password_ciphertext_len)) {
     std::cerr
         << "couldn't encrypt error in encrypt_and_send_stream_buffer_with_nonce"
         << std::endl;
@@ -175,19 +173,22 @@ int Send_Intention(unsigned char *client_tx, int client_sock, int intent) {
 
   std::array<unsigned char,
              sizeof(intent) + crypto_aead_chacha20poly1305_ABYTES>
-      cipher_arr;
+      intention_cipher;
   std::memcpy(arr.data(), &intent, sizeof(intent));
 
-  unsigned long long cipher_size;
+  unsigned long long intention_cipher_size;
 
   unsigned char intention_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
   if (encrypt_stream_buffer(client_tx, intention_nonce, arr.data(), arr.size(),
-                            cipher_arr.data(), &cipher_size, client_sock)) {
+                            intention_cipher.data(), &intention_cipher_size)) {
     return -1;
   }
 
   // send the nonce and array
+  send(client_sock, intention_nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
+
+  send(client_sock, intention_cipher.data(), intention_cipher.size(), 0);
 
   return 0;
 }

@@ -23,7 +23,8 @@ int total_connections = 0;
 int current_connections = 0;
 
 void cleanup(int client_sock) {
-  // figure out why this doesn't work: threads.erase(std::find(threads.begin(), threads.end(), client_sock));
+  // figure out why this doesn't work: threads.erase(std::find(threads.begin(),
+  // threads.end(), client_sock));
   --current_connections;
 }
 
@@ -113,7 +114,7 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
             << password_bytes_read << std::endl;
   send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
 
-  if (/* username_bytes_read <= 0 || */ password_bytes_read <= 0) {
+  if (username_bytes_read <= 0 || password_bytes_read <= 0) {
     std::cerr << "one of these username_bytes_read or password_bytes_read "
                  "returned a value less than or equal to 0"
               << std::endl;
@@ -141,8 +142,7 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
 
   if (crypto_aead_chacha20poly1305_decrypt(
           decrypted_password, &decrypted_password_len, NULL,
-          reinterpret_cast<unsigned char *>(
-              password_buffer.data()),
+          reinterpret_cast<unsigned char *>(password_buffer.data()),
           password_bytes_read, NULL, 0, password_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the password" << std::endl;
   } else {
@@ -180,14 +180,15 @@ void kill_yourself_listen(char *c, int server_sock) {
   std::cout << "press q then ENTER to shutdown server" << std::endl;
   std::cin >> *c;
   std::cout << "total connections spawned: " << total_connections << std::endl;
-  std::cout << "live connections interrupted: " << current_connections << std::endl;
+  std::cout << "live connections interrupted: " << current_connections
+            << std::endl;
   close(server_sock);
   exit(1);
 }
 
 void logger() {
   while (true) {
-    std::cerr << "current connections ==== " << current_connections 
+    std::cerr << "current connections ==== " << current_connections
               << "\n"; // so you can filter logs from std::cout if you need to
     sleep(1);
   }
@@ -224,16 +225,54 @@ void handle_conn(int client_sock) {
 
   send(client_sock, &ACK_SUC, sizeof(int), 0);
 
+  // need to move code starting from here
+std::array<unsigned char, crypto_aead_chacha20poly1305_NPUBBYTES>
+      intention_nonce;
+
+  recv(client_sock, intention_nonce.data(),
+       crypto_aead_chacha20poly1305_NPUBBYTES, 0);
+
+  int intent;
+
+  unsigned long long intent_len;
+
+  std::array<unsigned char, sizeof(intent)> intent_arr;
+
+  std::array<unsigned char,
+             sizeof(intent) + crypto_aead_chacha20poly1305_ABYTES>
+      intention_cipher;
+
+  recv(client_sock, intention_cipher.data(),
+       sizeof(intent) + crypto_aead_chacha20poly1305_ABYTES, 0);
+
+  if (crypto_aead_chacha20poly1305_decrypt(
+          intent_arr.data(), &intent_len, NULL,
+          reinterpret_cast<unsigned char *>((intention_cipher.data())),
+          intention_cipher.size(), NULL, 0, intention_nonce.data(),
+          server_rx) != 0) {
+    std::cerr << "error decrypting intention" << std::endl;
+
+    // loop again letting client know there was an error and to try again
+  }
+
+  std::memcpy(&intent, intent_arr.data(), intent_len);
+
+
+  std::cerr << "user's intention was " << intent << std::endl;
+  std::cerr << "SUCCESSFUL <INTENTION> DECRYPTION" << std::endl;
+
   // intention reading
   //
   // reading stream and writing to filesystem
 
-  // after sending the final chunk of the file from the server OR after receiving the last encrypted chunk from the client, recv for a value containing the stat from the client as to whether they want to perform another action
+  // after sending the final chunk of the file from the server OR after
+  // receiving the last encrypted chunk from the client, recv for a value
+  // containing the stat from the client as to whether they want to perform
+  // another action
 
-
+  // TO HERE and place in a loop to keep connection open for future actions
   cleanup(client_sock);
 }
-
 
 int main() {
 
