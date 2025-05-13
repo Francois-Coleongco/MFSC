@@ -111,8 +111,11 @@ int send_credentials(int client_sock, unsigned char *client_tx,
 
   unsigned long long password_ciphertext_len;
 
-  if (encrypt_and_send_stream_buffer_with_nonce(
-          client_tx,
+  unsigned char username_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
+  unsigned char password_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
+
+  if (encrypt_stream_buffer(
+          client_tx, username_nonce,
           static_cast<unsigned char *>(static_cast<void *>(username.data())),
           username.length() + 1, username_ciphertext, &username_ciphertext_len,
           client_sock)) {
@@ -121,8 +124,8 @@ int send_credentials(int client_sock, unsigned char *client_tx,
         << std::endl;
   }
 
-  if (encrypt_and_send_stream_buffer_with_nonce(
-          client_tx,
+  if (encrypt_stream_buffer(
+          client_tx, password_nonce,
           static_cast<unsigned char *>(static_cast<void *>(hashed_password)),
           password.length() + 1, password_ciphertext, &password_ciphertext_len,
           client_sock)) {
@@ -133,18 +136,19 @@ int send_credentials(int client_sock, unsigned char *client_tx,
 
   int received_username = -1;
 
-  while (received_username == -1) {
-    send(client_sock, username_ciphertext, username_ciphertext_len,
-         0); // username
-    recv(client_sock, &received_username, sizeof(received_username), 0);
-  }
+  send(client_sock, username_nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
+
+  send(client_sock, password_nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
+
+
+  send(client_sock, username_ciphertext, username_ciphertext_len,
+       0); // username
+  recv(client_sock, &received_username, sizeof(received_username), 0);
 
   int received_password = -1;
 
-  while (received_password == -1) {
-    send(client_sock, password_ciphertext, password_ciphertext_len, 0);
-    recv(client_sock, &received_password, sizeof(received_password), 0);
-  }
+  send(client_sock, password_ciphertext, password_ciphertext_len, 0);
+  recv(client_sock, &received_password, sizeof(received_password), 0);
 
   int auth_stat = -1;
 
@@ -176,11 +180,14 @@ int Send_Intention(unsigned char *client_tx, int client_sock, int intent) {
 
   unsigned long long cipher_size;
 
-  if (encrypt_and_send_stream_buffer_with_nonce(client_tx, arr.data(),
-                                                arr.size(), cipher_arr.data(),
-                                                &cipher_size, client_sock)) {
+  unsigned char intention_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
+
+  if (encrypt_stream_buffer(client_tx, intention_nonce, arr.data(), arr.size(),
+                            cipher_arr.data(), &cipher_size, client_sock)) {
     return -1;
   }
+
+  // send the nonce and array
 
   return 0;
 }
@@ -311,14 +318,10 @@ int main() {
     do {
       authed_comms(client_sock, client_tx, pswd_tmp);
       std::cout
-          << "would you like to perform another action? yY/<any_other_key>"
+          << "would you like to perform another action? yY/<any other key>"
           << std::endl;
       get_stuff(stat);
     } while (stat == 'y' || stat == 'Y');
-
-    // stat = authed_comms(int client_sock, unsigned char *client_tx,
-    // std::string &pswd_tmp) // goal is to call the function again to ask for
-    // intention and stuff
 
   }; // this will contain the rest of the follwoing after
   // no signup, this is only done by the admin of the server who can add

@@ -187,7 +187,7 @@ void kill_yourself_listen(char *c, int server_sock) {
 
 void logger() {
   while (true) {
-    std::cerr << "total connections ==== " << total_connections
+    std::cerr << "current connections ==== " << current_connections 
               << "\n"; // so you can filter logs from std::cout if you need to
     sleep(1);
   }
@@ -221,6 +221,7 @@ void handle_conn(int client_sock) {
     send(client_sock, &ACK_FAIL, sizeof(int), 0);
     return;
   }
+
   send(client_sock, &ACK_SUC, sizeof(int), 0);
 
   // intention reading
@@ -228,8 +229,6 @@ void handle_conn(int client_sock) {
   // reading stream and writing to filesystem
 
   // after sending the final chunk of the file from the server OR after receiving the last encrypted chunk from the client, recv for a value containing the stat from the client as to whether they want to perform another action
-
-  recv(int fd, void *buf, size_t n, int flags)
 
 
   cleanup(client_sock);

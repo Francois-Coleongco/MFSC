@@ -1,14 +1,12 @@
 #include "encryption_utils.h"
 
-int encrypt_and_send_stream_buffer_with_nonce(unsigned char *client_tx, unsigned char *msg_box,
+int encrypt_stream_buffer(unsigned char *client_tx, unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES], unsigned char *msg_box,
                           int message_len, unsigned char *ciphertext,
                           unsigned long long *ciphertext_len, int client_sock) {
 
-  unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
-  randombytes_buf(nonce, sizeof nonce);
+  randombytes_buf(nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
-  send(client_sock, nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
 
   std::cerr << "sent the nonce" << std::endl;
 

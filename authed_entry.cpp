@@ -18,10 +18,6 @@ int Sender_Agent::send_buffer() {
       buffer_ciphertext[this->size + crypto_aead_chacha20poly1305_ABYTES];
   unsigned long long buffer_ciphertext_len;
 
-  encrypt_stream_buffer(this->client_tx, this->buffer, this->size,
-                        buffer_ciphertext, &buffer_ciphertext_len,
-                        this->client_sock);
-
   int bytes_to_send_stat =
       send(this->client_sock, &buffer_ciphertext_len,
            sizeof(buffer_ciphertext_len), 0); // must be in the clear
