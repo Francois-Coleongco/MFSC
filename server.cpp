@@ -136,17 +136,18 @@ int verify_creds(int client_sock, unsigned char *server_rx) {
     std::cerr << "SUCCESSFUL <USERNAME> DECRYPTION" << std::endl;
   }
 
-  unsigned char decrypted_password[password_bytes_read];
+  unsigned char decrypted_password_hash[password_bytes_read];
 
   unsigned long long decrypted_password_len;
 
   if (crypto_aead_chacha20poly1305_decrypt(
-          decrypted_password, &decrypted_password_len, NULL,
+          decrypted_password_hash, &decrypted_password_len, NULL,
           reinterpret_cast<unsigned char *>(password_buffer.data()),
           password_bytes_read, NULL, 0, password_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the password" << std::endl;
   } else {
-    std::cerr << decrypted_password << std::endl;
+    std::cerr << "password cipher" << password_buffer.data() << "password "
+              << decrypted_password_hash << std::endl;
     std::cerr << "SUCCESSFUL <PASSWORD> DECRYPTION" << std::endl;
   }
 
@@ -226,7 +227,7 @@ void handle_conn(int client_sock) {
   send(client_sock, &ACK_SUC, sizeof(int), 0);
 
   // need to move code starting from here
-std::array<unsigned char, crypto_aead_chacha20poly1305_NPUBBYTES>
+  std::array<unsigned char, crypto_aead_chacha20poly1305_NPUBBYTES>
       intention_nonce;
 
   recv(client_sock, intention_nonce.data(),
@@ -256,7 +257,6 @@ std::array<unsigned char, crypto_aead_chacha20poly1305_NPUBBYTES>
   }
 
   std::memcpy(&intent, intent_arr.data(), intent_len);
-
 
   std::cerr << "user's intention was " << intent << std::endl;
   std::cerr << "SUCCESSFUL <INTENTION> DECRYPTION" << std::endl;
