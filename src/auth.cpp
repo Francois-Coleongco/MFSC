@@ -104,7 +104,7 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password_hash[
   sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
 
   if (sqlite3_step(stmt) != SQLITE_ROW) {
-    std::cerr << "no match" << std::endl;
+    std::cerr << "no match in DATABASE" << std::endl;
     return 1;
   }
 
