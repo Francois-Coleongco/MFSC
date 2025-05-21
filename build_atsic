@@ -1,4 +1,4 @@
 #!/bin/env bash
 
-g++ ./src/server.cpp ./src/auth.cpp -lsodium -lsqlite3 -o ./test_build/server
-g++ ./src/client.cpp ./src/authed_entry.cpp ./src/encryption_utils.cpp -lsodium -o ./test_build/client
+g++ ./src/server.cpp ./src/auth/auth.cpp -lsodium -lsqlite3 -o ./test_build/server
+g++ ./src/client.cpp ./src/authed_entry/authed_entry.cpp ./src/encryption_utils/encryption_utils.cpp -lsodium -o ./test_build/client

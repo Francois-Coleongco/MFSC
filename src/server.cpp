@@ -1,10 +1,11 @@
-#include "auth.h"
+#include "auth/auth.h"
 #include <array>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 #include <netinet/in.h>
 #include <ostream>
 #include <sodium/crypto_kx.h>
@@ -13,21 +14,49 @@
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
-#include <vector>
+#include <unordered_map>
 
 const size_t buffer_size = 4096;
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
 
-std::vector<std::thread> threads;
-std::vector<int> clients;
 int total_connections = 0;
 int current_connections = 0;
 
+struct Client_Info {
+  std::thread client_thread;
+};
+
+std::unordered_map<int, Client_Info> clients;
+std::unordered_map<int, Client_Info> zombie_clients;
+std::mutex clients_mutex;
+std::mutex zombie_clients_mutex;
+
 void cleanup(int client_sock) {
-  // figure out why this doesn't work: threads.erase(std::find(threads.begin(),
-  // threads.end(), client_sock));
+  std::cout << "cleanup called" << std::endl;
+  // i dont think i need ot check if it exists because if cleanup was called,
+  // the handle_conn func has a live thread and therefore Client_Info associated
+  // with it
+  std::lock_guard<std::mutex> zomb_lock(zombie_clients_mutex);
+  std::lock_guard<std::mutex> client_lock(clients_mutex);
+  zombie_clients.insert(
+      {client_sock, std::move(clients.find(client_sock)->second)});
+  clients.erase(client_sock);
   --current_connections;
+}
+void clean_periodic() {
+  // this will just clean up the zombie clients in std::unordered_map<int,
+  // Client_Info> zombie_clients;
+  std::lock_guard<std::mutex> zombie_lock(zombie_clients_mutex);
+  for (const auto& pair : zombie_clients) {
+    if (pair.second.client_thread.joinable()) {
+
+    }
+  }
+}
+
+void clean_all() {
+  // destroy the active clients and zombie clients
 }
 
 int crypt_gen(int client_sock, unsigned char *server_pk,
@@ -134,7 +163,8 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
           username_bytes_read, NULL, 0, username_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the username" << std::endl;
   } else {
-    std::cerr << "SUCCESSFUL <USERNAME> DECRYPTION ==== " << decrypted_username << std::endl;
+    std::cerr << "SUCCESSFUL <USERNAME> DECRYPTION ==== " << decrypted_username
+              << std::endl;
   }
 
   char decrypted_password[password_bytes_read];
@@ -148,14 +178,17 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
           password_bytes_read, NULL, 0, password_nonce, server_rx) != 0) {
     std::cerr << "error decrypting the password" << std::endl;
   } else {
-    std::cerr << "password cipher" << password_buffer.data() << "password" << std::endl;
-    std::cerr << "SUCCESSFUL <PASSWORD> DECRYPTION" << decrypted_password << std::endl;
+    std::cerr << "password cipher" << password_buffer.data() << "password"
+              << std::endl;
+    std::cerr << "SUCCESSFUL <PASSWORD> DECRYPTION" << decrypted_password
+              << std::endl;
   }
 
-  login(DB, decrypted_username, decrypted_username_len, decrypted_password, decrypted_password_len);
+  login(DB, decrypted_username, decrypted_username_len, decrypted_password,
+        decrypted_password_len);
 
   sodium_memzero(decrypted_username, decrypted_username_len);
-  sodium_memzero(decrypted_password,decrypted_password_len);
+  sodium_memzero(decrypted_password, decrypted_password_len);
 
   return 0;
 
@@ -183,21 +216,20 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 //   }
 // }
 
-
-void kill_yourself_listen(char *c, int server_sock) {
-  std::cout << "total connections spawned: " << total_connections << std::endl;
-  std::cout << "live connections interrupted: " << current_connections
-            << std::endl;
-  close(server_sock);
-  exit(1);
+void print_conns(std::string conn_type,
+                 std::unordered_map<int, Client_Info> &map) {
+  for (const auto &pair : map) {
+    std::cerr << conn_type << " " << pair.first << "\n";
+  }
 }
 
 void logger() {
   while (true) {
-    std::cerr << "current connections ==== " << current_connections
-              << "\n"; // so you can filter logs from std::cout if you need to
-    sleep(1);
+    std::cerr << "current connections ==== " << current_connections << "\n";
+    sleep(2);
   }
+  print_conns("clients", clients);
+  print_conns("zombies", zombie_clients);
 }
 
 void handle_conn(sqlite3 *DB, int client_sock) {
@@ -266,8 +298,6 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   std::cerr << "user's intention was " << intent << std::endl;
   std::cerr << "SUCCESSFUL <INTENTION> DECRYPTION" << std::endl;
 
-  // intention reading
-  //
   // reading stream and writing to filesystem
 
   // after sending the final chunk of the file from the server OR after
@@ -276,6 +306,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   // another action
 
   // TO HERE and place in a loop to keep connection open for future actions
+
   cleanup(client_sock);
 }
 
@@ -324,11 +355,7 @@ int main() {
 
   std::cout << "accepting\n";
 
-  char c = '\0';
-
-  // start a thread to listen for 'q'
-  // std::thread(kill_yourself_listen, &c, server_sock).detach();
-  std::thread(logger).detach();
+  std::thread log_thread = std::thread(logger);
 
   while (true) {
 
@@ -341,11 +368,13 @@ int main() {
       continue;
     }
 
-    threads.push_back(std::thread(handle_conn, DB, client_sock));
-    clients.push_back(client_sock);
+    std::lock_guard<std::mutex> client_lock(clients_mutex);
+    clients[client_sock].client_thread =
+        std::thread(handle_conn, DB, client_sock);
+
     ++total_connections;
     ++current_connections;
-
-    threads.back().detach();
   }
+
+  // clean_all();
 }
