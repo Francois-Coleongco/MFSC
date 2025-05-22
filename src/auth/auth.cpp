@@ -7,7 +7,7 @@
 #include <sqlite3.h>
 #include <string>
 
-int create_user(sqlite3 *DB, std::string *username, std::string *password) {
+int create_user(sqlite3 *DB, std::string &username, std::string &password) {
 
   sqlite3_stmt *stmt;
 
@@ -20,7 +20,7 @@ int create_user(sqlite3 *DB, std::string *username, std::string *password) {
               << std::endl;
   }
 
-  sqlite3_bind_text(stmt, 1, username->c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
 
   if (sqlite3_step(stmt) == SQLITE_ROW) {
     int count = sqlite3_column_int(stmt, 0);
@@ -35,9 +35,9 @@ int create_user(sqlite3 *DB, std::string *username, std::string *password) {
   char hashed_password[crypto_pwhash_STRBYTES];
 
   const unsigned char *key =
-      reinterpret_cast<const unsigned char *>(username->c_str());
+      reinterpret_cast<const unsigned char *>(username.c_str());
 
-  if (crypto_pwhash_str(hashed_password, password->c_str(), password->length(),
+  if (crypto_pwhash_str(hashed_password, password.c_str(), password.length(),
                         crypto_pwhash_OPSLIMIT_SENSITIVE,
                         crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
 
@@ -69,7 +69,7 @@ int create_user(sqlite3 *DB, std::string *username, std::string *password) {
   std::cout << "last char of hashed_password: " << hashed_password[127]
             << std::endl;
 
-  sqlite3_bind_text(stmt, 1, username->c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
   sqlite3_bind_text(stmt, 2, hashed_password, -1, SQLITE_STATIC);
 
   int res = sqlite3_step(stmt);
@@ -80,15 +80,14 @@ int create_user(sqlite3 *DB, std::string *username, std::string *password) {
   sqlite3_finalize(stmt);
 
   std::fill(std::begin(hashed_password), std::end(hashed_password), '\0');
-  std::fill(username->begin(), username->end(), '\0');
-  std::fill(password->begin(), password->end(), '\0');
+  std::fill(username.begin(), username.end(), '\0');
+  std::fill(password.begin(), password.end(), '\0');
 
   return 0;
 }
 
-int login(sqlite3 *DB, char username[], size_t username_len, char password_hash[], size_t password_hash_len) {
-
-  std::cout << "inside login" << std::endl;
+int login(sqlite3 *DB, char username[], size_t username_len, char password[],
+          size_t password_len) {
 
   sqlite3_stmt *stmt;
 
@@ -100,6 +99,8 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password_hash[
     std::cerr << "unable to prepare retrieve_hashed_pswd" << sqlite3_errmsg(DB)
               << std::endl;
   }
+  return 0;
+
 
   sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
 
@@ -109,22 +110,29 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password_hash[
   }
 
   std::cout << sqlite3_errmsg(DB) << std::endl;
-  const unsigned char *db_password_hash = sqlite3_column_text(stmt, 0);
-  std::cerr << password_hash << std::endl;
 
-  if (crypto_pwhash_str_verify((const char *)db_password_hash, password_hash,
-                               password_hash_len) != 0) {
+  const unsigned char *db_password = sqlite3_column_text(stmt, 0);
+
+  std::cerr << password << std::endl;
+
+    // need to hash the password here using a salt stored in the db before feeding into this function
+
+
+  if (crypto_pwhash_str_verify((const char *)db_password, password,
+                               password_len) != 0) {
     /* wrong password */
     std::cerr << "YOUUU SHALL NOTTTT PASSSSSSSSSSS" << std::endl;
   }
 
   std::cout << "SUCCESSFUL LOGIN YIPPIEEE" << std::endl;
 
+  sodium_memzero(username, username_len);
+  sodium_memzero(password, password_len);
+
   sqlite3_finalize(stmt);
 
   return 0;
 }
-
 
 int initialize_server(sqlite3 *DB) {
 
@@ -138,5 +146,4 @@ int initialize_server(sqlite3 *DB) {
   }
 
   return 0;
-
 }

@@ -1,9 +1,12 @@
 #include "auth/auth.h"
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <mutex>
 #include <netinet/in.h>
@@ -19,9 +22,10 @@
 const size_t buffer_size = 4096;
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
+const int MAX_ZOMBIE_CONNS = 1;
 
 int total_connections = 0;
-int current_connections = 0;
+int live_connections = 0;
 
 struct Client_Info {
   std::thread client_thread;
@@ -32,7 +36,7 @@ std::unordered_map<int, Client_Info> zombie_clients;
 std::mutex clients_mutex;
 std::mutex zombie_clients_mutex;
 
-void cleanup(int client_sock) {
+void zombify(int client_sock) {
   std::cout << "cleanup called" << std::endl;
   // i dont think i need ot check if it exists because if cleanup was called,
   // the handle_conn func has a live thread and therefore Client_Info associated
@@ -41,17 +45,29 @@ void cleanup(int client_sock) {
   std::lock_guard<std::mutex> client_lock(clients_mutex);
   zombie_clients.insert(
       {client_sock, std::move(clients.find(client_sock)->second)});
+  close(client_sock);
   clients.erase(client_sock);
-  --current_connections;
+  --live_connections;
 }
-void clean_periodic() {
+void cleanup_intermittent(std::atomic<bool> &server_alive) {
   // this will just clean up the zombie clients in std::unordered_map<int,
   // Client_Info> zombie_clients;
-  std::lock_guard<std::mutex> zombie_lock(zombie_clients_mutex);
-  for (const auto& pair : zombie_clients) {
-    if (pair.second.client_thread.joinable()) {
-
+  while (server_alive) {
+    if (zombie_clients.size() < MAX_ZOMBIE_CONNS) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      continue;
     }
+    std::cerr << "cleanup intermittent called\n";
+    std::unique_lock<std::mutex> zombie_lock(zombie_clients_mutex);
+    for (auto &pair : zombie_clients) {
+      if (pair.second.client_thread.joinable()) {
+        std::cout << "joined thread\n";
+        pair.second.client_thread.join();
+        std::cout << "completed thread\n";
+      }
+    }
+    zombie_lock.unlock();
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
   }
 }
 
@@ -184,11 +200,13 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
               << std::endl;
   }
 
-  login(DB, decrypted_username, decrypted_username_len, decrypted_password,
-        decrypted_password_len);
-
-  sodium_memzero(decrypted_username, decrypted_username_len);
-  sodium_memzero(decrypted_password, decrypted_password_len);
+  if (login(DB, decrypted_username, decrypted_username_len, decrypted_password,
+            decrypted_password_len)) { // login implicitly zeroes out my
+                                       // decrypted_username and
+                                       // decrypted_password with sodium_memzero
+    std::cerr << "returned 1 from login\n";
+    return 1;
+  }
 
   return 0;
 
@@ -216,20 +234,32 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 //   }
 // }
 
-void print_conns(std::string conn_type,
-                 std::unordered_map<int, Client_Info> &map) {
+void print_conns(std::unordered_map<int, Client_Info> &map) {
   for (const auto &pair : map) {
-    std::cerr << conn_type << " " << pair.first << "\n";
+    std::cerr << "fd: " << pair.first << "\n";
   }
 }
 
-void logger() {
-  while (true) {
-    std::cerr << "current connections ==== " << current_connections << "\n";
-    sleep(2);
+void print_border_top() {
+  size_t len = 20; // might make this an argument in the future if u care enough lol
+  for (size_t i = 0; i < len; ++i) {
+    std::cerr << "-";
   }
-  print_conns("clients", clients);
-  print_conns("zombies", zombie_clients);
+}
+
+void logger(std::atomic<bool> &server_alive) {
+  while (server_alive) {
+    print_border_top();
+    std::cerr << "CURRENT CONNECTIONS =>" << live_connections;
+    print_border_top();
+    std::cerr << "LIVE CLIENTS =>" << clients.size() << "\n";
+    print_conns(clients);
+    print_border_top();
+    std::cerr << "ZOMBIE CLIENTS =>" << clients.size() << "\n";
+    print_conns(zombie_clients);
+    print_border_top();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
 }
 
 void handle_conn(sqlite3 *DB, int client_sock) {
@@ -258,6 +288,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   if (verify_credentials(DB, client_sock, server_rx)) {
     std::cerr << "couldn't verify creds, ignoring";
     send(client_sock, &ACK_FAIL, sizeof(int), 0);
+    zombify(client_sock);
     return;
   }
 
@@ -307,11 +338,13 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
   // TO HERE and place in a loop to keep connection open for future actions
 
-  cleanup(client_sock);
+  zombify(client_sock);
+
 }
 
 int main() {
 
+  std::atomic<bool> server_alive = true;
   sqlite3 *DB;
 
   if (initialize_server(DB)) {
@@ -338,6 +371,12 @@ int main() {
   std::cout << "starting bind\n";
 
   int opt = 1;
+  if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) <
+      0) {
+    std::cerr << "setsockopt failed: " << strerror(errno) << std::endl;
+    close(server_sock);
+    return 1;
+  }
 
   int bind_stat = bind(server_sock, (struct sockaddr *)&server_address,
                        sizeof(server_address));
@@ -355,9 +394,12 @@ int main() {
 
   std::cout << "accepting\n";
 
-  std::thread log_thread = std::thread(logger);
+  std::thread log_thread = std::thread(logger, std::ref(server_alive));
+  std::thread cleanup_intermittent_thread =
+      std::thread(cleanup_intermittent, std::ref(server_alive));
+  // std::thread kill_server_listener = std::thread(kill_server);
 
-  while (true) {
+  while (server_alive) {
 
     int client_sock = accept(server_sock, nullptr, nullptr);
 
@@ -373,8 +415,9 @@ int main() {
         std::thread(handle_conn, DB, client_sock);
 
     ++total_connections;
-    ++current_connections;
+    ++live_connections;
   }
 
-  // clean_all();
+  clean_all(); // this should join the log_thread and
+               // cleanup_intermittent_thread
 }
