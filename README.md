@@ -1,4 +1,4 @@
-# Encrypted File Server & Client
+# Encrypted Multithreaded File Server & Client
 
 ## what is this?
 
