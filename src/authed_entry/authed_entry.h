@@ -41,6 +41,7 @@ public:
 };
 
 class Receiver {
+  // should inherit similar things to Sender from a base class i have not created yet
 
   int client_sock;
   char *buffer; // buffer capacity is always 4096
