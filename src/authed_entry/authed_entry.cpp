@@ -64,13 +64,13 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   crypto_secretstream_xchacha20poly1305_state state;
 
-  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES]; REMEMBER YOU NEED TO SEND HEADER AS WELL
   crypto_secretstream_xchacha20poly1305_init_push(&state, header, this->key);
   unsigned char message_buffer[chunk_size];
 
   int tag = 0;
 
-  while (!file.eof()) {
+  do {
 
     std::cout << "encrypting a chunk wee woo" << std::endl;
 
@@ -98,9 +98,8 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
     // encryption
 
     // int send_stat = this->send_buffer(); //this func needs major fixing
-
-    std::cerr << "file stat " << file.eof() << "\n";
-  }
+    //
+  } while (!file.eof());
 
   return 0;
 }
