@@ -105,19 +105,19 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   unsigned char username_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned char password_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
-  if (encrypt_stream_buffer(
-          client_tx, username_nonce,
-          reinterpret_cast<unsigned char *>(username.data()),
-          username.length() + 1, username_ciphertext, &username_ciphertext_len)) {
+  if (encrypt_stream_buffer(client_tx, username_nonce,
+                            reinterpret_cast<unsigned char *>(username.data()),
+                            username.length() + 1, username_ciphertext,
+                            &username_ciphertext_len)) {
     std::cerr
         << "couldn't encrypt error in encrypt_and_send_stream_buffer_with_nonce"
         << std::endl;
   }
 
-  if (encrypt_stream_buffer(
-          client_tx, password_nonce,
-          reinterpret_cast<unsigned char *>(password.data()),
-          password.length() + 1, password_ciphertext, &password_ciphertext_len)) {
+  if (encrypt_stream_buffer(client_tx, password_nonce,
+                            reinterpret_cast<unsigned char *>(password.data()),
+                            password.length() + 1, password_ciphertext,
+                            &password_ciphertext_len)) {
     std::cerr
         << "couldn't encrypt error in encrypt_and_send_stream_buffer_with_nonce"
         << std::endl;
@@ -128,7 +128,6 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   send(client_sock, username_nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
 
   send(client_sock, password_nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-
 
   send(client_sock, username_ciphertext, username_ciphertext_len,
        0); // username
@@ -186,8 +185,12 @@ int Send_Intention(unsigned char *client_tx, int client_sock, int intent) {
 
 int WTFS_Handler(int client_sock,
                  unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                 unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                  std::string &pswd_tmp) {
-  Sender_Agent s = Sender_Agent(client_tx, client_sock);
+  std::cerr << "made it here in WTFS_Handler\n";
+
+  Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
+  Sender_Agent s = Sender_Agent(client_tx, client_rx, client_sock, &CA);
 
   unsigned char
       salt[crypto_pwhash_SALTBYTES]; // needs to be stored in the sqlite db.
@@ -237,7 +240,7 @@ int WTFS_Handler(int client_sock,
 }
 
 int authed_comms(int client_sock,
-                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES], unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                  std::string &pswd_tmp) {
 
   std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
@@ -265,7 +268,7 @@ int authed_comms(int client_sock,
     // RFFS_Handler(client_sock, client_tx, pswd_tmp);
   } else if (intention == WRITE_TO_FILESYSTEM) {
     Send_Intention(client_tx, client_sock, intention);
-    WTFS_Handler(client_sock, client_tx, pswd_tmp);
+    WTFS_Handler(client_sock, client_tx, client_rx, pswd_tmp);
   }
   return 0;
 }
@@ -308,7 +311,7 @@ int main() {
     char stat;
 
     do {
-      authed_comms(client_sock, client_tx, pswd_tmp);
+      authed_comms(client_sock, client_tx, client_rx, pswd_tmp);
       std::cout
           << "would you like to perform another action? yY/<any other key>"
           << std::endl;

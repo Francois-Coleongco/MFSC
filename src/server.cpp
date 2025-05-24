@@ -59,18 +59,25 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
     }
     std::cerr << "cleanup intermittent called\n";
     std::unique_lock<std::mutex> zombie_lock(zombie_clients_mutex);
+    std::cerr << "zombie client count before loop " << zombie_clients.size() << "\n";
+    std::vector<int> to_erase;
     for (auto &pair : zombie_clients) {
-      std::cerr << "processing client\n";
+      std::cerr << "processing client " << pair.first << "\n";
       if (pair.second.client_thread.joinable()) {
         std::cout << "joined thread\n";
         pair.second.client_thread.join();
         std::cout << "completed thread\n";
-        zombie_clients.erase(pair.first);
+        to_erase.push_back(pair.first);
       }
     }
+    for (int i : to_erase) {
+      zombie_clients.erase(i);
+    }
+    std::cerr << "after the loop\n";
 
     zombie_lock.unlock();
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::cerr << "exited cleanup_intermittent\n";
   }
 }
 

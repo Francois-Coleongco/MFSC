@@ -12,6 +12,26 @@
 #include <sodium/utils.h>
 #include <sys/socket.h>
 
+Comms_Agent::Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                         unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+                         int client_sock)
+    : client_sock(client_sock) {
+  std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
+  std::memcpy(this->client_rx, client_rx, crypto_kx_SESSIONKEYBYTES);
+}
+
+Comms_Agent::~Comms_Agent() {
+  this->client_sock = -420;
+  std::memset(this->client_rx, 0, crypto_kx_SESSIONKEYBYTES);
+  std::memset(this->client_tx, 0, crypto_kx_SESSIONKEYBYTES);
+}
+
+int Comms_Agent::get_socket() { return this->client_sock; }
+
+unsigned char *Comms_Agent::get_client_tx() { return this->client_tx; }
+
+unsigned char *Comms_Agent::get_client_rx() { return this->client_rx; }
+
 int Sender_Agent::send_buffer() {
   // just sends the buffer
 
@@ -20,9 +40,9 @@ int Sender_Agent::send_buffer() {
   unsigned long long buffer_ciphertext_len;
 
   int bytes_to_send_stat =
-      send(this->client_sock, &buffer_ciphertext_len,
+      send(this->CA->get_socket(), &buffer_ciphertext_len,
            sizeof(buffer_ciphertext_len), 0); // must be in the clear
-  int buffer_bytes_stat = send(this->client_sock, buffer_ciphertext,
+  int buffer_bytes_stat = send(this->CA->get_socket(), buffer_ciphertext,
                                buffer_ciphertext_len, 0); // this is not
 
   return buffer_bytes_stat;
@@ -59,7 +79,6 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
     std::cerr << "read message_buffer_len " << message_buffer_len << "\n";
 
-
     unsigned long long ciphertext_len =
         crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
 
@@ -92,18 +111,14 @@ void Sender_Agent::set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]) {
 }
 
 Sender_Agent::Sender_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-                           int client_sock)
-    : client_sock{client_sock},
-      buffer(new unsigned char[chunk_size +
-                               crypto_secretstream_xchacha20poly1305_ABYTES]),
-      size{0}, key{} {
-  std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
+                           unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+                           int client_sock, Comms_Agent *CA)
+    : size{0}, CA(CA), key{} {
+  std::memcpy(this->CA->get_client_tx(), client_tx, crypto_kx_SESSIONKEYBYTES);
   sodium_memzero(client_tx, crypto_kx_SESSIONKEYBYTES);
-
 }; // remember the buffer here holds the ciphertext not the message
 
 Sender_Agent::~Sender_Agent() {
-  delete[] this->buffer;
   this->size = 0;
   sodium_memzero(this->key, crypto_box_SEEDBYTES);
 }
