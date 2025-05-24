@@ -46,15 +46,15 @@ int create_user(sqlite3 *DB, std::string &username, std::string &password) {
     /* out of memory */
   }
 
-  if (crypto_pwhash_str_verify(hashed_password, password->c_str(),
-                               password->length()) != 0) {
+  if (crypto_pwhash_str_verify(hashed_password, password.c_str(),
+                               password.length()) != 0) {
     std::cerr << "wrong password bitch" << std::endl;
     return 3;
     /* wrong password */
   }
 
   std::cout << "successfully verified password" << std::endl;
-
+;
   const char *create_user_query =
       "INSERT INTO users( username, hashed_pswd ) values( ?, ? );";
 
@@ -94,13 +94,27 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password[],
   const char *retrieve_hashed_pswd =
       "SELECT hashed_pswd FROM users WHERE username = ?";
 
+  std::cerr << "grabbed username was " << username << "\n ";
+  std::cerr << "this was password " << password << "\n";
+  std::cerr << "this was DB " << DB << "\n";
+
+  char hash[crypto_pwhash_STRBYTES];
+
+  std::cerr << "hashing password: " << password << "\n";
+  if (crypto_pwhash_str(hash, (const char *)password, password_len,
+                        crypto_pwhash_OPSLIMIT_SENSITIVE,
+                        crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
+    /* out of memory */
+  }
+
+  std::cerr << hash << "\n";
+
   if (sqlite3_prepare_v2(DB, retrieve_hashed_pswd, -1, &stmt, nullptr) !=
       SQLITE_OK) {
     std::cerr << "unable to prepare retrieve_hashed_pswd" << sqlite3_errmsg(DB)
               << std::endl;
+    return 1;
   }
-  return 0;
-
 
   sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
 
@@ -111,17 +125,15 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password[],
 
   std::cout << sqlite3_errmsg(DB) << std::endl;
 
-  const unsigned char *db_password = sqlite3_column_text(stmt, 0);
+  const unsigned char *db_password_hash = sqlite3_column_text(stmt, 0);
 
-  std::cerr << password << std::endl;
-
-    // need to hash the password here using a salt stored in the db before feeding into this function
-
-
-  if (crypto_pwhash_str_verify((const char *)db_password, password,
+  if (crypto_pwhash_str_verify((const char *)db_password_hash, password,
                                password_len) != 0) {
+
+    std::cerr << "this is password_len" << password_len << "\n";
     /* wrong password */
     std::cerr << "YOUUU SHALL NOTTTT PASSSSSSSSSSS" << std::endl;
+    return 1;
   }
 
   std::cout << "SUCCESSFUL LOGIN YIPPIEEE" << std::endl;
@@ -134,11 +146,11 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password[],
   return 0;
 }
 
-int initialize_server(sqlite3 *DB) {
+int initialize_server(sqlite3 **DB) {
 
   int exit = 0;
 
-  exit = sqlite3_open("term_chat_users.db", &DB);
+  exit = sqlite3_open("term_chat_users.db", DB);
 
   if (exit != 0) {
     std::cerr << "couldn't open database" << std::endl;

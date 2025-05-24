@@ -57,6 +57,9 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
     unsigned long long message_buffer_len = file.gcount();
 
+    std::cerr << "read message_buffer_len " << message_buffer_len << "\n";
+
+
     unsigned long long ciphertext_len =
         crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
 

@@ -37,7 +37,7 @@ std::mutex clients_mutex;
 std::mutex zombie_clients_mutex;
 
 void zombify(int client_sock) {
-  std::cout << "cleanup called" << std::endl;
+  std::cout << "zombify called" << std::endl;
   // i dont think i need ot check if it exists because if cleanup was called,
   // the handle_conn func has a live thread and therefore Client_Info associated
   // with it
@@ -60,12 +60,15 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
     std::cerr << "cleanup intermittent called\n";
     std::unique_lock<std::mutex> zombie_lock(zombie_clients_mutex);
     for (auto &pair : zombie_clients) {
+      std::cerr << "processing client\n";
       if (pair.second.client_thread.joinable()) {
         std::cout << "joined thread\n";
         pair.second.client_thread.join();
         std::cout << "completed thread\n";
+        zombie_clients.erase(pair.first);
       }
     }
+
     zombie_lock.unlock();
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
   }
@@ -208,6 +211,8 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
     return 1;
   }
 
+  std::cerr << "made past login\n";
+
   return 0;
 
   // reads from recv the ENCRYPTED username and password and decrypts it and
@@ -241,7 +246,8 @@ void print_conns(std::unordered_map<int, Client_Info> &map) {
 }
 
 void print_border_top() {
-  size_t len = 20; // might make this an argument in the future if u care enough lol
+  size_t len =
+      20; // might make this an argument in the future if u care enough lol
   for (size_t i = 0; i < len; ++i) {
     std::cerr << "-";
   }
@@ -255,7 +261,7 @@ void logger(std::atomic<bool> &server_alive) {
     std::cerr << "LIVE CLIENTS =>" << clients.size() << "\n";
     print_conns(clients);
     print_border_top();
-    std::cerr << "ZOMBIE CLIENTS =>" << clients.size() << "\n";
+    std::cerr << "ZOMBIE CLIENTS =>" << zombie_clients.size() << "\n";
     print_conns(zombie_clients);
     print_border_top();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -339,7 +345,6 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   // TO HERE and place in a loop to keep connection open for future actions
 
   zombify(client_sock);
-
 }
 
 int main() {
@@ -347,7 +352,7 @@ int main() {
   std::atomic<bool> server_alive = true;
   sqlite3 *DB;
 
-  if (initialize_server(DB)) {
+  if (initialize_server(&DB)) {
     std::cerr << "couldn't open db" << std::endl;
     return 1;
   }
