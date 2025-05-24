@@ -183,14 +183,13 @@ int Send_Intention(unsigned char *client_tx, int client_sock, int intent) {
   return 0;
 }
 
-int WTFS_Handler(int client_sock,
+int WTFS_Handler(Comms_Agent *CA, int client_sock,
                  unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
                  unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                  std::string &pswd_tmp) {
   std::cerr << "made it here in WTFS_Handler\n";
 
-  Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
-  Sender_Agent s = Sender_Agent(client_tx, client_rx, client_sock, &CA);
+  Sender_Agent s = Sender_Agent(client_tx, client_rx, client_sock, CA);
 
   unsigned char
       salt[crypto_pwhash_SALTBYTES]; // needs to be stored in the sqlite db.
@@ -240,7 +239,8 @@ int WTFS_Handler(int client_sock,
 }
 
 int authed_comms(int client_sock,
-                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES], unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                 unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                  std::string &pswd_tmp) {
 
   std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
@@ -262,13 +262,16 @@ int authed_comms(int client_sock,
 
   if (intention == CONFUSION) {
     return -1;
-  } else if (intention == READ_FROM_FILESYSTEM) {
+  }
+  Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
+
+  if (intention == READ_FROM_FILESYSTEM) {
     // to be implemented
     // Send_Intention(unsigned char *client_tx, int client_sock, int intent)
     // RFFS_Handler(client_sock, client_tx, pswd_tmp);
   } else if (intention == WRITE_TO_FILESYSTEM) {
     Send_Intention(client_tx, client_sock, intention);
-    WTFS_Handler(client_sock, client_tx, client_rx, pswd_tmp);
+    WTFS_Handler(&CA, client_sock, client_tx, client_rx, pswd_tmp);
   }
   return 0;
 }

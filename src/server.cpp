@@ -70,10 +70,10 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
         to_erase.push_back(pair.first);
       }
     }
+
     for (int i : to_erase) {
       zombie_clients.erase(i);
     }
-    std::cerr << "after the loop\n";
 
     zombie_lock.unlock();
     std::this_thread::sleep_for(std::chrono::milliseconds(250));

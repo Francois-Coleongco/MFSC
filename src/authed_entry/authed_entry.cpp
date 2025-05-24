@@ -44,6 +44,7 @@ int Sender_Agent::send_buffer() {
            sizeof(buffer_ciphertext_len), 0); // must be in the clear
   int buffer_bytes_stat = send(this->CA->get_socket(), buffer_ciphertext,
                                buffer_ciphertext_len, 0); // this is not
+  std::cerr << "sock " << this->CA->get_socket() << "\n";
 
   return buffer_bytes_stat;
 }
@@ -65,15 +66,15 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   crypto_secretstream_xchacha20poly1305_init_push(&state, header, this->key);
+  unsigned char message_buffer[chunk_size];
 
-  do {
+  int tag = 0;
+
+  while (!file.eof()) {
 
     std::cout << "encrypting a chunk wee woo" << std::endl;
 
-    unsigned char message_buffer[chunk_size];
     file.read(reinterpret_cast<char *>(message_buffer), chunk_size);
-
-    crypto_secretstream_xchacha20poly1305_state state;
 
     unsigned long long message_buffer_len = file.gcount();
 
@@ -84,7 +85,9 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
     this->size = ciphertext_len;
 
-    int tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
+    tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
+
+    std::cerr << "tag is " << tag << "\n";
 
     crypto_secretstream_xchacha20poly1305_push(
         &state, this->buffer, &ciphertext_len, message_buffer,
@@ -93,9 +96,11 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
     // send_size and send_buffer should be modified to use the session
     // encryption
-    this->send_buffer();
 
-  } while (!file.eof());
+    // int send_stat = this->send_buffer(); //this func needs major fixing
+
+    std::cerr << "file stat " << file.eof() << "\n";
+  }
 
   return 0;
 }
