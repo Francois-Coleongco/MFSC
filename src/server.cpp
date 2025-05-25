@@ -24,6 +24,10 @@ const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
 const int MAX_ZOMBIE_CONNS = 1;
 
+const int CONFUSION = -420;
+const int READ_FROM_FILESYSTEM = 1;
+const int WRITE_TO_FILESYSTEM = 2;
+
 int total_connections = 0;
 int live_connections = 0;
 
@@ -59,7 +63,8 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
     }
     std::cerr << "cleanup intermittent called\n";
     std::unique_lock<std::mutex> zombie_lock(zombie_clients_mutex);
-    std::cerr << "zombie client count before loop " << zombie_clients.size() << "\n";
+    std::cerr << "zombie client count before loop " << zombie_clients.size()
+              << "\n";
     std::vector<int> to_erase;
     for (auto &pair : zombie_clients) {
       std::cerr << "processing client " << pair.first << "\n";
@@ -275,6 +280,15 @@ void logger(std::atomic<bool> &server_alive) {
   }
 }
 
+void WTFS_Handler__Server() {
+  // read init header, and salt
+  // loop:
+  // read size of subsequent cunk
+  // read subsequent chunk
+  // end loop;
+  recv()
+}
+
 void handle_conn(sqlite3 *DB, int client_sock) {
 
   unsigned char server_pk[crypto_kx_PUBLICKEYBYTES],
@@ -342,16 +356,13 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   std::cerr << "user's intention was " << intent << std::endl;
   std::cerr << "SUCCESSFUL <INTENTION> DECRYPTION" << std::endl;
 
-  // reading stream and writing to filesystem
+  if (intent == READ_FROM_FILESYSTEM) {
+    // to be implemented
+  } else if (intent == WRITE_TO_FILESYSTEM) {
+    WTFS_Handler__Server();
+  }
 
-  // after sending the final chunk of the file from the server OR after
-  // receiving the last encrypted chunk from the client, recv for a value
-  // containing the stat from the client as to whether they want to perform
-  // another action
-
-  // TO HERE and place in a loop to keep connection open for future actions
-
-  zombify(client_sock);
+    zombify(client_sock);
 }
 
 int main() {

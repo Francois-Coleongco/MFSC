@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// intentions
 const int CONFUSION = -420;
 const int READ_FROM_FILESYSTEM = 1;
 const int WRITE_TO_FILESYSTEM = 2;
