@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <unordered_map>
 
-const size_t buffer_size = 4096;
+const size_t chunk_size = 4096;
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
 const int MAX_ZOMBIE_CONNS = 1;
@@ -53,6 +53,29 @@ void zombify(int client_sock) {
   clients.erase(client_sock);
   --live_connections;
 }
+
+void iter_clean_live(std::unordered_map<int, Client_Info> &map) {
+  for (auto &pair : map) {
+    std::cerr << "processing client " << pair.first << "\n";
+    if (pair.second.client_thread.joinable()) {
+      std::cout << "joined thread\n";
+      pair.second.client_thread.join();
+      std::cout << "completed thread\n";
+      close(pair.first);
+    }
+  }
+}
+void iter_clean_zombie(std::unordered_map<int, Client_Info> &map) {
+  for (auto &pair : map) {
+    std::cerr << "processing client " << pair.first << "\n";
+    if (pair.second.client_thread.joinable()) {
+      std::cout << "joined thread\n";
+      pair.second.client_thread.join();
+      std::cout << "completed thread\n";
+    }
+  }
+}
+
 void cleanup_intermittent(std::atomic<bool> &server_alive) {
   // this will just clean up the zombie clients in std::unordered_map<int,
   // Client_Info> zombie_clients;
@@ -65,20 +88,10 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
     std::unique_lock<std::mutex> zombie_lock(zombie_clients_mutex);
     std::cerr << "zombie client count before loop " << zombie_clients.size()
               << "\n";
-    std::vector<int> to_erase;
-    for (auto &pair : zombie_clients) {
-      std::cerr << "processing client " << pair.first << "\n";
-      if (pair.second.client_thread.joinable()) {
-        std::cout << "joined thread\n";
-        pair.second.client_thread.join();
-        std::cout << "completed thread\n";
-        to_erase.push_back(pair.first);
-      }
-    }
 
-    for (int i : to_erase) {
-      zombie_clients.erase(i);
-    }
+    iter_clean_zombie(zombie_clients);
+
+    zombie_clients.clear();
 
     zombie_lock.unlock();
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
@@ -88,6 +101,11 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
 
 void clean_all() {
   // destroy the active clients and zombie clients
+  std::lock_guard<std::mutex> client_lock(clients_mutex);
+  std::lock_guard<std::mutex> zombie_lock(zombie_clients_mutex);
+
+  iter_clean_live(clients);
+  iter_clean_zombie(zombie_clients);
 }
 
 int crypt_gen(int client_sock, unsigned char *server_pk,
@@ -145,8 +163,8 @@ int crypt_gen(int client_sock, unsigned char *server_pk,
 
 int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 
-  std::array<char, buffer_size> username_buffer{0};
-  std::array<char, buffer_size> password_buffer{0};
+  std::array<char, chunk_size> username_buffer{0};
+  std::array<char, chunk_size> password_buffer{0};
 
   unsigned char username_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
@@ -165,13 +183,13 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 
   std::cerr << "received password nonce" << std::endl;
 
-  int username_bytes_read = recv(client_sock, &username_buffer, buffer_size, 0);
+  int username_bytes_read = recv(client_sock, &username_buffer, chunk_size, 0);
   std::cerr << "read username YIPPIEEE this was how many bytes it was: "
             << username_bytes_read << std::endl;
 
   send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
 
-  int password_bytes_read = recv(client_sock, &password_buffer, buffer_size, 0);
+  int password_bytes_read = recv(client_sock, &password_buffer, chunk_size, 0);
   std::cerr << "read password YIPPIEEE this was how many bytes it was: "
             << password_bytes_read << std::endl;
   send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
@@ -231,7 +249,7 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
   // checks against the database using auth.h funcs
 }
 
-// void forward_to_all(std::array<char, buffer_size> buffer, int sender) {
+// void forward_to_all(std::array<char, chunk_size> buffer, int sender) {
 //
 //   for (int client_sock : clients) {
 //
@@ -242,7 +260,7 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 //     std::cout << "trying to forward buffer to client_sock: " << client_sock
 //               << std::endl;
 //
-//     int bytes_sent = send(client_sock, buffer.data(), buffer_size, 0);
+//     int bytes_sent = send(client_sock, buffer.data(), chunk_size, 0);
 //
 //     if (bytes_sent < 0) {
 //       std::cerr << "couldn't forward to this client: " << client_sock
@@ -280,13 +298,36 @@ void logger(std::atomic<bool> &server_alive) {
   }
 }
 
-void WTFS_Handler__Server() {
-  // read init header, and salt
-  // loop:
-  // read size of subsequent cunk
-  // read subsequent chunk
-  // end loop;
-  recv()
+int WTFS_Handler__Server(int client_sock) {
+  unsigned char header_buf[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  unsigned char salt_buf[crypto_pwhash_SALTBYTES];
+  // header is 24 bytes, salt is 16
+  size_t header_bytes =
+      recv(client_sock, header_buf,
+           crypto_secretstream_xchacha20poly1305_HEADERBYTES, 0);
+  size_t salt_bytes = recv(client_sock, salt_buf, crypto_pwhash_SALTBYTES, 0);
+
+  if (header_bytes <= 0) {
+    std::cerr << "header_bytes was less than or equal to 0";
+    return 1;
+  }
+  if (salt_bytes <= 0) {
+    std::cerr << "salt_bytes was less than or equal to 0";
+    return 2;
+  }
+
+  unsigned char read_buf[chunk_size];
+  size_t bytes_to_read;
+  size_t read_bytes;
+
+  do {
+    bytes_to_read = recv(client_sock, &bytes_to_read, sizeof(bytes_to_read), 0);
+    read_bytes = recv(client_sock, read_buf, chunk_size, 0);
+    // obviously gonna have to write the buffer after the recv to a file on the server. need to figure out how to structure the file system.
+    std::cerr << "read_bytes is " << read_bytes << "\n";
+  } while (bytes_to_read != 0);
+
+  return 0;
 }
 
 void handle_conn(sqlite3 *DB, int client_sock) {
@@ -308,7 +349,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
   std::cerr << std::endl;
 
-  std::array<char, buffer_size> buffer{0};
+  std::array<char, chunk_size> buffer{0};
 
   // make sure the last character the 4095th index is not overwritten
   // cuz this is the null pointer for you cstring
@@ -359,10 +400,10 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   if (intent == READ_FROM_FILESYSTEM) {
     // to be implemented
   } else if (intent == WRITE_TO_FILESYSTEM) {
-    WTFS_Handler__Server();
+    WTFS_Handler__Server(client_sock);
   }
 
-    zombify(client_sock);
+  zombify(client_sock);
 }
 
 int main() {

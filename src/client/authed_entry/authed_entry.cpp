@@ -1,7 +1,7 @@
 // everything in this file contains resources for the server after a user is
 // authenticated.
 #include "authed_entry.h"
-#include "../encryption_utils/encryption_utils.h"
+#include "../../encryption_utils/encryption_utils.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>

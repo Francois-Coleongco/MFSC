@@ -1,0 +1,7 @@
+the directories on the server will be as follows
+
+$HOME/MFSC_FILES/username/file
+
+when i start doing folders within folders or files within folders, things will be more complicated ofc.
+
+you need to use the mkdir function or something
