@@ -17,6 +17,9 @@
 #include <unistd.h>
 
 // intentions
+const int ACK_SUC = 0;
+const int ACK_FAIL = -1;
+
 const int CONFUSION = -420;
 const int READ_FROM_FILESYSTEM = 1;
 const int WRITE_TO_FILESYSTEM = 2;
@@ -272,7 +275,9 @@ int authed_comms(int client_sock,
     // RFFS_Handler(client_sock, client_tx, pswd_tmp);
   } else if (intention == WRITE_TO_FILESYSTEM) {
     Send_Intention(client_tx, client_sock, intention);
-    WTFS_Handler(&CA, client_sock, client_tx, client_rx, pswd_tmp);
+    if (WTFS_Handler(&CA, client_sock, client_tx, client_rx, pswd_tmp)) {
+      send(client_sock, &ACK_FAIL, sizeof(ACK_SUC), 0);
+    };
   }
   return 0;
 }

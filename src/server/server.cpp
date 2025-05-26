@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <mutex>
@@ -298,7 +299,10 @@ void logger(std::atomic<bool> &server_alive) {
   }
 }
 
-int WTFS_Handler__Server(int client_sock) {
+int init_read(int client_sock, std::string &file_name) {
+
+  recv(client_sock, file_name.data(), 255, 0);
+
   unsigned char header_buf[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt_buf[crypto_pwhash_SALTBYTES];
   // header is 24 bytes, salt is 16
@@ -316,6 +320,19 @@ int WTFS_Handler__Server(int client_sock) {
     return 2;
   }
 
+  return 0;
+}
+
+int WTFS_Handler__Server(int client_sock) {
+  // when doing multiple files and directories, this function could be called in
+  // a separate thread perhaps for each file
+
+  std::string file_name;
+
+  init_read(client_sock, file_name);
+
+  std::ofstream file(file_name, std::ios::binary);
+
   unsigned char read_buf[chunk_size];
   size_t bytes_to_read;
   size_t read_bytes;
@@ -323,8 +340,10 @@ int WTFS_Handler__Server(int client_sock) {
   do {
     bytes_to_read = recv(client_sock, &bytes_to_read, sizeof(bytes_to_read), 0);
     read_bytes = recv(client_sock, read_buf, chunk_size, 0);
-    // obviously gonna have to write the buffer after the recv to a file on the server. need to figure out how to structure the file system.
+    // obviously gonna have to write the buffer after the recv to a file on the
+    // server. need to figure out how to structure the file system.
     std::cerr << "read_bytes is " << read_bytes << "\n";
+    size_t written_ack = send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
   } while (bytes_to_read != 0);
 
   return 0;

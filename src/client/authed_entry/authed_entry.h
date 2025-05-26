@@ -45,7 +45,7 @@ class Sender_Agent {
 
 private:
   int send_buffer();
-  int init_send(unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES], unsigned char salt[crypto_pwhash_SALTBYTES]);
+  int init_send(std::string &file_name, unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES], unsigned char salt[crypto_pwhash_SALTBYTES]);
 
 public:
   // add functionality for directories later

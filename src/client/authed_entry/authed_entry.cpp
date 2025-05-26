@@ -34,19 +34,20 @@ unsigned char *Comms_Agent::get_client_rx() { return this->client_rx; }
 
 int Sender_Agent::send_buffer() {
   // just sends the buffer
+  size_t transmission_size = this->size + crypto_aead_chacha20poly1305_ABYTES;
 
   unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
-  unsigned char ciphertext[this->size + crypto_aead_chacha20poly1305_ABYTES];
+  unsigned char ciphertext[transmission_size];
   unsigned long long ciphertext_len;
 
   encrypt_stream_buffer(this->CA->get_client_tx(), nonce, this->buffer,
                         this->size, ciphertext, &ciphertext_len);
+
   int bytes_to_send_stat =
-      send(this->CA->get_socket(), &this->size, sizeof(this->size),
+      send(this->CA->get_socket(), &transmission_size, sizeof(transmission_size),
            0); // need to send this using the encrypt_stream_buffer func as well
-  // int buffer_bytes_stat =
-  //     send(this->CA->get_socket(), ciphertext, ciphertext_len, 0);
-  std::cerr << "sock " << this->CA->get_socket() << "\n";
+  int buffer_bytes_stat =
+      send(this->CA->get_socket(), ciphertext, ciphertext_len, 0);
 
   return 0;
 }
@@ -55,18 +56,25 @@ int Sender_Agent::send_buffer() {
 // add functionality for directories later
 
 int Sender_Agent::init_send(
+    std::string &file_name,
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
   std::cerr << "started init_send\n";
+  int filename_send_stat =
+      send(this->CA->get_socket(), file_name.data(), file_name.size() + 1,
+           0); // need to plus one here because the null byte is part of the
+               // file nameee
   int header_send_stat =
       send(this->CA->get_socket(), header,
            crypto_secretstream_xchacha20poly1305_HEADERBYTES, 0);
   int salt_send_stat =
       send(this->CA->get_socket(), salt, crypto_pwhash_SALTBYTES, 0);
 
-  std::cerr << header_send_stat << "\n";
-  std::cerr << salt_send_stat << "\n";
+  std::cerr << "filename stat " << filename_send_stat << "\n";
+  std::cerr << "header stat " << header_send_stat << "\n";
+  std::cerr << "salt stat " << salt_send_stat << "\n";
+
   return 0;
 }
 
@@ -94,7 +102,7 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   std::cerr << "this->key " << this->key << "\n";
 
-  int init_stat = init_send(header, this->salt);
+  int init_stat = init_send(file_name, header, this->salt);
 
   std::cerr << "past init_send\n";
 
@@ -125,9 +133,6 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
         &state, this->buffer, &ciphertext_len, message_buffer,
         message_buffer_len, NULL, 0,
         tag); // encrypt it straight into the buffer
-
-    // send_size and send_buffer should be modified to use the session
-    // encryption
 
     // int send_stat = this->send_buffer(); //this func needs major fixing
     //
