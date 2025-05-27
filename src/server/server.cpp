@@ -85,7 +85,7 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
   // Client_Info> zombie_clients;
   while (server_alive) {
     if (zombie_clients.size() < MAX_ZOMBIE_CONNS) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      std::this_thread::sleep_for(std::chrono::seconds(2));
       continue;
     }
     std::cerr << "cleanup intermittent called\n";
@@ -98,7 +98,7 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
     zombie_clients.clear();
 
     zombie_lock.unlock();
-    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cerr << "exited cleanup_intermittent\n";
   }
 }
@@ -292,7 +292,7 @@ void logger(std::atomic<bool> &server_alive) {
     std::cerr << "ZOMBIE CLIENTS =>" << zombie_clients.size() << "\n";
     print_conns(zombie_clients);
     print_border_top();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::seconds(4));
   }
 }
 
@@ -303,38 +303,30 @@ template <typename T> int get_stream_item_size(int client_sock, T *size) {
 int init_read(int client_sock, std::string &file_name,
               unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
 
-  unsigned long long header_nonce_size;
-  get_stream_item_size(client_sock, &header_nonce_size);
+  unsigned long long decrypted_file_name_length;
+  SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
+  file_name_wrap.unwrap(server_rx, file_name_wrap.get_nonce(),
+                        reinterpret_cast<unsigned char *>(file_name.data()),
+                        &decrypted_file_name_length);
 
-  unsigned long long encrypted_header_size;
-  get_stream_item_size(client_sock, &encrypted_header_size);
-
-  unsigned char header_nonce[header_nonce_size];
-  unsigned char encrypted_header[encrypted_header_size];
-
-  ssize_t encrypted_header_bytes_read =
-      recv(client_sock, encrypted_header, encrypted_header_size,
-           0); // in the clear
+  std::cerr << "decrypted file_name length\n"
+            << decrypted_file_name_length << "\n";
 
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  unsigned long long decrypted_header_length;
+  SessionEncWrapper header_wrap = SessionEncWrapper(client_sock);
+  header_wrap.unwrap(server_rx, header_wrap.get_nonce(), header,
+                     &decrypted_header_length);
 
-  SessionEncWrapper encrypted_header_burrito =
-      SessionEncWrapper(encrypted_header, encrypted_header_size);
+  std::cerr << "decrypted header length\n" << decrypted_header_length << "\n";
 
-  // rinse and repeat
+  unsigned char salt[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  SessionEncWrapper salt_wrap = SessionEncWrapper(client_sock);
+  unsigned long long decrypted_salt_length;
+  salt_wrap.unwrap(server_rx, salt_wrap.get_nonce(), header,
+                   &decrypted_salt_length);
 
-  // unsigned char salt_buf[crypto_pwhash_SALTBYTES];
-
-  // header is 24 bytes, salt is 16
-
-  // if (header_bytes <= 0) {
-  //   std::cerr << "header_bytes was less than or equal to 0";
-  //   return 1;
-  // }
-  // if (salt_bytes <= 0) {
-  //   std::cerr << "salt_bytes was less than or equal to 0";
-  //   return 2;
-  // }
+  std::cerr << "decrypted salt length\n" << decrypted_salt_length << "\n";
 
   return 0;
 }
@@ -346,22 +338,26 @@ int WTFS_Handler__Server(int client_sock,
 
   std::string file_name;
 
+  std::cerr << "prior to init_read\n";
   init_read(client_sock, file_name, server_rx);
 
-  std::ofstream file(file_name, std::ios::binary);
+  std::cerr << "debug end\n";
 
-  unsigned char read_buf[chunk_size];
-  size_t bytes_to_read;
-  size_t read_bytes;
-
-  do {
-    bytes_to_read = recv(client_sock, &bytes_to_read, sizeof(bytes_to_read), 0);
-    read_bytes = recv(client_sock, read_buf, chunk_size, 0);
-    // obviously gonna have to write the buffer after the recv to a file on the
-    // server. need to figure out how to structure the file system.
-    std::cerr << "read_bytes is " << read_bytes << "\n";
-    size_t written_ack = send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
-  } while (bytes_to_read != 0);
+  // std::ofstream file(file_name, std::ios::binary);
+  //
+  // unsigned char read_buf[chunk_size];
+  // size_t bytes_to_read;
+  // size_t read_bytes;
+  //
+  // do {
+  //   bytes_to_read = recv(client_sock, &bytes_to_read, sizeof(bytes_to_read),
+  //   0); read_bytes = recv(client_sock, read_buf, chunk_size, 0);
+  //   // obviously gonna have to write the buffer after the recv to a file on
+  //   the
+  //   // server. need to figure out how to structure the file system.
+  //   std::cerr << "read_bytes is " << read_bytes << "\n";
+  //   size_t written_ack = send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
+  // } while (bytes_to_read != 0);
 
   return 0;
 }

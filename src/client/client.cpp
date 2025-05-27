@@ -1,5 +1,5 @@
-#include "authed_entry/authed_entry.h"
 #include "../encryption_utils/encryption_utils.h"
+#include "authed_entry/authed_entry.h"
 #include <array>
 #include <cassert>
 #include <cstdio>
@@ -109,8 +109,6 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   unsigned char username_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned char password_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
-
-
   if (encrypt_stream_buffer(client_tx, username_nonce,
                             reinterpret_cast<unsigned char *>(username.data()),
                             username.length() + 1, username_ciphertext,
@@ -205,9 +203,9 @@ int WTFS_Handler(Comms_Agent *CA, int client_sock,
   randombytes_buf(
       salt,
       sizeof salt); // this salt is for encryption NOT logging in. for logging
-                    // in, the salt is stored with the hash on the server. user
-                    // supplies password which is combined with salt to create
-                    // hash and if it matches they are in
+                    // in, the salt is stored with the hash on the server in the
+                    // argon format. user supplies password which is combined
+                    // with salt to create hash and if it matches they are in
 
   std::cout << "made salt, creating key" << std::endl;
 
@@ -224,6 +222,7 @@ int WTFS_Handler(Comms_Agent *CA, int client_sock,
   sodium_memzero(pswd_tmp.data(), pswd_tmp.size());
 
   s.set_key(key);
+  s.set_salt(salt);
 
   std::cout << "set key!" << std::endl;
 

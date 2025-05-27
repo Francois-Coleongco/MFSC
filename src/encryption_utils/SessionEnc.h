@@ -5,6 +5,7 @@
 #include <sodium/crypto_kx.h>
 #include <sodium/randombytes.h>
 
+
 class SessionEncWrapper {
   // data under two layers of encryption. first by file encryption means, and
   // the next by session
@@ -13,12 +14,9 @@ class SessionEncWrapper {
   unsigned long long session_encrypted_data_length;
 
 public:
-  unsigned char *get_enc_data();
   unsigned char *get_nonce();
-  unsigned long long &get_enc_data_length();
 
-  SessionEncWrapper(unsigned char *data,
-                    unsigned long long data_length); // for readers
+  SessionEncWrapper(int client_sock); // for readers
   SessionEncWrapper(
       unsigned char *data, unsigned long long data_length,
       unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]); // for writers

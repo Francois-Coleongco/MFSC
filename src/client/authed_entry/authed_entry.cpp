@@ -101,45 +101,52 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
   unsigned char
       header[crypto_secretstream_xchacha20poly1305_HEADERBYTES]; // 24 bytes
 
-  crypto_secretstream_xchacha20poly1305_init_push(&state, header, this->key);
+  crypto_secretstream_xchacha20poly1305_init_push(
+      &state, header,
+      this->key); //  the salt used to create this key needs to be saved on the
+                  //  database. this is to be combined with the user's password
+                  //  to recreate this exact key which is what's needed for
+                  //  decryption
 
   std::cerr << "this->key " << this->key << "\n";
 
   int init_stat = init_send(file_name, header, this->salt);
 
-  std::cerr << "past init_send\n";
+  std::cerr << "debug end client\n";
 
-  unsigned char message_buffer[chunk_size];
-
-  int tag = 0;
-
-  do {
-
-    std::cout << "encrypting a chunk wee woo" << std::endl;
-
-    file.read(reinterpret_cast<char *>(message_buffer), chunk_size);
-
-    unsigned long long message_buffer_len = file.gcount();
-
-    std::cerr << "read message_buffer_len " << message_buffer_len << "\n";
-
-    unsigned long long ciphertext_len =
-        crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
-
-    this->size = ciphertext_len;
-
-    tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
-
-    std::cerr << "tag is " << tag << "\n";
-
-    crypto_secretstream_xchacha20poly1305_push(
-        &state, this->buffer, &ciphertext_len, message_buffer,
-        message_buffer_len, NULL, 0,
-        tag); // encrypt it straight into the buffer
-
-    int send_stat = this->send_buffer();
-
-  } while (!file.eof());
+  // std::cerr << "past init_send\n";
+  //
+  // unsigned char message_buffer[chunk_size];
+  //
+  // int tag = 0;
+  //
+  // do {
+  //
+  //   std::cout << "encrypting a chunk wee woo" << std::endl;
+  //
+  //   file.read(reinterpret_cast<char *>(message_buffer), chunk_size);
+  //
+  //   unsigned long long message_buffer_len = file.gcount();
+  //
+  //   std::cerr << "read message_buffer_len " << message_buffer_len << "\n";
+  //
+  //   unsigned long long ciphertext_len =
+  //       crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
+  //
+  //   this->size = ciphertext_len;
+  //
+  //   tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
+  //
+  //   std::cerr << "tag is " << tag << "\n";
+  //
+  //   crypto_secretstream_xchacha20poly1305_push(
+  //       &state, this->buffer, &ciphertext_len, message_buffer,
+  //       message_buffer_len, NULL, 0,
+  //       tag); // encrypt it straight into the buffer
+  //
+  //   int send_stat = this->send_buffer();
+  //
+  // } while (!file.eof());
 
   return 0;
 }

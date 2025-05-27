@@ -4,12 +4,6 @@
 #include <sodium/crypto_kx.h>
 #include <sodium/utils.h>
 
-enum STREAM_GRAB_TYPE {
-  NONCE,
-  LENGTH,
-  DATA,
-};
-
 SessionEncWrapper::SessionEncWrapper(
     unsigned char *data, unsigned long long data_length,
     unsigned char client_tx[crypto_kx_SESSIONKEYBYTES])
@@ -22,17 +16,14 @@ SessionEncWrapper::SessionEncWrapper(
                         &this->session_encrypted_data_length);
 };
 
-SessionEncWrapper::SessionEncWrapper(int client_sock,
-                                     STREAM_GRAB_TYPE grab_type) {
-  if (grab_type == NONCE) {
-    recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-  } else if (grab_type == LENGTH) {
-    recv(client_sock, &this->session_encrypted_data_length,
-         sizeof(this->session_encrypted_data_length), 0);
-  } else if (grab_type == DATA) {
-    recv(client_sock, this->session_encrypted_data,
-         this->session_encrypted_data_length, 0);
-  }
+SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
+  std::cerr << "started reading construction\n";
+  recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
+  recv(client_sock, &this->session_encrypted_data_length,
+       sizeof(this->session_encrypted_data_length), 0);
+  recv(client_sock, this->session_encrypted_data,
+       this->session_encrypted_data_length, 0);
+  std::cerr << "finished reading construction\n";
 };
 
 int SessionEncWrapper::unwrap(
@@ -72,3 +63,5 @@ int SessionEncWrapper::send_data_length(int client_sock) {
   return send(client_sock, &this->session_encrypted_data_length,
               sizeof(this->session_encrypted_data_length), 0);
 }
+
+unsigned char *SessionEncWrapper::get_nonce() { return this->nonce; }
