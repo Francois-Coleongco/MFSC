@@ -37,7 +37,7 @@ class Sender_Agent {
 
   unsigned char
       buffer[chunk_size + crypto_secretstream_xchacha20poly1305_ABYTES];
-  size_t
+ unsigned long long 
       size; // the size here refers to the amount of the buffer that is filled
   unsigned char key[crypto_box_SEEDBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];

@@ -1,6 +1,7 @@
 // everything in this file contains resources for the server after a user is
 // authenticated.
 #include "authed_entry.h"
+#include "../../encryption_utils/SessionEnc.h"
 #include "../../encryption_utils/encryption_utils.h"
 #include <cstring>
 #include <fstream>
@@ -34,20 +35,12 @@ unsigned char *Comms_Agent::get_client_rx() { return this->client_rx; }
 
 int Sender_Agent::send_buffer() {
   // just sends the buffer
-  size_t transmission_size = this->size + crypto_aead_chacha20poly1305_ABYTES;
-
-  unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
-  unsigned char ciphertext[transmission_size];
-  unsigned long long ciphertext_len;
-
-  encrypt_stream_buffer(this->CA->get_client_tx(), nonce, this->buffer,
-                        this->size, ciphertext, &ciphertext_len);
-
-  int bytes_to_send_stat =
-      send(this->CA->get_socket(), &transmission_size, sizeof(transmission_size),
-           0); // need to send this using the encrypt_stream_buffer func as well
-  int buffer_bytes_stat =
-      send(this->CA->get_socket(), ciphertext, ciphertext_len, 0);
+  SessionEncWrapper buf_wrap =
+      SessionEncWrapper(this->buffer, this->size, this->CA->get_client_tx());
+  int client_sock = this->CA->get_socket();
+  buf_wrap.send_nonce(client_sock);
+  buf_wrap.send_data_length(client_sock);
+  buf_wrap.send_data(client_sock);
 
   return 0;
 }
@@ -61,19 +54,29 @@ int Sender_Agent::init_send(
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
   std::cerr << "started init_send\n";
-  int filename_send_stat =
-      send(this->CA->get_socket(), file_name.data(), file_name.size() + 1,
-           0); // need to plus one here because the null byte is part of the
-               // file nameee
-  int header_send_stat =
-      send(this->CA->get_socket(), header,
-           crypto_secretstream_xchacha20poly1305_HEADERBYTES, 0);
-  int salt_send_stat =
-      send(this->CA->get_socket(), salt, crypto_pwhash_SALTBYTES, 0);
 
-  std::cerr << "filename stat " << filename_send_stat << "\n";
-  std::cerr << "header stat " << header_send_stat << "\n";
-  std::cerr << "salt stat " << salt_send_stat << "\n";
+  int client_sock = this->CA->get_socket();
+  unsigned char *client_tx = this->CA->get_client_tx();
+
+  SessionEncWrapper file_name_wrap =
+      SessionEncWrapper(reinterpret_cast<unsigned char *>(file_name.data()),
+                        file_name.length(), client_tx);
+  SessionEncWrapper header_wrap = SessionEncWrapper(
+      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx);
+  SessionEncWrapper salt_wrap =
+      SessionEncWrapper(header, crypto_pwhash_SALTBYTES, client_tx);
+
+  file_name_wrap.send_nonce(client_sock);
+  file_name_wrap.send_data_length(client_sock);
+  file_name_wrap.send_data(client_sock);
+
+  header_wrap.send_nonce(client_sock);
+  header_wrap.send_data_length(client_sock);
+  header_wrap.send_data(client_sock);
+
+  salt_wrap.send_nonce(client_sock);
+  salt_wrap.send_data_length(client_sock);
+  salt_wrap.send_data(client_sock);
 
   return 0;
 }
@@ -134,8 +137,8 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
         message_buffer_len, NULL, 0,
         tag); // encrypt it straight into the buffer
 
-    // int send_stat = this->send_buffer(); //this func needs major fixing
-    //
+    int send_stat = this->send_buffer();
+
   } while (!file.eof());
 
   return 0;

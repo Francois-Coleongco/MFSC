@@ -109,6 +109,8 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   unsigned char username_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned char password_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
+
+
   if (encrypt_stream_buffer(client_tx, username_nonce,
                             reinterpret_cast<unsigned char *>(username.data()),
                             username.length() + 1, username_ciphertext,

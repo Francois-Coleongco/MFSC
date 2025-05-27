@@ -2,5 +2,6 @@
 SRC_DIR=$HOME/vault/MFSC/src/
 BUILD_DIR=$HOME/vault/MFSC/test_build/
 
-g++ $SRC_DIR/server/server.cpp $SRC_DIR/server/auth/auth.cpp -lsodium -lsqlite3 -o $BUILD_DIR/server
+
+g++ $SRC_DIR/server/server.cpp $SRC_DIR/server/auth/auth.cpp $SRC_DIR/encryption_utils/encryption_utils.cpp $SRC_DIR/encryption_utils/SessionEnc.cpp -lsodium -lsqlite3 -o $BUILD_DIR/server
 g++ $SRC_DIR/client/client.cpp $SRC_DIR/client/authed_entry/authed_entry.cpp $SRC_DIR/encryption_utils/encryption_utils.cpp -lsodium -o $BUILD_DIR/client

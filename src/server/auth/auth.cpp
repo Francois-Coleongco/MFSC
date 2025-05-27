@@ -107,7 +107,8 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password[],
     /* out of memory */
   }
 
-  std::cerr << hash << "\n";
+  std::cerr << "db  val: " << DB << "\n";
+
 
   if (sqlite3_prepare_v2(DB, retrieve_hashed_pswd, -1, &stmt, nullptr) !=
       SQLITE_OK) {

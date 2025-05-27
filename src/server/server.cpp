@@ -1,3 +1,5 @@
+#include "../encryption_utils/SessionEnc.h"
+#include "../encryption_utils/encryption_utils.h"
 #include "auth/auth.h"
 #include <array>
 #include <atomic>
@@ -16,6 +18,7 @@
 #include <sodium/utils.h>
 #include <sqlite3.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
@@ -177,16 +180,10 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
   int username_nonce_bytes = recv(client_sock, username_nonce,
                                   crypto_aead_chacha20poly1305_NPUBBYTES, 0);
 
-  std::cerr << "received username nonce" << std::endl;
-
   int password_nonce_bytes = recv(client_sock, password_nonce,
                                   crypto_aead_chacha20poly1305_NPUBBYTES, 0);
 
-  std::cerr << "received password nonce" << std::endl;
-
   int username_bytes_read = recv(client_sock, &username_buffer, chunk_size, 0);
-  std::cerr << "read username YIPPIEEE this was how many bytes it was: "
-            << username_bytes_read << std::endl;
 
   send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
 
@@ -299,37 +296,57 @@ void logger(std::atomic<bool> &server_alive) {
   }
 }
 
-int init_read(int client_sock, std::string &file_name) {
+template <typename T> int get_stream_item_size(int client_sock, T *size) {
+  return recv(client_sock, size, sizeof(size), 0);
+}
 
-  recv(client_sock, file_name.data(), 255, 0);
+int init_read(int client_sock, std::string &file_name,
+              unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
 
-  unsigned char header_buf[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
-  unsigned char salt_buf[crypto_pwhash_SALTBYTES];
+  unsigned long long header_nonce_size;
+  get_stream_item_size(client_sock, &header_nonce_size);
+
+  unsigned long long encrypted_header_size;
+  get_stream_item_size(client_sock, &encrypted_header_size);
+
+  unsigned char header_nonce[header_nonce_size];
+  unsigned char encrypted_header[encrypted_header_size];
+
+  ssize_t encrypted_header_bytes_read =
+      recv(client_sock, encrypted_header, encrypted_header_size,
+           0); // in the clear
+
+  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+
+  SessionEncWrapper encrypted_header_burrito =
+      SessionEncWrapper(encrypted_header, encrypted_header_size);
+
+  // rinse and repeat
+
+  // unsigned char salt_buf[crypto_pwhash_SALTBYTES];
+
   // header is 24 bytes, salt is 16
-  size_t header_bytes =
-      recv(client_sock, header_buf,
-           crypto_secretstream_xchacha20poly1305_HEADERBYTES, 0);
-  size_t salt_bytes = recv(client_sock, salt_buf, crypto_pwhash_SALTBYTES, 0);
 
-  if (header_bytes <= 0) {
-    std::cerr << "header_bytes was less than or equal to 0";
-    return 1;
-  }
-  if (salt_bytes <= 0) {
-    std::cerr << "salt_bytes was less than or equal to 0";
-    return 2;
-  }
+  // if (header_bytes <= 0) {
+  //   std::cerr << "header_bytes was less than or equal to 0";
+  //   return 1;
+  // }
+  // if (salt_bytes <= 0) {
+  //   std::cerr << "salt_bytes was less than or equal to 0";
+  //   return 2;
+  // }
 
   return 0;
 }
 
-int WTFS_Handler__Server(int client_sock) {
+int WTFS_Handler__Server(int client_sock,
+                         unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
   // when doing multiple files and directories, this function could be called in
   // a separate thread perhaps for each file
 
   std::string file_name;
 
-  init_read(client_sock, file_name);
+  init_read(client_sock, file_name, server_rx);
 
   std::ofstream file(file_name, std::ios::binary);
 
@@ -419,7 +436,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   if (intent == READ_FROM_FILESYSTEM) {
     // to be implemented
   } else if (intent == WRITE_TO_FILESYSTEM) {
-    WTFS_Handler__Server(client_sock);
+    WTFS_Handler__Server(client_sock, server_rx);
   }
 
   zombify(client_sock);
