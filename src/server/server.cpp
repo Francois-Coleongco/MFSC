@@ -305,17 +305,17 @@ int init_read(int client_sock, std::string &file_name,
 
   unsigned long long decrypted_file_name_length;
   SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
-  file_name_wrap.unwrap(server_rx, file_name_wrap.get_nonce(),
+  file_name_wrap.unwrap(server_rx,
                         reinterpret_cast<unsigned char *>(file_name.data()),
                         &decrypted_file_name_length);
 
   std::cerr << "decrypted file_name length\n"
-            << decrypted_file_name_length << "\n";
+            << decrypted_file_name_length << "\n"; // just truncate the file name when you actually get around to using it for i/o
 
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned long long decrypted_header_length;
   SessionEncWrapper header_wrap = SessionEncWrapper(client_sock);
-  header_wrap.unwrap(server_rx, header_wrap.get_nonce(), header,
+  header_wrap.unwrap(server_rx, header,
                      &decrypted_header_length);
 
   std::cerr << "decrypted header length\n" << decrypted_header_length << "\n";
@@ -323,7 +323,7 @@ int init_read(int client_sock, std::string &file_name,
   unsigned char salt[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   SessionEncWrapper salt_wrap = SessionEncWrapper(client_sock);
   unsigned long long decrypted_salt_length;
-  salt_wrap.unwrap(server_rx, salt_wrap.get_nonce(), header,
+  salt_wrap.unwrap(server_rx, header,
                    &decrypted_salt_length);
 
   std::cerr << "decrypted salt length\n" << decrypted_salt_length << "\n";

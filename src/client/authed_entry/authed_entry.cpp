@@ -2,7 +2,6 @@
 // authenticated.
 #include "authed_entry.h"
 #include "../../encryption_utils/SessionEnc.h"
-#include "../../encryption_utils/encryption_utils.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -49,31 +48,37 @@ int Sender_Agent::send_buffer() {
 // add functionality for directories later
 
 int Sender_Agent::init_send(
-    std::string &file_name,
+    unsigned char file_name[255], unsigned long long file_name_length,
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
   std::cerr << "started init_send\n";
 
+  std::cerr << "this is filename before encryption: " << file_name;
+  std::cerr << "this is header before encryption: " << header;
+  std::cerr << "this is salt before encryption: " << salt;
+
   int client_sock = this->CA->get_socket();
   unsigned char *client_tx = this->CA->get_client_tx();
 
-  SessionEncWrapper file_name_wrap =
-      SessionEncWrapper(reinterpret_cast<unsigned char *>(file_name.data()),
-                        file_name.length(), client_tx);
-  SessionEncWrapper header_wrap = SessionEncWrapper(
-      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx);
-  SessionEncWrapper salt_wrap =
-      SessionEncWrapper(header, crypto_pwhash_SALTBYTES, client_tx);
 
-  file_name_wrap.send_nonce(client_sock);
+  SessionEncWrapper file_name_wrap =
+      SessionEncWrapper(file_name,
+                        file_name_length, client_tx);
+  file_name_wrap.send_nonce(
+      client_sock); // in the future make this access socket itself via
+                    // this->CA->get_socket() internally
   file_name_wrap.send_data_length(client_sock);
   file_name_wrap.send_data(client_sock);
 
+  SessionEncWrapper header_wrap = SessionEncWrapper(
+      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx);
   header_wrap.send_nonce(client_sock);
   header_wrap.send_data_length(client_sock);
   header_wrap.send_data(client_sock);
 
+  SessionEncWrapper salt_wrap =
+      SessionEncWrapper(salt, crypto_pwhash_SALTBYTES, client_tx);
   salt_wrap.send_nonce(client_sock);
   salt_wrap.send_data_length(client_sock);
   salt_wrap.send_data(client_sock);
@@ -103,14 +108,17 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   crypto_secretstream_xchacha20poly1305_init_push(
       &state, header,
-      this->key); //  the salt used to create this key needs to be saved on the
-                  //  database. this is to be combined with the user's password
+      this->key); //  the salt used to create this key needs to be saved with
+                  //  the encrypted file. this is to be combined with the user's password
                   //  to recreate this exact key which is what's needed for
                   //  decryption
 
   std::cerr << "this->key " << this->key << "\n";
 
-  int init_stat = init_send(file_name, header, this->salt);
+  std::cerr << "this is header before INIT SEND " << header << "\n";
+  std::cerr << "this is salt before INIT SEND " << this->salt << "\n";
+
+  int init_stat = init_send(reinterpret_cast<unsigned char *>(file_name.data()), file_name.length(), header, this->salt);
 
   std::cerr << "debug end client\n";
 
