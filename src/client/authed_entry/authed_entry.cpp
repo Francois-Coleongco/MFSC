@@ -122,39 +122,37 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   std::cerr << "debug end client\n";
 
-  // std::cerr << "past init_send\n";
-  //
-  // unsigned char message_buffer[chunk_size];
-  //
-  // int tag = 0;
-  //
-  // do {
-  //
-  //   std::cout << "encrypting a chunk wee woo" << std::endl;
-  //
-  //   file.read(reinterpret_cast<char *>(message_buffer), chunk_size);
-  //
-  //   unsigned long long message_buffer_len = file.gcount();
-  //
-  //   std::cerr << "read message_buffer_len " << message_buffer_len << "\n";
-  //
-  //   unsigned long long ciphertext_len =
-  //       crypto_secretstream_xchacha20poly1305_ABYTES + message_buffer_len;
-  //
-  //   this->size = ciphertext_len;
-  //
-  //   tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
-  //
-  //   std::cerr << "tag is " << tag << "\n";
-  //
-  //   crypto_secretstream_xchacha20poly1305_push(
-  //       &state, this->buffer, &ciphertext_len, message_buffer,
-  //       message_buffer_len, NULL, 0,
-  //       tag); // encrypt it straight into the buffer
-  //
-  //   int send_stat = this->send_buffer();
-  //
-  // } while (!file.eof());
+  unsigned char file_chunk[chunk_size];
+  
+  int tag = 0;
+  
+  do {
+  
+    std::cout << "encrypting a chunk wee woo" << std::endl;
+  
+    file.read(reinterpret_cast<char *>(file_chunk), chunk_size);
+  
+    unsigned long long file_chunk_len = file.gcount();
+  
+    std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
+  
+    unsigned long long ciphertext_len =
+        crypto_secretstream_xchacha20poly1305_ABYTES + file_chunk_len;
+  
+    this->size = ciphertext_len;
+  
+    tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
+  
+    std::cerr << "tag is " << tag << "\n";
+  
+    crypto_secretstream_xchacha20poly1305_push(
+        &state, this->buffer, &ciphertext_len, file_chunk,
+        file_chunk_len, NULL, 0,
+        tag); // encrypt it straight into the buffer
+  
+    int send_stat = this->send_buffer();
+  
+  } while (!file.eof());
 
   return 0;
 }

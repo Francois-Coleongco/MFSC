@@ -10,11 +10,13 @@
 #include <cstring>
 #include <fstream>
 #include <functional>
+#include <ios>
 #include <iostream>
 #include <mutex>
 #include <netinet/in.h>
 #include <ostream>
 #include <sodium/crypto_kx.h>
+#include <sodium/crypto_pwhash.h>
 #include <sodium/utils.h>
 #include <sqlite3.h>
 #include <sys/socket.h>
@@ -296,12 +298,11 @@ void logger(std::atomic<bool> &server_alive) {
   }
 }
 
-template <typename T> int get_stream_item_size(int client_sock, T *size) {
-  return recv(client_sock, size, sizeof(size), 0);
-}
-
-int init_read(int client_sock, std::string &file_name,
-              unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
+int init_read(
+    int client_sock, std::string &file_name,
+    unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
+    unsigned char salt[crypto_pwhash_SALTBYTES],
+    unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
 
   unsigned long long decrypted_file_name_length;
   SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
@@ -310,21 +311,19 @@ int init_read(int client_sock, std::string &file_name,
                         &decrypted_file_name_length);
 
   std::cerr << "decrypted file_name length\n"
-            << decrypted_file_name_length << "\n"; // just truncate the file name when you actually get around to using it for i/o
+            << decrypted_file_name_length << "\n";
 
-  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  file_name.resize(255);
+
   unsigned long long decrypted_header_length;
   SessionEncWrapper header_wrap = SessionEncWrapper(client_sock);
-  header_wrap.unwrap(server_rx, header,
-                     &decrypted_header_length);
+  header_wrap.unwrap(server_rx, header, &decrypted_header_length);
 
   std::cerr << "decrypted header length\n" << decrypted_header_length << "\n";
 
-  unsigned char salt[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   SessionEncWrapper salt_wrap = SessionEncWrapper(client_sock);
   unsigned long long decrypted_salt_length;
-  salt_wrap.unwrap(server_rx, header,
-                   &decrypted_salt_length);
+  salt_wrap.unwrap(server_rx, header, &decrypted_salt_length);
 
   std::cerr << "decrypted salt length\n" << decrypted_salt_length << "\n";
 
@@ -337,27 +336,29 @@ int WTFS_Handler__Server(int client_sock,
   // a separate thread perhaps for each file
 
   std::string file_name;
+  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  unsigned char salt[crypto_pwhash_SALTBYTES];
 
   std::cerr << "prior to init_read\n";
-  init_read(client_sock, file_name, server_rx);
+
+  init_read(client_sock, file_name, header, salt, server_rx);
+
+  std::ofstream file(file_name, std::ios::binary);
+
+  file.write(reinterpret_cast<const char *>(header),
+             crypto_secretstream_xchacha20poly1305_HEADERBYTES);
+  file.write(reinterpret_cast<const char *>(salt), crypto_pwhash_SALTBYTES);
 
   std::cerr << "debug end\n";
 
-  // std::ofstream file(file_name, std::ios::binary);
-  //
-  // unsigned char read_buf[chunk_size];
-  // size_t bytes_to_read;
-  // size_t read_bytes;
-  //
-  // do {
-  //   bytes_to_read = recv(client_sock, &bytes_to_read, sizeof(bytes_to_read),
-  //   0); read_bytes = recv(client_sock, read_buf, chunk_size, 0);
-  //   // obviously gonna have to write the buffer after the recv to a file on
-  //   the
-  //   // server. need to figure out how to structure the file system.
-  //   std::cerr << "read_bytes is " << read_bytes << "\n";
-  //   size_t written_ack = send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
-  // } while (bytes_to_read != 0);
+  unsigned char read_buf[stream_chunk_size];
+  size_t bytes_to_read;
+  size_t read_bytes;
+
+  do {
+    SessionEncWrapper encrypted_data = SessionEncWrapper(client_sock);
+    /// need to write the stuff to the file, aka MAKE A NEW METHOD THAT TAKES A FILE HANDLE
+  } while (bytes_to_read != 0);
 
   return 0;
 }

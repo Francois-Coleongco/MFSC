@@ -222,7 +222,7 @@ int WTFS_Handler(Comms_Agent *CA, int client_sock,
   sodium_memzero(pswd_tmp.data(), pswd_tmp.size());
 
   s.set_key(key);
-  s.set_salt(salt);
+  s.set_salt(salt); // salt used to make key should be part of the prefix of encrypted file on server fs
 
   std::cout << "set key!" << std::endl;
 
