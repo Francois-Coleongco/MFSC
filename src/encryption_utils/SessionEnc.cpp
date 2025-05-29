@@ -33,10 +33,6 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   // underlying data is encrypted aka was file encrypted or something of the
   // sort, it is the caller's responsibility to decrypt that.
 
-  std::cerr << "what is the NONCE received? " << this->nonce << "\n";
-  std::cerr << "what is the length received? "
-            << this->session_encrypted_data_length << "\n";
-
   if (crypto_aead_chacha20poly1305_decrypt(decrypted_data, decrypted_data_len,
                                            NULL, this->session_encrypted_data,
                                            this->session_encrypted_data_length,
@@ -54,10 +50,6 @@ SessionEncWrapper::~SessionEncWrapper() {
 }
 
 int SessionEncWrapper::send_data(int client_sock) {
-  std::cerr << "NONCE after encryption " << this->nonce;
-  std::cerr << "LENGTH after encryption "
-            << this->session_encrypted_data_length;
-  std::cerr << "DATA after encryption " << this->session_encrypted_data;
   return send(client_sock, this->session_encrypted_data,
               this->session_encrypted_data_length, 0);
 }
