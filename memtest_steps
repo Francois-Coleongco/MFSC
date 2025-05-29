@@ -1,0 +1,10 @@
+start valgrind and type to server stdin using the valgrind terminal
+
+```valgrind --vgdb=yes --vgdb-error=0 --leak-check=full ./server 2> valgrind_out/name_of_output.memtest```
+
+start gdb in another terminal
+```gdb ./server
+target remote | vgdb
+```
+if it traps, use `continue`
+
