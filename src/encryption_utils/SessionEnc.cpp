@@ -15,9 +15,12 @@ SessionEncWrapper::SessionEncWrapper(
 
 SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
   std::cerr << "started reading construction\n";
-  recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
   recv(client_sock, &this->session_encrypted_data_length,
        sizeof(this->session_encrypted_data_length), 0);
+  if (session_encrypted_data_length == 0) {
+    return;
+  }
+  recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
   recv(client_sock, this->session_encrypted_data,
        this->session_encrypted_data_length, 0);
   std::cerr << "finished reading construction\n";
@@ -73,3 +76,18 @@ int SessionEncWrapper::send_data_length(int client_sock) {
 }
 
 unsigned char *SessionEncWrapper::get_nonce() { return this->nonce; }
+
+unsigned long long SessionEncWrapper::get_data_length() {
+  return this->session_encrypted_data_length;
+};
+
+int SessionEncWrapper::write_to_file(std::ofstream &file) {
+  file.write(reinterpret_cast<const char *>(this->session_encrypted_data),
+             this->session_encrypted_data_length);
+
+  if (!file) {
+    return 1;
+  }
+
+  return 0;
+};

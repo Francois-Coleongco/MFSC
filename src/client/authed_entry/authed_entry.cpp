@@ -37,8 +37,9 @@ int Sender_Agent::send_buffer() {
   SessionEncWrapper buf_wrap =
       SessionEncWrapper(this->buffer, this->size, this->CA->get_client_tx());
   int client_sock = this->CA->get_socket();
-  buf_wrap.send_nonce(client_sock);
-  buf_wrap.send_data_length(client_sock);
+  buf_wrap.send_data_length(client_sock); // swapping these
+  buf_wrap.send_nonce(
+      client_sock); // around because i need to return if data lenght is 0
   buf_wrap.send_data(client_sock);
 
   return 0;
@@ -61,26 +62,24 @@ int Sender_Agent::init_send(
   int client_sock = this->CA->get_socket();
   unsigned char *client_tx = this->CA->get_client_tx();
 
-
   SessionEncWrapper file_name_wrap =
-      SessionEncWrapper(file_name,
-                        file_name_length, client_tx);
+      SessionEncWrapper(file_name, file_name_length, client_tx);
+  file_name_wrap.send_data_length(client_sock);
   file_name_wrap.send_nonce(
       client_sock); // in the future make this access socket itself via
                     // this->CA->get_socket() internally
-  file_name_wrap.send_data_length(client_sock);
   file_name_wrap.send_data(client_sock);
 
   SessionEncWrapper header_wrap = SessionEncWrapper(
       header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx);
-  header_wrap.send_nonce(client_sock);
   header_wrap.send_data_length(client_sock);
+  header_wrap.send_nonce(client_sock);
   header_wrap.send_data(client_sock);
 
   SessionEncWrapper salt_wrap =
       SessionEncWrapper(salt, crypto_pwhash_SALTBYTES, client_tx);
-  salt_wrap.send_nonce(client_sock);
   salt_wrap.send_data_length(client_sock);
+  salt_wrap.send_nonce(client_sock);
   salt_wrap.send_data(client_sock);
 
   return 0;
@@ -109,50 +108,52 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
   crypto_secretstream_xchacha20poly1305_init_push(
       &state, header,
       this->key); //  the salt used to create this key needs to be saved with
-                  //  the encrypted file. this is to be combined with the user's password
-                  //  to recreate this exact key which is what's needed for
-                  //  decryption
+                  //  the encrypted file. this is to be combined with the user's
+                  //  password to recreate this exact key which is what's needed
+                  //  for decryption
 
   std::cerr << "this->key " << this->key << "\n";
 
   std::cerr << "this is header before INIT SEND " << header << "\n";
   std::cerr << "this is salt before INIT SEND " << this->salt << "\n";
 
-  int init_stat = init_send(reinterpret_cast<unsigned char *>(file_name.data()), file_name.length(), header, this->salt);
+  int init_stat = init_send(reinterpret_cast<unsigned char *>(file_name.data()),
+                            file_name.length(), header, this->salt);
 
   std::cerr << "debug end client\n";
 
   unsigned char file_chunk[chunk_size];
-  
+
   int tag = 0;
-  
+
   do {
-  
+
     std::cout << "encrypting a chunk wee woo" << std::endl;
-  
+
     file.read(reinterpret_cast<char *>(file_chunk), chunk_size);
-  
+
     unsigned long long file_chunk_len = file.gcount();
-  
+
     std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
-  
+
     unsigned long long ciphertext_len =
         crypto_secretstream_xchacha20poly1305_ABYTES + file_chunk_len;
-  
+
     this->size = ciphertext_len;
-  
+
     tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
-  
+
     std::cerr << "tag is " << tag << "\n";
-  
+
     crypto_secretstream_xchacha20poly1305_push(
-        &state, this->buffer, &ciphertext_len, file_chunk,
-        file_chunk_len, NULL, 0,
+        &state, this->buffer, &ciphertext_len, file_chunk, file_chunk_len, NULL,
+        0,
         tag); // encrypt it straight into the buffer
-  
+
     int send_stat = this->send_buffer();
-  
+
   } while (!file.eof());
+
 
   return 0;
 }

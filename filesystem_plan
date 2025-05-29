@@ -5,3 +5,7 @@ $HOME/MFSC_FILES/username/file
 when i start doing folders within folders or files within folders, things will be more complicated ofc.
 
 you need to use the mkdir function or something
+
+file structure:
+
+| header 24 bytes | salt 16 bytes | data ??? |

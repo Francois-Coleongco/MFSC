@@ -343,6 +343,8 @@ int WTFS_Handler__Server(int client_sock,
 
   init_read(client_sock, file_name, header, salt, server_rx);
 
+  file_name.append(".enc");
+
   std::ofstream file(file_name, std::ios::binary);
 
   file.write(reinterpret_cast<const char *>(header),
@@ -356,9 +358,16 @@ int WTFS_Handler__Server(int client_sock,
   size_t read_bytes;
 
   do {
-    SessionEncWrapper encrypted_data = SessionEncWrapper(client_sock);
-    /// need to write the stuff to the file, aka MAKE A NEW METHOD THAT TAKES A FILE HANDLE
+    SessionEncWrapper encrypted_data_wrap = SessionEncWrapper(client_sock);
+    if (encrypted_data_wrap.get_data_length() == 0) {
+      break; // we came across the last chunk already in the previous iteration
+    }
+
+    encrypted_data_wrap.write_to_file(file);
+
   } while (bytes_to_read != 0);
+
+  std::cerr << "returning 0 from the WTFS_Handler__Server\n";
 
   return 0;
 }
@@ -439,6 +448,16 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   zombify(client_sock);
 }
 
+void kill_server(std::atomic<bool> &server_alive) {
+  std::cout << "kill the server by typing (q)\n";
+  char switch_char;
+  std::cin >> switch_char;
+  if (switch_char == 'q') {
+    server_alive = false;
+  }
+  std::cout << "server kill switch activated\n";
+}
+
 int main() {
 
   std::atomic<bool> server_alive = true;
@@ -494,7 +513,7 @@ int main() {
   std::thread log_thread = std::thread(logger, std::ref(server_alive));
   std::thread cleanup_intermittent_thread =
       std::thread(cleanup_intermittent, std::ref(server_alive));
-  // std::thread kill_server_listener = std::thread(kill_server);
+  std::thread kill_server_listener = std::thread(kill_server, std::ref(server_alive));
 
   while (server_alive) {
 

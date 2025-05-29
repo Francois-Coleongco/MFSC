@@ -1,11 +1,11 @@
 #include "encryption_utils.h"
 #include <iostream>
+#include <fstream>
 #include <netinet/in.h>
 #include <sodium/crypto_aead_chacha20poly1305.h>
 #include <sodium/crypto_kx.h>
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sodium/randombytes.h>
-
 
 class SessionEncWrapper {
   // data under two layers of encryption. first by file encryption means, and
@@ -16,6 +16,7 @@ class SessionEncWrapper {
 
 public:
   unsigned char *get_nonce();
+  unsigned long long get_data_length();
 
   SessionEncWrapper(int client_sock); // for readers
   SessionEncWrapper(
@@ -32,4 +33,6 @@ public:
   int send_data_length(int client_sock);
   int send_nonce(int client_sock);
   int send_data(int client_sock);
+
+  int write_to_file(std::ofstream &file);
 };

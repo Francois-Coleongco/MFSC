@@ -49,13 +49,6 @@ int crypt_gen(int client_sock, unsigned char *client_pk,
 
   send(client_sock, client_pk, crypto_kx_PUBLICKEYBYTES, 0);
 
-  /* Prerequisite after this point: the server's public key must be known by the
-   * client */
-
-  /* Compute two shared keys using the server's public key and the client's
-     secret key. client_rx will be used by the client to receive data from the
-     server, client_tx will be used by the client to send data to the server. */
-
   unsigned char server_pk[crypto_kx_PUBLICKEYBYTES];
 
   int crypto_bytes_read =
@@ -222,7 +215,8 @@ int WTFS_Handler(Comms_Agent *CA, int client_sock,
   sodium_memzero(pswd_tmp.data(), pswd_tmp.size());
 
   s.set_key(key);
-  s.set_salt(salt); // salt used to make key should be part of the prefix of encrypted file on server fs
+  s.set_salt(salt); // salt used to make key should be part of the prefix of
+                    // encrypted file on server fs
 
   std::cout << "set key!" << std::endl;
 
