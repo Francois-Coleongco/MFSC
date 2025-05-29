@@ -7,7 +7,6 @@ I want to make my own cloud storage essentially via an encrypted file server on 
 ## dependencies:
 
 ubuntu/ubuntu based (sorry idk if these pkgs are on debian):
-
 ```
 sudo apt install sqlite3 libsqlite3-dev libsodium-dev
 ```
@@ -21,7 +20,7 @@ sudo dnf sqlite3 libsqlite3-dev libsodium-dev
 
 just default c++ 17 standard works
 
-must therefore build with respective linking (there is a build bash script that builds both the server and client ./build_atsic which builds it it into the ./test_build/ directory) i honestly had an acronym for atsic but i forgot what it meant so... whoops.
+must therefore build with respective linking (there is a build bash script that builds both the server and client ./create which builds it it into the ./test_build/ directory) i honestly had an acronym for atsic but i forgot what it meant so... whoops.
 
 ## todo:
 

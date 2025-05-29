@@ -1,5 +1,4 @@
-#include "../encryption_utils/SessionEnc.h"
-#include "../encryption_utils/encryption_utils.h"
+#include "./read_write_handlers/read_write_handlers.h"
 #include "auth/auth.h"
 #include <array>
 #include <atomic>
@@ -8,9 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fstream>
 #include <functional>
-#include <ios>
 #include <iostream>
 #include <mutex>
 #include <netinet/in.h>
@@ -25,7 +22,7 @@
 #include <unistd.h>
 #include <unordered_map>
 
-const size_t chunk_size = 4096;
+const size_t CHUNK_SIZE = 4096;
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
 const int MAX_ZOMBIE_CONNS = 1;
@@ -105,13 +102,28 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
   }
 }
 
-void clean_all() {
+void clean_all(std::thread &log_thread, std::thread &kill_server_listener,
+               std::thread &clean_intermittent_thread) {
+  std::cerr << "starting clean_all\n";
   // destroy the active clients and zombie clients
   std::lock_guard<std::mutex> client_lock(clients_mutex);
   std::lock_guard<std::mutex> zombie_lock(zombie_clients_mutex);
 
   iter_clean_live(clients);
   iter_clean_zombie(zombie_clients);
+
+  if (log_thread.joinable()) {
+    log_thread.join();
+    std::cerr << "completed log_thread\n";
+  }
+  if (kill_server_listener.joinable()) {
+    kill_server_listener.join();
+    std::cerr << "completed kill_server_listener\n";
+  }
+  if (clean_intermittent_thread.joinable()) {
+    clean_intermittent_thread.join();
+    std::cerr << "completed clean_intermittent_thread\n";
+  }
 }
 
 int crypt_gen(int client_sock, unsigned char *server_pk,
@@ -169,8 +181,8 @@ int crypt_gen(int client_sock, unsigned char *server_pk,
 
 int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 
-  std::array<char, chunk_size> username_buffer{0};
-  std::array<char, chunk_size> password_buffer{0};
+  std::array<char, CHUNK_SIZE> username_buffer{0};
+  std::array<char, CHUNK_SIZE> password_buffer{0};
 
   unsigned char username_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
@@ -185,11 +197,11 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
   int password_nonce_bytes = recv(client_sock, password_nonce,
                                   crypto_aead_chacha20poly1305_NPUBBYTES, 0);
 
-  int username_bytes_read = recv(client_sock, &username_buffer, chunk_size, 0);
+  int username_bytes_read = recv(client_sock, &username_buffer, CHUNK_SIZE, 0);
 
   send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
 
-  int password_bytes_read = recv(client_sock, &password_buffer, chunk_size, 0);
+  int password_bytes_read = recv(client_sock, &password_buffer, CHUNK_SIZE, 0);
   std::cerr << "read password YIPPIEEE this was how many bytes it was: "
             << password_bytes_read << std::endl;
   send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
@@ -249,7 +261,7 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
   // checks against the database using auth.h funcs
 }
 
-// void forward_to_all(std::array<char, chunk_size> buffer, int sender) {
+// void forward_to_all(std::array<char, CHUNK_SIZE> buffer, int sender) {
 //
 //   for (int client_sock : clients) {
 //
@@ -260,7 +272,7 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 //     std::cout << "trying to forward buffer to client_sock: " << client_sock
 //               << std::endl;
 //
-//     int bytes_sent = send(client_sock, buffer.data(), chunk_size, 0);
+//     int bytes_sent = send(client_sock, buffer.data(), CHUNK_SIZE, 0);
 //
 //     if (bytes_sent < 0) {
 //       std::cerr << "couldn't forward to this client: " << client_sock
@@ -298,80 +310,6 @@ void logger(std::atomic<bool> &server_alive) {
   }
 }
 
-int init_read(
-    int client_sock, std::string &file_name,
-    unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
-    unsigned char salt[crypto_pwhash_SALTBYTES],
-    unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
-
-  unsigned long long decrypted_file_name_length;
-  SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
-  file_name_wrap.unwrap(server_rx,
-                        reinterpret_cast<unsigned char *>(file_name.data()),
-                        &decrypted_file_name_length);
-
-  std::cerr << "decrypted file_name length\n"
-            << decrypted_file_name_length << "\n";
-
-  file_name.resize(255);
-
-  unsigned long long decrypted_header_length;
-  SessionEncWrapper header_wrap = SessionEncWrapper(client_sock);
-  header_wrap.unwrap(server_rx, header, &decrypted_header_length);
-
-  std::cerr << "decrypted header length\n" << decrypted_header_length << "\n";
-
-  SessionEncWrapper salt_wrap = SessionEncWrapper(client_sock);
-  unsigned long long decrypted_salt_length;
-  salt_wrap.unwrap(server_rx, header, &decrypted_salt_length);
-
-  std::cerr << "decrypted salt length\n" << decrypted_salt_length << "\n";
-
-  return 0;
-}
-
-int WTFS_Handler__Server(int client_sock,
-                         unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
-  // when doing multiple files and directories, this function could be called in
-  // a separate thread perhaps for each file
-
-  std::string file_name;
-  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
-  unsigned char salt[crypto_pwhash_SALTBYTES];
-
-  std::cerr << "prior to init_read\n";
-
-  init_read(client_sock, file_name, header, salt, server_rx);
-
-  file_name.append(".enc");
-
-  std::ofstream file(file_name, std::ios::binary);
-
-  file.write(reinterpret_cast<const char *>(header),
-             crypto_secretstream_xchacha20poly1305_HEADERBYTES);
-  file.write(reinterpret_cast<const char *>(salt), crypto_pwhash_SALTBYTES);
-
-  std::cerr << "debug end\n";
-
-  unsigned char read_buf[stream_chunk_size];
-  size_t bytes_to_read;
-  size_t read_bytes;
-
-  do {
-    SessionEncWrapper encrypted_data_wrap = SessionEncWrapper(client_sock);
-    if (encrypted_data_wrap.get_data_length() == 0) {
-      break; // we came across the last chunk already in the previous iteration
-    }
-
-    encrypted_data_wrap.write_to_file(file);
-
-  } while (bytes_to_read != 0);
-
-  std::cerr << "returning 0 from the WTFS_Handler__Server\n";
-
-  return 0;
-}
-
 void handle_conn(sqlite3 *DB, int client_sock) {
 
   unsigned char server_pk[crypto_kx_PUBLICKEYBYTES],
@@ -391,7 +329,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
   std::cerr << std::endl;
 
-  std::array<char, chunk_size> buffer{0};
+  std::array<char, CHUNK_SIZE> buffer{0};
 
   // make sure the last character the 4095th index is not overwritten
   // cuz this is the null pointer for you cstring
@@ -448,14 +386,16 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   zombify(client_sock);
 }
 
-void kill_server(std::atomic<bool> &server_alive) {
+void kill_server(std::atomic<bool> &server_alive, int server_sock) {
   std::cout << "kill the server by typing (q)\n";
   char switch_char;
   std::cin >> switch_char;
   if (switch_char == 'q') {
     server_alive = false;
   }
-  std::cout << "server kill switch activated\n";
+  std::cout << "server kill switch activated, server_alive is now "
+            << server_alive << "\n";
+  shutdown(server_sock, SHUT_RDWR);
 }
 
 int main() {
@@ -513,13 +453,17 @@ int main() {
   std::thread log_thread = std::thread(logger, std::ref(server_alive));
   std::thread cleanup_intermittent_thread =
       std::thread(cleanup_intermittent, std::ref(server_alive));
-  std::thread kill_server_listener = std::thread(kill_server, std::ref(server_alive));
+  std::thread kill_server_listener =
+      std::thread(kill_server, std::ref(server_alive), server_sock);
 
   while (server_alive) {
 
     int client_sock = accept(server_sock, nullptr, nullptr);
 
-    std::cout << "made another socket: " << client_sock << "\n";
+    if (server_alive == false) {
+      close(client_sock); // need to close manually here
+      break;
+    }
 
     if (client_sock < 0) {
       std::cerr << "Failed to accept connection" << std::endl;
@@ -534,6 +478,10 @@ int main() {
     ++live_connections;
   }
 
-  clean_all(); // this should join the log_thread and
-               // cleanup_intermittent_thread
+  std::cerr << "stopped accepting clients\n";
+
+  sqlite3_close(DB);
+  clean_all(log_thread, kill_server_listener, cleanup_intermittent_thread);
+
+  // this should join the log_thread and
 }
