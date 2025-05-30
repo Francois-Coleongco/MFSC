@@ -27,11 +27,21 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
 };
 
 int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
+                              unsigned long long decrypted_data_capacity,
                               unsigned char *decrypted_data,
                               unsigned long long *decrypted_data_len) {
   // the data returned within here is up to the caller's interpretation. if the
   // underlying data is encrypted aka was file encrypted or something of the
   // sort, it is the caller's responsibility to decrypt that.
+  if (this->session_encrypted_data_length -
+          crypto_secretstream_xchacha20poly1305_ABYTES >
+      decrypted_data_capacity) {
+
+    std::cerr << "WARNING COULD OVERFLOW | TRIED PUTTING"
+              << this->session_encrypted_data_length << " BYTES INTO"
+              << decrypted_data_capacity << "\n";
+    return 2;
+  }
 
   if (crypto_aead_chacha20poly1305_decrypt(decrypted_data, decrypted_data_len,
                                            NULL, this->session_encrypted_data,

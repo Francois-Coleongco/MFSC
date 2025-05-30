@@ -118,7 +118,7 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
   std::cerr << "this is salt before INIT SEND " << this->salt << "\n";
 
   int init_stat = init_send(reinterpret_cast<unsigned char *>(file_name.data()),
-                            file_name.length(), header, this->salt);
+                            file_name.length(), header, this->salt); // no need to plus one here as on server side i check the length properly
 
   std::cerr << "debug end client\n";
 
@@ -153,7 +153,6 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
     int send_stat = this->send_buffer();
 
   } while (!file.eof());
-
 
   return 0;
 }
