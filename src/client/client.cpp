@@ -1,5 +1,5 @@
-#include "../encryption_utils/encryption_utils.h"
-#include "authed_entry/authed_entry.h"
+#include "../../include/common/encryption_utils.h"
+#include "../../include/authed_entry.h"
 #include <array>
 #include <cassert>
 #include <cstdio>

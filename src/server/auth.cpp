@@ -1,11 +1,4 @@
-#include <iostream>
-#include <iterator>
-#include <openssl/evp.h>
-#include <ostream>
-#include <sodium.h>
-#include <sodium/crypto_pwhash.h>
-#include <sqlite3.h>
-#include <string>
+#include "../../include/auth.h"
 
 int create_user(sqlite3 *DB, std::string &username, std::string &password) {
 

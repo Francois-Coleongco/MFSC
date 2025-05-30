@@ -1,4 +1,4 @@
-#include "encryption_utils.h"
+#include "../../include/common/encryption_utils.h"
 #include <cstring>
 #include <sodium/crypto_kx.h>
 #include <sodium/utils.h>

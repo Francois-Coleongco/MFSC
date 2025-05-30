@@ -1,8 +1,8 @@
 #include <sodium/crypto_pwhash.h>
 #include <sodium/crypto_kx.h>
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
-#include "../../encryption_utils/encryption_utils.h"
-#include "../../encryption_utils/SessionEnc.h"
+#include "../include/common/encryption_utils.h"
+#include "../include/common/SessionEnc.h"
 
 
 #include <string>

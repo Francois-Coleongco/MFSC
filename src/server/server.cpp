@@ -1,8 +1,7 @@
-#include "./read_write_handlers/read_write_handlers.h"
-#include "auth/auth.h"
+#include "../../include/read_write_handlers.h"
+#include "../../include/auth.h"
 #include <array>
 #include <atomic>
-#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
