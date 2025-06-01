@@ -25,7 +25,8 @@ public:
   // both of these constructors will use the encrypt_stream_buffer function in
   // encryption_utils.
   ~SessionEncWrapper(); // zeroes out it's array
-  int unwrap(unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
+  int unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
+             unsigned long long decrypted_data_capacity,
              unsigned char *decrypted_data,
              unsigned long long *decrypted_data_len); // decrypts and
                                                       // returns another

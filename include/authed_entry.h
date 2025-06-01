@@ -58,9 +58,7 @@ public:
   void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);
   void set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]);
 
-  Sender_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-               unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-               int client_sock, Comms_Agent *CA);
+  Sender_Agent(Comms_Agent *CA);
 
   ~Sender_Agent();
   // copy constructor is kinda weird for here, same as move, i dont think we

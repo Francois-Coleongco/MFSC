@@ -1,5 +1,5 @@
-#include "../../include/read_write_handlers.h"
 #include "../../include/auth.h"
+#include "../../include/read_write_handlers.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -24,7 +24,9 @@
 const size_t CHUNK_SIZE = 4096;
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
-const int MAX_ZOMBIE_CONNS = 1;
+const int MAX_ZOMBIE_CONNS = 8;
+
+enum CONN_TYPE { LIVE, ZOMBIE };
 
 const int CONFUSION = -420;
 const int READ_FROM_FILESYSTEM = 1;
@@ -67,6 +69,7 @@ void iter_clean_live(std::unordered_map<int, Client_Info> &map) {
     }
   }
 }
+
 void iter_clean_zombie(std::unordered_map<int, Client_Info> &map) {
   for (auto &pair : map) {
     std::cerr << "processing client " << pair.first << "\n";
@@ -255,30 +258,7 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
   std::cerr << "made past login\n";
 
   return 0;
-
-  // reads from recv the ENCRYPTED username and password and decrypts it and
-  // checks against the database using auth.h funcs
 }
-
-// void forward_to_all(std::array<char, CHUNK_SIZE> buffer, int sender) {
-//
-//   for (int client_sock : clients) {
-//
-//     if (client_sock == sender) {
-//       continue;
-//     }
-//
-//     std::cout << "trying to forward buffer to client_sock: " << client_sock
-//               << std::endl;
-//
-//     int bytes_sent = send(client_sock, buffer.data(), CHUNK_SIZE, 0);
-//
-//     if (bytes_sent < 0) {
-//       std::cerr << "couldn't forward to this client: " << client_sock
-//                 << std::endl;
-//     }
-//   }
-// }
 
 void print_conns(std::unordered_map<int, Client_Info> &map) {
   for (const auto &pair : map) {
@@ -376,11 +356,16 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   std::cerr << "user's intention was " << intent << std::endl;
   std::cerr << "SUCCESSFUL <INTENTION> DECRYPTION" << std::endl;
 
+  FS_Operator OP = FS_Operator(client_sock, server_rx, server_tx);
+  // PAST THIS POINT THE SERVER TX AND RX ARE ZEROED OUT EXCEPT THE INSTANCE WITHIN OP
+
   if (intent == READ_FROM_FILESYSTEM) {
-    // to be implemented
+    OP.RFFS_Handler__Server();
   } else if (intent == WRITE_TO_FILESYSTEM) {
-    WTFS_Handler__Server(client_sock, server_rx);
+    OP.WTFS_Handler__Server();
   }
+
+  // end the loop here cuz zombify is after client ends communications
 
   zombify(client_sock);
 }

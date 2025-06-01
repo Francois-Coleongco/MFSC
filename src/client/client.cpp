@@ -1,5 +1,5 @@
-#include "../../include/common/encryption_utils.h"
 #include "../../include/authed_entry.h"
+#include "../../include/common/encryption_utils.h"
 #include <array>
 #include <cassert>
 #include <cstdio>
@@ -186,7 +186,7 @@ int WTFS_Handler(Comms_Agent *CA, int client_sock,
                  std::string &pswd_tmp) {
   std::cerr << "made it here in WTFS_Handler\n";
 
-  Sender_Agent s = Sender_Agent(client_tx, client_rx, client_sock, CA);
+  Sender_Agent s = Sender_Agent(CA);
 
   unsigned char
       salt[crypto_pwhash_SALTBYTES]; // needs to be stored in the sqlite db.
@@ -242,6 +242,8 @@ int authed_comms(int client_sock,
                  unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                  std::string &pswd_tmp) {
 
+  Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
+ /// loop from here to the end of the function depending on what the user syas they want to do. aka if they wish to complete another action, don't deconstruct the CA, save it for future. REMEMBER in creating CA you destroyed the original keys. you have no way of communication without them.
   std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
   int intention = CONFUSION;
 
@@ -262,14 +264,14 @@ int authed_comms(int client_sock,
   if (intention == CONFUSION) {
     return -1;
   }
-  Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
 
   if (intention == READ_FROM_FILESYSTEM) {
-    // to be implemented
-    // Send_Intention(unsigned char *client_tx, int client_sock, int intent)
-    // RFFS_Handler(client_sock, client_tx, pswd_tmp);
+    Send_Intention(CA.get_client_tx(), client_sock, intention);
+    // if (RFFS_Handler(client_sock, CA.get_client_tx(), pswd_tmp)) {
+    //   send(client_sock, &ACK_FAIL, sizeof(ACK_SUC), 0);
+    // }
   } else if (intention == WRITE_TO_FILESYSTEM) {
-    Send_Intention(client_tx, client_sock, intention);
+    Send_Intention(CA.get_client_tx(), client_sock, intention);
     if (WTFS_Handler(&CA, client_sock, client_tx, client_rx, pswd_tmp)) {
       send(client_sock, &ACK_FAIL, sizeof(ACK_SUC), 0);
     };

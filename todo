@@ -1,0 +1,9 @@
+need to properly handle when the client is the one that disconnects from the server. it says "Failed to accept connection" because of this:
+ and it infinite loops
+
+
+    if (client_sock < 0) {
+      std::cerr << "Failed to accept connection" << std::endl;
+      continue;
+    }
+

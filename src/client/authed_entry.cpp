@@ -18,6 +18,9 @@ Comms_Agent::Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
     : client_sock(client_sock) {
   std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->client_rx, client_rx, crypto_kx_SESSIONKEYBYTES);
+
+  sodium_memzero(client_tx, crypto_kx_SESSIONKEYBYTES);
+  sodium_memzero(client_rx, crypto_kx_SESSIONKEYBYTES);
 }
 
 Comms_Agent::~Comms_Agent() {
@@ -117,8 +120,10 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
   std::cerr << "this is header before INIT SEND " << header << "\n";
   std::cerr << "this is salt before INIT SEND " << this->salt << "\n";
 
-  int init_stat = init_send(reinterpret_cast<unsigned char *>(file_name.data()),
-                            file_name.length(), header, this->salt); // no need to plus one here as on server side i check the length properly
+  int init_stat = init_send(
+      reinterpret_cast<unsigned char *>(file_name.data()), file_name.length(),
+      header, this->salt); // no need to plus one here as on server side i check
+                           // the length properly
 
   std::cerr << "debug end client\n";
 
@@ -167,13 +172,9 @@ void Sender_Agent::set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]) {
   sodium_memzero(new_salt, crypto_pwhash_SALTBYTES);
 }
 
-Sender_Agent::Sender_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-                           unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-                           int client_sock, Comms_Agent *CA)
-    : size{0}, CA(CA), key{} {
-  std::memcpy(this->CA->get_client_tx(), client_tx, crypto_kx_SESSIONKEYBYTES);
-  sodium_memzero(client_tx, crypto_kx_SESSIONKEYBYTES);
-}; // remember the buffer here holds the ciphertext not the message
+Sender_Agent::Sender_Agent(Comms_Agent *CA)
+    : size{0}, CA(CA),
+      key{} {}; // remember the buffer here holds the ciphertext not the message
 
 Sender_Agent::~Sender_Agent() {
   this->size = 0;
