@@ -16,6 +16,7 @@ Comms_Agent::Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
                          unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                          int client_sock)
     : client_sock(client_sock) {
+
   std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->client_rx, client_rx, crypto_kx_SESSIONKEYBYTES);
 
@@ -47,9 +48,6 @@ int Sender_Agent::send_buffer() {
 
   return 0;
 }
-
-// int encrypt_buffer(char *plain_buf) { this->key }
-// add functionality for directories later
 
 int Sender_Agent::init_send(
     unsigned char file_name[255], unsigned long long file_name_length,

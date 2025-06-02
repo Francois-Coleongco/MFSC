@@ -15,14 +15,29 @@ SessionEncWrapper::SessionEncWrapper(
 
 SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
   std::cerr << "started reading construction\n";
-  recv(client_sock, &this->session_encrypted_data_length,
-       sizeof(this->session_encrypted_data_length), 0);
-  if (session_encrypted_data_length == 0) {
+  if (recv(client_sock, &this->session_encrypted_data_length,
+           sizeof(this->session_encrypted_data_length), 0) <= 0) {
+    this->corrupted = true;
+    return;
+  };
+
+  if (session_encrypted_data_length == 0 ||
+      session_encrypted_data_length > stream_chunk_size) {
+    this->corrupted = true;
     return;
   }
-  recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-  recv(client_sock, this->session_encrypted_data,
-       this->session_encrypted_data_length, 0);
+  if (recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES,
+           0) <= 0) {
+    this->corrupted = true;
+    return;
+  };
+  if (recv(client_sock, this->session_encrypted_data,
+           this->session_encrypted_data_length, 0) <= 0) {
+    this->corrupted = true;
+    return;
+  };
+
+  this->corrupted = false;
   std::cerr << "finished reading construction\n";
 };
 
@@ -37,9 +52,10 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
           crypto_secretstream_xchacha20poly1305_ABYTES >
       decrypted_data_capacity) {
 
-    std::cerr << "WARNING COULD OVERFLOW | TRIED PUTTING"
+    std::cerr << "WARNING COULD OVERFLOW | TRYING TO PUT "
               << this->session_encrypted_data_length << " BYTES INTO"
               << decrypted_data_capacity << "\n";
+    this->corrupted = true;
     return 2;
   }
 
@@ -48,12 +64,16 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
                                            this->session_encrypted_data_length,
                                            NULL, 0, this->nonce, rx) != 0) {
     std::cerr << "error decrypting in unwrap" << std::endl;
+    this->corrupted = true;
     return 1;
   }
   return 0;
 };
 
 SessionEncWrapper::~SessionEncWrapper() {
+  if (this->corrupted) {
+    return;
+  }
   sodium_memzero(this->session_encrypted_data,
                  this->session_encrypted_data_length);
   this->session_encrypted_data_length = 0;
@@ -93,3 +113,5 @@ int SessionEncWrapper::write_to_file(std::ofstream &file) {
 
   return 0;
 };
+
+bool SessionEncWrapper::is_corrupted() { return this->corrupted; }

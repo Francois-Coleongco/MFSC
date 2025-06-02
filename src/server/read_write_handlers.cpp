@@ -29,18 +29,23 @@ FS_Operator::~FS_Operator() {
 int FS_Operator::init_read(
     int client_sock, char file_name_buf[250],
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
-    unsigned char salt[crypto_pwhash_SALTBYTES],
-    unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]) {
+    unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
   unsigned long long decrypted_file_name_length;
   SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
+  std::cerr << "outside construction now\n";
+  if (file_name_wrap.is_corrupted()) {
+    std::cerr << "it's corrupted i see from outsideeeeeeee\n";
+    return 2;
+  }
 
-  if (file_name_wrap.unwrap(server_rx, FILE_NAME_BUF_SIZE,
+  if (file_name_wrap.unwrap(this->server_rx, FILE_NAME_BUF_SIZE,
                             reinterpret_cast<unsigned char *>(file_name_buf),
                             &decrypted_file_name_length) == 2) {
     std::cerr << "couldn't read file name, ABORT\n";
     return 1;
   }
+
   // decrypted file length will be NOT null terminated. so i need to null
   // terminate it before it leaves int_read
 
@@ -52,7 +57,7 @@ int FS_Operator::init_read(
 
   unsigned long long decrypted_header_length;
   SessionEncWrapper header_wrap = SessionEncWrapper(client_sock);
-  header_wrap.unwrap(server_rx,
+  header_wrap.unwrap(this->server_rx,
                      crypto_secretstream_xchacha20poly1305_HEADERBYTES, header,
                      &decrypted_header_length);
 
@@ -60,7 +65,7 @@ int FS_Operator::init_read(
 
   SessionEncWrapper salt_wrap = SessionEncWrapper(client_sock);
   unsigned long long decrypted_salt_length;
-  salt_wrap.unwrap(server_rx, crypto_pwhash_SALTBYTES, salt,
+  salt_wrap.unwrap(this->server_rx, crypto_pwhash_SALTBYTES, salt,
                    &decrypted_salt_length);
 
   std::cerr << "decrypted salt length\n" << decrypted_salt_length << "\n";
@@ -78,14 +83,8 @@ int FS_Operator::WTFS_Handler__Server() {
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
 
-  std::cerr << "prior to init_read\n";
-
-  int init_read_err_code = init_read(this->client_sock, file_name_buf, header, salt, server_rx);
-
-  if (init_read_err_code) {
-    std::cerr << "init_read failed, aborting this WTFS Action | init_read returned " << init_read_err_code;
-    return 1;
-  }
+  int init_read_err_code =
+      init_read(this->client_sock, file_name_buf, header, salt);
 
   std::string file_name = file_name_buf;
   file_name.append(".enc");
@@ -98,8 +97,6 @@ int FS_Operator::WTFS_Handler__Server() {
              crypto_secretstream_xchacha20poly1305_HEADERBYTES);
   file.write(reinterpret_cast<const char *>(salt), crypto_pwhash_SALTBYTES);
 
-  std::cerr << "debug end\n";
-
   unsigned char read_buf[stream_chunk_size];
   size_t read_bytes;
 
@@ -111,14 +108,10 @@ int FS_Operator::WTFS_Handler__Server() {
     encrypted_data_wrap.write_to_file(file);
   };
 
-  std::cerr << "returning 0 from the WTFS_Handler__Server\n";
-
   return 0;
 }
 
 int FS_Operator::RFFS_Handler__Server() {
-
-  // send the whole file down the line
 
   char file_name_buf[FILE_NAME_BUF_SIZE];
 
@@ -142,8 +135,6 @@ int FS_Operator::RFFS_Handler__Server() {
   int tag = 0;
 
   do {
-
-    std::cout << "encrypting a chunk wee woo" << std::endl;
 
     file.read(reinterpret_cast<char *>(file_chunk), CHUNK_SIZE);
 

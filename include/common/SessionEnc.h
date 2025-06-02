@@ -1,6 +1,6 @@
 #include "encryption_utils.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <netinet/in.h>
 #include <sodium/crypto_aead_chacha20poly1305.h>
 #include <sodium/crypto_kx.h>
@@ -10,6 +10,7 @@
 class SessionEncWrapper {
   // data under two layers of encryption. first by file encryption means, and
   // the next by session
+  bool corrupted;
   unsigned char session_encrypted_data[stream_chunk_size];
   unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned long long session_encrypted_data_length;
@@ -36,4 +37,6 @@ public:
   int send_data(int client_sock);
 
   int write_to_file(std::ofstream &file);
+
+  bool is_corrupted();
 };

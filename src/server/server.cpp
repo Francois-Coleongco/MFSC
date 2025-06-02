@@ -128,59 +128,6 @@ void clean_all(std::thread &log_thread, std::thread &kill_server_listener,
   }
 }
 
-int crypt_gen(int client_sock, unsigned char *server_pk,
-              unsigned char *server_sk, unsigned char *server_rx,
-              unsigned char *server_tx) {
-
-  /* Generate the server's key pair */
-  crypto_kx_keypair(server_pk, server_sk);
-  std::cerr << "this is server_pk" << std::endl;
-
-  for (int i = 0; i < crypto_kx_PUBLICKEYBYTES; ++i) {
-    printf("%c", server_pk[i]);
-  }
-
-  std::cout << std::endl;
-
-  send(client_sock, server_pk, crypto_kx_PUBLICKEYBYTES, 0);
-
-  // receive client_pk from client
-
-  unsigned char client_pk[crypto_kx_PUBLICKEYBYTES];
-
-  int crypto_bytes_read =
-      recv(client_sock, client_pk, crypto_kx_PUBLICKEYBYTES, 0);
-
-  std::cout << "ON THE SERVER cryptobytesread: " << crypto_bytes_read
-            << std::endl;
-
-  std::cerr << "this is client_pk" << std::endl;
-  for (int i = 0; i < crypto_kx_PUBLICKEYBYTES; ++i) {
-    printf("%c", client_pk[i]);
-  }
-
-  std::cout << std::endl;
-
-  /* Prerequisite after this point: the client's public key must be known by
-   * the server */
-
-  /* Compute two shared keys using the client's public key and the server's
-     secret key. server_rx will be used by the server to receive data from
-     the client, server_tx will be used by the server to send data to the
-     client. */
-
-  if (crypto_kx_server_session_keys(server_rx, server_tx, server_pk, server_sk,
-                                    client_pk) != 0) {
-    std::cerr << "BAILED" << std::endl;
-    /* Suspicious client public key, bail out */
-    return 1;
-  }
-
-  std::cerr << "DIDNT BAIL WE HAVE VALID KEYSSS YAYYY" << std::endl;
-
-  return 0;
-}
-
 int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 
   std::array<char, CHUNK_SIZE> username_buffer{0};
@@ -190,11 +137,11 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 
   unsigned char password_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
-  // int username_nonce_bytes = recv(client_sock, username_nonce,
-  //                                 crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-  //
-  int username_nonce_bytes = recv(client_sock, username_nonce,
-                                  crypto_aead_chacha20poly1305_NPUBBYTES, 0);
+  if(recv(client_sock, username_nonce,
+                                  crypto_aead_chacha20poly1305_NPUBBYTES, 0) <= 0) {
+    std::cerr << "unable to read username_nonce\n";
+    return 4;
+  };
 
   int password_nonce_bytes = recv(client_sock, password_nonce,
                                   crypto_aead_chacha20poly1305_NPUBBYTES, 0);
@@ -206,6 +153,7 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
   int password_bytes_read = recv(client_sock, &password_buffer, CHUNK_SIZE, 0);
   std::cerr << "read password YIPPIEEE this was how many bytes it was: "
             << password_bytes_read << std::endl;
+
   send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
 
   if (username_bytes_read <= 0 || password_bytes_read <= 0) {
@@ -296,7 +244,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
       server_tx[crypto_kx_SESSIONKEYBYTES];
 
-  if (crypt_gen(client_sock, server_pk, server_sk, server_rx, server_tx)) {
+  if (server_crypt_gen(client_sock, server_pk, server_sk, server_rx, server_tx)) {
     std::cerr << "couldn't gen keys :c" << std::endl;
   }
 
@@ -357,12 +305,14 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   std::cerr << "SUCCESSFUL <INTENTION> DECRYPTION" << std::endl;
 
   FS_Operator OP = FS_Operator(client_sock, server_rx, server_tx);
-  // PAST THIS POINT THE SERVER TX AND RX ARE ZEROED OUT EXCEPT THE INSTANCE WITHIN OP
+  // PAST THIS POINT THE SERVER TX AND RX ARE ZEROED OUT EXCEPT THE INSTANCE
+  // WITHIN OP
 
   if (intent == READ_FROM_FILESYSTEM) {
     OP.RFFS_Handler__Server();
   } else if (intent == WRITE_TO_FILESYSTEM) {
     OP.WTFS_Handler__Server();
+    std::cerr << "after WTFS_Handler\n";
   }
 
   // end the loop here cuz zombify is after client ends communications

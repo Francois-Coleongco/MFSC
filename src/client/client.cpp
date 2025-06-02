@@ -2,6 +2,7 @@
 #include "../../include/common/encryption_utils.h"
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -14,6 +15,7 @@
 #include <sodium/randombytes.h>
 #include <sodium/utils.h>
 #include <sys/socket.h>
+#include <thread>
 #include <unistd.h>
 
 // intentions
@@ -30,50 +32,6 @@ template <typename T> void get_stuff(T &stuff_holder) {
     std::cin.ignore();
     std::cin >> stuff_holder;
   } while (std::cin.fail());
-}
-
-int crypt_gen(int client_sock, unsigned char *client_pk,
-              unsigned char *client_sk, unsigned char *client_rx,
-              unsigned char *client_tx) {
-
-  /* Generate the client's key pair */
-  crypto_kx_keypair(client_pk, client_sk);
-
-  std::cerr << "this is client_pk" << std::endl;
-
-  for (int i = 0; i < crypto_kx_PUBLICKEYBYTES; ++i) {
-    printf("%c", client_pk[i]);
-  }
-
-  std::cout << std::endl;
-
-  send(client_sock, client_pk, crypto_kx_PUBLICKEYBYTES, 0);
-
-  unsigned char server_pk[crypto_kx_PUBLICKEYBYTES];
-
-  int crypto_bytes_read =
-      recv(client_sock, server_pk, crypto_kx_PUBLICKEYBYTES, 0);
-
-  std::cout << "ON THE CLIENT cryptobytesread: " << crypto_bytes_read
-            << std::endl;
-
-  std::cerr << "this is server_pk" << std::endl;
-
-  for (int i = 0; i < crypto_kx_PUBLICKEYBYTES; ++i) {
-    printf("%c", server_pk[i]);
-  }
-
-  std::cout << std::endl;
-
-  if (crypto_kx_client_session_keys(client_rx, client_tx, client_pk, client_sk,
-                                    server_pk) != 0) {
-    std::cerr << "BAILED SUS KEYS" << std::endl;
-    return 1;
-    /* Suspicious server public key, bail out */
-  }
-
-  std::cerr << "DIDNT BAIL WE HAVE VALID KEYSSS YAYAYYYYY" << std::endl;
-  return 0;
 }
 
 int send_credentials(int client_sock, unsigned char *client_tx,
@@ -133,6 +91,7 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   int received_password = -1;
 
   send(client_sock, password_ciphertext, password_ciphertext_len, 0);
+
   recv(client_sock, &received_password, sizeof(received_password), 0);
 
   int auth_stat = -1;
@@ -243,7 +202,11 @@ int authed_comms(int client_sock,
                  std::string &pswd_tmp) {
 
   Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
- /// loop from here to the end of the function depending on what the user syas they want to do. aka if they wish to complete another action, don't deconstruct the CA, save it for future. REMEMBER in creating CA you destroyed the original keys. you have no way of communication without them.
+  /// loop from here to the end of the function depending on what the user syas
+  /// they want to do. aka if they wish to complete another action, don't
+  /// deconstruct the CA, save it for future. REMEMBER in creating CA you
+  /// destroyed the original keys. you have no way of communication without
+  /// them.
   std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
   int intention = CONFUSION;
 
@@ -273,7 +236,6 @@ int authed_comms(int client_sock,
   } else if (intention == WRITE_TO_FILESYSTEM) {
     Send_Intention(CA.get_client_tx(), client_sock, intention);
     if (WTFS_Handler(&CA, client_sock, client_tx, client_rx, pswd_tmp)) {
-      send(client_sock, &ACK_FAIL, sizeof(ACK_SUC), 0);
     };
   }
   return 0;
@@ -295,7 +257,8 @@ int main() {
   unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
       client_tx[crypto_kx_SESSIONKEYBYTES];
 
-  if (crypt_gen(client_sock, client_pk, client_sk, client_rx, client_tx)) {
+  if (client_crypt_gen(client_sock, client_pk, client_sk, client_rx,
+                       client_tx)) {
     std::cerr << "error generating keys :(" << std::endl;
     return 1;
   }
@@ -324,6 +287,7 @@ int main() {
       get_stuff(stat);
     } while (stat == 'y' || stat == 'Y');
 
+    std::this_thread::sleep_for(std::chrono::seconds(5));
   }; // this will contain the rest of the follwoing after
   // no signup, this is only done by the admin of the server who can add
   // themselves to the sql db

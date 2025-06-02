@@ -91,15 +91,6 @@ int login(sqlite3 *DB, char username[], size_t username_len, char password[],
   std::cerr << "this was password " << password << "\n";
   std::cerr << "this was DB " << DB << "\n";
 
-  char hash[crypto_pwhash_STRBYTES];
-
-  std::cerr << "hashing password: " << password << "\n";
-  if (crypto_pwhash_str(hash, (const char *)password, password_len,
-                        crypto_pwhash_OPSLIMIT_SENSITIVE,
-                        crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
-    /* out of memory */
-  }
-
   std::cerr << "db  val: " << DB << "\n";
 
 

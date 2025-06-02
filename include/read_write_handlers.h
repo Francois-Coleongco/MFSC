@@ -17,13 +17,12 @@ private:
   int init_read(
       int client_sock, char file_name_buf[250],
       unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
-      unsigned char salt[crypto_pwhash_SALTBYTES],
-      unsigned char server_rx[crypto_kx_SESSIONKEYBYTES]);
+      unsigned char salt[crypto_pwhash_SALTBYTES]);
 
 public:
-  int WTFS_Handler__Server();
+  int WTFS_Handler__Server(); // Write To File System Handler
 
-  int RFFS_Handler__Server();
+  int RFFS_Handler__Server(); // Read From File System Handler
 
   FS_Operator(int client_sock,
               unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
