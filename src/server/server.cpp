@@ -278,13 +278,16 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
     if (OP.receive_notice_of_new_action()) {
       std::cerr << "did not receive a notice of new action\n";
-      perform_next = true;
+      perform_next = false;
       return;
+    } else {
+      perform_next = true;
     }
+    int intent = OP.read_intent();
 
-    if (OP.read_intent() == READ_FROM_FILESYSTEM) {
+    if (intent == READ_FROM_FILESYSTEM) {
       OP.RFFS_Handler__Server();
-    } else if (OP.read_intent() == WRITE_TO_FILESYSTEM) {
+    } else if (intent == WRITE_TO_FILESYSTEM) {
       OP.WTFS_Handler__Server();
       std::cerr << "after WTFS_Handler\n";
     } else {
@@ -292,9 +295,9 @@ void handle_conn(sqlite3 *DB, int client_sock) {
     }
   } while (perform_next);
 
-      // end the loop here cuz zombify is after client ends communications
+  // end the loop here cuz zombify is after client ends communications
 
-      zombify(client_sock);
+  zombify(client_sock);
 }
 
 void kill_server(std::atomic<bool> &server_alive, int server_sock) {

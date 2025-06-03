@@ -1,6 +1,7 @@
 CMakeFiles/client.dir/src/client/client.cpp.o: \
  /home/sleepy/vault/MFSC/src/client/client.cpp /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/client/../../include/common/constants.h \
+ /home/sleepy/vault/MFSC/src/client/../../include/authed_entry.h \
+ /home/sleepy/vault/MFSC/src/client/../../include/./common/constants.h \
  /usr/include/unistd.h /usr/include/features.h \
  /usr/include/features-time64.h /usr/include/bits/wordsize.h \
  /usr/include/bits/timesize.h /usr/include/sys/cdefs.h \
@@ -11,9 +12,8 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
  /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
  /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
- /usr/include/linux/close_range.h \
- /home/sleepy/vault/MFSC/src/client/../../include/authed_entry.h \
- /usr/include/c++/15/cstring /usr/include/c++/15/bits/version.h \
+ /usr/include/linux/close_range.h /usr/include/c++/15/cstring \
+ /usr/include/c++/15/bits/version.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/os_defines.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/cpu_defines.h \
@@ -171,7 +171,9 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /home/sleepy/vault/MFSC/src/client/../../include/common/encryption_utils.h \
  /usr/include/netinet/in.h /usr/include/bits/in.h \
  /usr/include/sodium/crypto_aead_chacha20poly1305.h \
- /usr/include/sodium/randombytes.h /usr/include/c++/15/cassert \
- /usr/include/assert.h /usr/include/c++/15/optional \
+ /usr/include/sodium/randombytes.h \
+ /home/sleepy/vault/MFSC/src/client/../../include/common/constants.h \
+ /usr/include/c++/15/cassert /usr/include/assert.h \
+ /usr/include/c++/15/optional \
  /usr/include/c++/15/bits/enable_special_members.h \
  /usr/include/sodium/utils.h

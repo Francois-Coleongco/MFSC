@@ -26,6 +26,7 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
     this->corrupted = true;
     return;
   }
+
   if (recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES,
            0) <= 0) {
     this->corrupted = true;
@@ -36,6 +37,9 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
     this->corrupted = true;
     return;
   };
+
+  std::cerr << "this is the length of the data "
+            << this->session_encrypted_data_length << "\n";
 
   this->corrupted = false;
   std::cerr << "finished reading construction\n";
@@ -51,12 +55,13 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   if (this->corrupted) {
     return 3;
   }
+
   if (this->session_encrypted_data_length -
           crypto_secretstream_xchacha20poly1305_ABYTES >
       decrypted_data_capacity) {
 
     std::cerr << "WARNING COULD OVERFLOW | TRYING TO PUT "
-              << this->session_encrypted_data_length << " BYTES INTO"
+              << this->session_encrypted_data_length << " BYTES INTO "
               << decrypted_data_capacity << "\n";
     this->corrupted = true;
     return 2;

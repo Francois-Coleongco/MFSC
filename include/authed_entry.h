@@ -1,5 +1,6 @@
 // everything in this file contains resources for the server after a user is
 // authenticated.
+#include "./common/constants.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -9,12 +10,21 @@
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sys/socket.h>
 
+#ifndef AUTHED_ENTRY
+#define AUTHED_ENTRY
+
 // need header guardss
 
 class Comms_Agent {
   int client_sock;
-  bool SA_active;
-  bool RA_active;
+  size_t SA_count; // these will be used to count the number of active Sender
+                   // and Receiver instances
+  size_t RA_count; // need these for the future for concurrent reads and writes
+                   // as they each are independent to a respective file
+  // with that, we will need a thread pool, the pool perhaps being
+  // another unordered list keyed by the file names
+  // after a certain amount of time being unused in the pool, force the thread
+  // to complete so it's SA/RA goes out of scope and destructor is callsed
   unsigned char client_tx[crypto_kx_SESSIONKEYBYTES];
   unsigned char client_rx[crypto_kx_SESSIONKEYBYTES];
 
@@ -22,10 +32,6 @@ public:
   int get_socket();
 
   int notify_server_of_new_action();
-  void set_SA_status(bool stat);
-  void set_RA_status(bool stat);
-  bool SA_stat();
-  bool RA_stat();
 
   unsigned char *get_client_tx();
   unsigned char *get_client_rx();
@@ -58,14 +64,14 @@ private:
       unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
       unsigned char salt[crypto_pwhash_SALTBYTES]);
 
+  void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);
+  void set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]);
+  int set_crypto(std::string &password);
+
 public:
   // add functionality for directories later
   int encrypt_and_send_to_server(std::string &file_name);
   int fill_and_send(std::string &file_name);
-
-  void set_key(unsigned char new_key[crypto_box_SEEDBYTES]);
-  void set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]);
-  int set_crypto(std::string &password);
 
   Sender_Agent(Comms_Agent *CA, std::string &password);
 
@@ -80,11 +86,17 @@ class Receiver_Agent {
   unsigned long long
       size; // the size here refers to the amount of the buffer that is filled
   unsigned char key[crypto_box_SEEDBYTES];
-  unsigned char salt[crypto_pwhash_SALTBYTES];
   Comms_Agent *CA;
 
 public:
-  int decrypt_and_read_from_server(std::string &file_name);
-  // Receiver_Agent(Comms_Agent *CA, );
+  int decrypt_and_read_from_server(
+      std::ofstream file,
+      std::string &password); // internally handles set_crypto for itself
+  Receiver_Agent(Comms_Agent *CA);
+
+  int init_read(
+      unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
+      unsigned char salt[crypto_pwhash_SALTBYTES]);
   ~Receiver_Agent();
 };
+#endif

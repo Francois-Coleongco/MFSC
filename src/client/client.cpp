@@ -1,9 +1,8 @@
-#include "../../include/common/constants.h"
 #include "../../include/authed_entry.h"
 #include "../../include/common/SessionEnc.h"
+#include "../../include/common/constants.h"
 #include "../../include/common/encryption_utils.h"
 #include <cassert>
-#include <cstdio>
 #include <iostream>
 #include <netinet/in.h>
 #include <optional>
@@ -118,47 +117,29 @@ int send_intention(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
   return 0;
 }
 
-// int RFFS_Handler(Comms_Agent *CA, std::optional<Receiver_Agent> &RA,
-//                  int client_sock, std::string &password) {
-//   if (!CA->RA_stat()) {
-//     RA.emplace(CA, password);
-//   }
-//
-//   std::string file_name;
-//
-//   std::cin >> file_name;
-//
-//   // read file in chunks, decrypting it as it comes in and writing it to a
-//   // file of the same name user requested
-//   return 0;
-// }
+int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
+                 std::string &password) {
 
-int WTFS_Handler(Comms_Agent *CA, std::optional<Sender_Agent> &SA,
-                 int client_sock, std::string &password) {
+  std::string file_name;
+  std::cout << "enter file name to grab from server:\n";
+
+  std::cin >> file_name;
+
+  return 0;
+}
+
+int WTFS_Handler(Comms_Agent *CA, Sender_Agent &SA, int client_sock,
+                 std::string &password) {
   std::cerr << "made it here in WTFS_Handler\n";
 
-  if (!CA->SA_stat()) {
-    SA.emplace(CA, password);
-  } else {
-    // object alrdy exists, just need to reset the keys and salt for forward
-    // secrecy between files
-    if (SA->set_crypto(password)) {
-      std::cerr << "error in set_crypto\n";
-      return 1;
-    }
-  }
-
-  std::cout << "enter file name to send to server" << std::endl;
+  std::cout << "enter file name to send to server:\n";
 
   std::string file_name;
 
   get_stuff(file_name);
 
-  int enc_stat = SA->encrypt_and_send_to_server(file_name);
-
-  if (enc_stat != 0) {
-    std::cerr << "error enc_stat was not 0. error in read_and_create"
-              << std::endl;
+  if (SA.encrypt_and_send_to_server(file_name) != 0) {
+    std::cerr << "error in encrypt_and_send_to_server\n";
   }
 
   return 0;
@@ -190,8 +171,11 @@ int authed_comms(int client_sock,
 
     get_stuff(intention);
 
-    std::optional<Sender_Agent> SA;
-    // std::optional<Receiver_Agent> RA;
+    // when we eventually make the program capable of handling multiple files
+    // concurrently, we will need to spawn threads that create their own SA or
+    // RA
+    Sender_Agent SA = Sender_Agent(&CA, password);
+    Receiver_Agent RA = Receiver_Agent(&CA);
 
     if (intention == CONFUSION) {
       return -1;
@@ -199,9 +183,9 @@ int authed_comms(int client_sock,
 
     if (intention == READ_FROM_FILESYSTEM) {
       send_intention(CA.get_client_tx(), client_sock, intention);
-      // if (RFFS_Handler(&CA, RA, client_sock, password)) {
-      //   std::cerr << "failed reading from file system\n";
-      // }
+      if (RFFS_Handler(&CA, RA, client_sock, password)) {
+        std::cerr << "failed reading from file system\n";
+      }
     } else if (intention == WRITE_TO_FILESYSTEM) {
       send_intention(CA.get_client_tx(), client_sock, intention);
       if (WTFS_Handler(&CA, SA, client_sock, password)) {
@@ -240,10 +224,6 @@ int main() {
                        client_tx)) {
     std::cerr << "error generating keys :(" << std::endl;
     return 1;
-  }
-
-  for (int i = 0; i < crypto_kx_SESSIONKEYBYTES; ++i) {
-    printf("%c", client_tx[i]);
   }
 
   std::cerr << std::endl;

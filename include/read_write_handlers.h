@@ -5,9 +5,6 @@
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <string>
 
-const unsigned char MAX_FILE_SIZE =
-    255; // since we are grabbing from storage, the max is 255
-
 class FS_Operator {
   int client_sock;
   unsigned char server_rx[crypto_kx_SESSIONKEYBYTES];

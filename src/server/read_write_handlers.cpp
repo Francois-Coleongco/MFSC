@@ -47,6 +47,8 @@ int FS_Operator::init_read(
     return 1;
   }
 
+  std::cerr << "decrypted_file_name_length: " << decrypted_file_name_length << "\n";
+
   // decrypted file length will be NOT null terminated. so i need to null
   // terminate it before it leaves int_read
 
@@ -157,6 +159,7 @@ int FS_Operator::read_intent() {
   nonce_wrap.unwrap(server_rx, sizeof(intent),
                     reinterpret_cast<unsigned char *>(&intent),
                     &decrypted_data_length);
+  std::cerr << "this was the intent read: " << intent << "\n";
 
   return intent;
 }
@@ -171,8 +174,10 @@ int FS_Operator::receive_notice_of_new_action() {
                      &decrypted_notice_length);
 
   if (notice == NEW_ACTION) {
+    std::cerr << "NEW ACTION INISIATED\n";
     return 0;
   } else {
+    std::cerr << "RETURNED ONE FROM NEWACTION NOOOOOOOOOOOOOO\n";
     return 1;
   }
 }

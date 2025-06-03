@@ -1,8 +1,8 @@
 // everything in this file contains resources for the server after a user is
 // authenticated.
-#include "../../include/common/constants.h"
 #include "../../include/authed_entry.h"
 #include "../../include/common/SessionEnc.h"
+#include "../../include/common/constants.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -16,7 +16,7 @@
 Comms_Agent::Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
                          unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                          int client_sock)
-    : client_sock(client_sock), SA_active(false), RA_active(false) {
+    : client_sock(client_sock) {
 
   std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->client_rx, client_rx, crypto_kx_SESSIONKEYBYTES);
@@ -30,12 +30,6 @@ Comms_Agent::~Comms_Agent() {
   sodium_memzero(this->client_rx, crypto_kx_SESSIONKEYBYTES);
   sodium_memzero(this->client_tx, crypto_kx_SESSIONKEYBYTES);
 }
-
-void Comms_Agent::set_SA_status(bool stat) { this->SA_active = stat; }
-bool Comms_Agent::SA_stat() { return this->SA_active; }
-
-void Comms_Agent::set_RA_status(bool stat) { this->RA_active = stat; }
-bool Comms_Agent::RA_stat() { return this->RA_active; }
 
 int Comms_Agent::get_socket() { return this->client_sock; }
 
@@ -53,7 +47,6 @@ int Comms_Agent::notify_server_of_new_action() {
   notif.send_data(this->client_sock);
 
   return 0;
-
 }
 
 int Sender_Agent::send_buffer() {
@@ -74,15 +67,10 @@ int Sender_Agent::init_send(
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
-  std::cerr << "started init_send\n";
-
-  std::cerr << "this is filename before encryption: " << file_name;
-  std::cerr << "this is header before encryption: " << header;
-  std::cerr << "this is salt before encryption: " << salt;
-
   int client_sock = this->CA->get_socket();
   unsigned char *client_tx = this->CA->get_client_tx();
 
+  std::cerr << "sending file_name: " << file_name << " down the wire\n";
   SessionEncWrapper file_name_wrap =
       SessionEncWrapper(file_name, file_name_length, client_tx);
   file_name_wrap.send_data_length(client_sock);
@@ -133,17 +121,10 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
                   //  password to recreate this exact key which is what's needed
                   //  for decryption
 
-  std::cerr << "this->key " << this->key << "\n";
-
-  std::cerr << "this is header before INIT SEND " << header << "\n";
-  std::cerr << "this is salt before INIT SEND " << this->salt << "\n";
-
   int init_stat = init_send(
       reinterpret_cast<unsigned char *>(file_name.data()), file_name.length(),
       header, this->salt); // no need to plus one here as on server side i check
                            // the length properly
-
-  std::cerr << "debug end client\n";
 
   unsigned char file_chunk[CHUNK_SIZE];
 
@@ -223,14 +204,60 @@ Sender_Agent::Sender_Agent(Comms_Agent *CA, std::string &password)
   if (set_crypto(password)) {
     std::cerr << "error in set_crypto\n";
   }
-
-  this->CA->set_SA_status(true);
 };
 
 Sender_Agent::~Sender_Agent() {
   this->size = 0;
+  this->CA = nullptr;
   sodium_memzero(this->key, crypto_box_SEEDBYTES);
   sodium_memzero(this->salt, crypto_pwhash_SALTBYTES);
-  CA->set_SA_status(false);
-  CA->set_RA_status(false);
+}
+
+int Receiver_Agent::init_read(
+    unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
+    unsigned char salt[crypto_pwhash_SALTBYTES]) {
+
+  SessionEncWrapper header_wrap = SessionEncWrapper(this->CA->get_socket());
+  unsigned long long decrypted_header_len;
+  if (header_wrap.unwrap(this->CA->get_client_rx(),
+                         crypto_secretstream_xchacha20poly1305_HEADERBYTES,
+                         header, &decrypted_header_len)) {
+    std::cerr << "couldn't unwrap header\n";
+    return 2;
+  };
+
+  SessionEncWrapper salt_wrap = SessionEncWrapper(this->CA->get_socket());
+  unsigned long long decrypted_salt_len;
+  if (salt_wrap.unwrap(this->CA->get_client_rx(), crypto_pwhash_SALTBYTES, salt,
+                       &decrypted_salt_len)) {
+    std::cerr << "couldn't unwrap header\n";
+    return 1;
+  }
+
+  return 0;
+}
+
+int Receiver_Agent::decrypt_and_read_from_server(std::ofstream file,
+                                                 std::string &password) {
+  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  unsigned char salt[crypto_pwhash_SALTBYTES];
+
+  init_read(header, salt);
+
+  if (crypto_pwhash(this->key, crypto_box_SEEDBYTES, password.data(),
+                    password.size(), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
+                    crypto_pwhash_MEMLIMIT_INTERACTIVE,
+                    crypto_pwhash_ALG_DEFAULT) != 0) {
+    /* out of memory */
+    std::cerr << "out of mem" << std::endl;
+    return 1;
+  }
+  return 0;
+}
+
+Receiver_Agent::Receiver_Agent(Comms_Agent *CA) : size(0), CA(CA) {}
+Receiver_Agent::~Receiver_Agent() {
+  this->size = 0;
+  this->CA = nullptr;
+  sodium_memzero(this->key, crypto_box_SEEDBYTES);
 }
