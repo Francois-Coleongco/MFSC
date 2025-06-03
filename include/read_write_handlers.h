@@ -20,6 +20,7 @@ private:
       unsigned char salt[crypto_pwhash_SALTBYTES]);
 
 public:
+  int receive_notice_of_new_action();
 
   int read_intent();
 
@@ -32,5 +33,3 @@ public:
               unsigned char server_tx[crypto_kx_SESSIONKEYBYTES]);
   ~FS_Operator();
 };
-
-int receive_notice_of_new_action();

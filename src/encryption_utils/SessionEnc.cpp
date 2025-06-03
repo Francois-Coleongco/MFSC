@@ -5,7 +5,7 @@
 #include <sodium/utils.h>
 
 SessionEncWrapper::SessionEncWrapper(
-    unsigned char *data, unsigned long long data_length,
+    const unsigned char *data, unsigned long long data_length,
     unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]) { // for writers
 
   encrypt_stream_buffer(client_tx, this->nonce, data, data_length,
@@ -48,6 +48,9 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   // the data returned within here is up to the caller's interpretation. if the
   // underlying data is encrypted aka was file encrypted or something of the
   // sort, it is the caller's responsibility to decrypt that.
+  if (this->corrupted) {
+    return 3;
+  }
   if (this->session_encrypted_data_length -
           crypto_secretstream_xchacha20poly1305_ABYTES >
       decrypted_data_capacity) {

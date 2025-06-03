@@ -4,6 +4,7 @@
 CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src/client/authed_entry.cpp \
   /home/sleepy/vault/MFSC/include/authed_entry.h \
   /home/sleepy/vault/MFSC/include/common/SessionEnc.h \
+  /home/sleepy/vault/MFSC/include/common/constants.h \
   /home/sleepy/vault/MFSC/include/common/encryption_utils.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -23,12 +24,16 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src
   /usr/include/asm/types.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
   /usr/include/bits/cpu-set.h \
   /usr/include/bits/endian.h \
   /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
   /usr/include/bits/errno.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
   /usr/include/bits/in.h \
   /usr/include/bits/libc-header-start.h \
   /usr/include/bits/local_lim.h \
@@ -36,6 +41,7 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src
   /usr/include/bits/long-double.h \
   /usr/include/bits/posix1_lim.h \
   /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/posix_opt.h \
   /usr/include/bits/pthread_stack_min-dynamic.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
@@ -87,6 +93,7 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src
   /usr/include/bits/typesizes.h \
   /usr/include/bits/uintn-identity.h \
   /usr/include/bits/uio_lim.h \
+  /usr/include/bits/unistd_ext.h \
   /usr/include/bits/waitflags.h \
   /usr/include/bits/waitstatus.h \
   /usr/include/bits/wchar.h \
@@ -209,6 +216,7 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/limits.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
   /usr/include/linux/posix_types.h \
@@ -245,6 +253,7 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src
   /usr/include/sys/socket.h \
   /usr/include/sys/types.h \
   /usr/include/time.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/include/wctype.h \
   /usr/lib/gcc/x86_64-redhat-linux/15/include/limits.h \
@@ -255,6 +264,8 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src
 
 CMakeFiles/client.dir/src/client/client.cpp.o: /home/sleepy/vault/MFSC/src/client/client.cpp \
   /home/sleepy/vault/MFSC/include/authed_entry.h \
+  /home/sleepy/vault/MFSC/include/common/SessionEnc.h \
+  /home/sleepy/vault/MFSC/include/common/constants.h \
   /home/sleepy/vault/MFSC/include/common/encryption_utils.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -351,7 +362,6 @@ CMakeFiles/client.dir/src/client/client.cpp.o: /home/sleepy/vault/MFSC/src/clien
   /usr/include/bits/wctype-wchar.h \
   /usr/include/bits/wordsize.h \
   /usr/include/bits/xopen_lim.h \
-  /usr/include/c++/15/array \
   /usr/include/c++/15/backward/binders.h \
   /usr/include/c++/15/bit \
   /usr/include/c++/15/bits/alloc_traits.h \
@@ -417,7 +427,6 @@ CMakeFiles/client.dir/src/client/client.cpp.o: /home/sleepy/vault/MFSC/src/clien
   /usr/include/c++/15/cctype \
   /usr/include/c++/15/cerrno \
   /usr/include/c++/15/clocale \
-  /usr/include/c++/15/compare \
   /usr/include/c++/15/concepts \
   /usr/include/c++/15/cstddef \
   /usr/include/c++/15/cstdio \
@@ -562,39 +571,17 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o:
 
 /lib64/ld-linux-x86-64.so.2:
 
-/usr/include/unistd.h:
-
-/usr/include/linux/close_range.h:
-
 /usr/include/c++/15/cassert:
 
-/usr/include/c++/15/array:
+/home/sleepy/vault/MFSC/src/client/client.cpp:
 
-/usr/include/bits/unistd_ext.h:
-
-/usr/include/bits/posix_opt.h:
-
-/home/sleepy/vault/MFSC/src/client/authed_entry.cpp:
-
-/usr/include/asm-generic/int-ll64.h:
-
-/usr/include/c++/15/bits/memory_resource.h:
-
-/usr/include/bits/types/struct_timespec.h:
-
-/usr/include/c++/15/bits/locale_facets.tcc:
-
-/usr/include/bits/waitflags.h:
-
-/usr/lib64/libc.so:
-
-/usr/include/ctype.h:
-
-/usr/include/c++/15/bits/locale_classes.tcc:
+/usr/lib/gcc/x86_64-redhat-linux/15/include/syslimits.h:
 
 /usr/include/bits/types/locale_t.h:
 
 /usr/include/c++/15/bits/istream.tcc:
+
+/usr/include/c++/15/bits/locale_classes.tcc:
 
 /usr/include/c++/15/bits/functional_hash.h:
 
@@ -604,27 +591,21 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o:
 
 /usr/lib/gcc/x86_64-redhat-linux/15/libgcc_s.so:
 
-/usr/include/c++/15/compare:
-
 /usr/include/c++/15/bits/cxxabi_forced.h:
 
 /usr/include/asm/bitsperlong.h:
 
-/usr/include/c++/15/bits/cxxabi_init_exception.h:
-
-/usr/include/bits/types/struct_sched_param.h:
+/usr/include/pthread.h:
 
 /usr/include/c++/15/bits/basic_string.h:
-
-/usr/include/c++/15/bits/basic_ios.tcc:
-
-/usr/include/pthread.h:
 
 /usr/include/c++/15/bits/version.h:
 
 /usr/include/c++/15/backward/binders.h:
 
 /usr/include/bits/xopen_lim.h:
+
+/home/sleepy/vault/MFSC/include/common/constants.h:
 
 /usr/include/c++/15/bits/cpp_type_traits.h:
 
@@ -633,6 +614,10 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o:
 /usr/include/sys/types.h:
 
 /usr/include/bits/timesize.h:
+
+/usr/include/bits/unistd_ext.h:
+
+/home/sleepy/vault/MFSC/include/common/encryption_utils.h:
 
 /usr/include/c++/15/bits/requires_hosted.h:
 
@@ -645,6 +630,12 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o:
 /usr/include/c++/15/bits/locale_facets.h:
 
 /usr/include/bits/types/wint_t.h:
+
+/usr/include/bits/types/struct_timespec.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h:
+
+/usr/include/c++/15/bits/localefwd.h:
 
 /usr/include/bits/types/struct_itimerspec.h:
 
@@ -674,25 +665,17 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/bits/types/__locale_t.h:
 
-/usr/include/bits/cpu-set.h:
-
-/usr/include/c++/15/bits/new_allocator.h:
-
-/usr/include/bits/struct_rwlock.h:
-
-/usr/include/c++/15/bits/uses_allocator.h:
-
 /usr/include/bits/types/__fpos64_t.h:
 
-/usr/include/c++/15/bits/exception_ptr.h:
-
-/usr/include/bits/floatn-common.h:
-
-/usr/include/c++/15/x86_64-redhat-linux/bits/error_constants.h:
+/usr/include/bits/timex.h:
 
 /usr/include/bits/errno.h:
 
-/usr/include/bits/timex.h:
+/usr/include/bits/time64.h:
+
+/usr/include/c++/15/x86_64-redhat-linux/bits/gthr-default.h:
+
+/usr/include/bits/stdlib-float.h:
 
 /usr/include/c++/15/bits/basic_string.tcc:
 
@@ -700,11 +683,9 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/bits/atomic_wide_counter.h:
 
+/usr/include/bits/posix_opt.h:
+
 /usr/include/c++/15/bits/invoke.h:
-
-/usr/include/c++/15/bits/memoryfwd.h:
-
-/usr/include/c++/15/bits/fstream.tcc:
 
 /usr/include/bits/types/__mbstate_t.h:
 
@@ -718,19 +699,35 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/bits/locale.h:
 
+/usr/include/c++/15/bits/cxxabi_init_exception.h:
+
+/usr/include/bits/types/struct_sched_param.h:
+
+/usr/include/bits/confname.h:
+
 /usr/include/c++/15/bits/char_traits.h:
 
 /usr/include/bits/setjmp.h:
 
 /usr/include/bits/byteswap.h:
 
-/usr/include/bits/time64.h:
+/usr/include/asm-generic/bitsperlong.h:
 
-/usr/include/c++/15/x86_64-redhat-linux/bits/gthr-default.h:
+/usr/include/asm-generic/types.h:
 
-/usr/include/bits/stdlib-float.h:
+/usr/include/asm-generic/errno-base.h:
 
-/home/sleepy/vault/MFSC/include/common/encryption_utils.h:
+/usr/include/sodium/crypto_kx.h:
+
+/usr/include/sodium/randombytes.h:
+
+/home/sleepy/vault/MFSC/src/client/authed_entry.cpp:
+
+/usr/include/asm-generic/int-ll64.h:
+
+/usr/include/c++/15/bits/fstream.tcc:
+
+/usr/include/c++/15/bits/memoryfwd.h:
 
 /usr/include/c++/15/x86_64-redhat-linux/bits/ctype_inline.h:
 
@@ -754,6 +751,10 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/bits/struct_mutex.h:
 
+/usr/include/c++/15/x86_64-redhat-linux/bits/c++io.h:
+
+/usr/include/bits/types/struct_osockaddr.h:
+
 /usr/include/asm/types.h:
 
 /usr/include/alloca.h:
@@ -766,33 +767,9 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/asm-generic/socket.h:
 
-/usr/include/asm-generic/bitsperlong.h:
-
-/usr/include/asm-generic/types.h:
-
-/usr/include/asm-generic/errno-base.h:
-
-/usr/include/sodium/crypto_kx.h:
-
-/usr/include/sodium/randombytes.h:
-
-/home/sleepy/vault/MFSC/src/client/client.cpp:
-
 /usr/include/bits/posix2_lim.h:
 
-/usr/include/bits/in.h:
-
 /usr/include/asm-generic/errno.h:
-
-/usr/include/bits/floatn.h:
-
-/usr/include/c++/15/bits/refwrap.h:
-
-/usr/include/c++/15/type_traits:
-
-/usr/include/c++/15/x86_64-redhat-linux/bits/basic_file.h:
-
-/usr/include/c++/15/x86_64-redhat-linux/bits/gthr.h:
 
 /usr/include/bits/types/__sigset_t.h:
 
@@ -812,11 +789,45 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/c++/15/iostream:
 
+/usr/include/c++/15/bits/exception_ptr.h:
+
+/usr/include/bits/floatn-common.h:
+
+/usr/include/c++/15/x86_64-redhat-linux/bits/error_constants.h:
+
+/usr/include/bits/floatn.h:
+
+/usr/include/c++/15/bits/refwrap.h:
+
+/usr/include/c++/15/type_traits:
+
+/usr/include/c++/15/x86_64-redhat-linux/bits/basic_file.h:
+
+/usr/include/c++/15/x86_64-redhat-linux/bits/gthr.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/c++/15/bits/streambuf_iterator.h:
+
+/usr/include/bits/thread-shared-types.h:
+
+/usr/include/bits/waitflags.h:
+
+/usr/include/c++/15/bits/locale_facets.tcc:
+
+/usr/lib64/libc.so:
+
+/usr/include/ctype.h:
+
+/usr/include/bits/in.h:
+
 /usr/include/bits/long-double.h:
 
 /usr/include/wchar.h:
 
 /usr/include/bits/posix1_lim.h:
+
+/usr/include/c++/15/bits/basic_ios.tcc:
 
 /usr/include/bits/pthreadtypes-arch.h:
 
@@ -831,6 +842,10 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 /usr/include/bits/socket.h:
 
 /usr/include/time.h:
+
+/usr/include/asm/errno.h:
+
+/usr/include/bits/stdint-uintn.h:
 
 /usr/include/bits/types/timer_t.h:
 
@@ -848,33 +863,15 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/asm/socket.h:
 
-/usr/include/bits/types/struct_osockaddr.h:
-
-/usr/include/bits/stdint-uintn.h:
-
-/usr/include/asm/errno.h:
-
 /usr/include/c++/15/bits/ostream_insert.h:
 
 /usr/include/bits/types/error_t.h:
 
 /usr/include/c++/15/bits/utility.h:
 
+/usr/include/linux/close_range.h:
+
 /usr/include/bits/types/struct_timeval.h:
-
-/usr/include/bits/types/time_t.h:
-
-/usr/include/sodium/crypto_box.h:
-
-/usr/include/sodium/crypto_secretstream_xchacha20poly1305.h:
-
-/usr/include/bits/thread-shared-types.h:
-
-/usr/include/c++/15/x86_64-redhat-linux/bits/c++io.h:
-
-/usr/include/bits/types.h:
-
-/usr/include/c++/15/bits/streambuf_iterator.h:
 
 /usr/include/features.h:
 
@@ -884,7 +881,27 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/c++/15/x86_64-redhat-linux/bits/atomic_word.h:
 
+/usr/include/bits/types/time_t.h:
+
+/usr/include/sodium/crypto_box.h:
+
+/usr/include/sodium/crypto_secretstream_xchacha20poly1305.h:
+
+/usr/include/c++/15/bits/memory_resource.h:
+
+/usr/include/bits/cpu-set.h:
+
+/usr/include/c++/15/bits/new_allocator.h:
+
+/usr/include/bits/struct_rwlock.h:
+
+/usr/include/c++/15/bits/uses_allocator.h:
+
 /usr/include/c++/15/bits/ostream.h:
+
+/usr/include/assert.h:
+
+/usr/include/c++/15/fstream:
 
 /usr/include/bits/endianness.h:
 
@@ -952,6 +969,10 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/c++/15/cwctype:
 
+/usr/include/bits/getopt_core.h:
+
+/usr/include/c++/15/debug/debug.h:
+
 /usr/include/c++/15/ext/alloc_traits.h:
 
 /usr/include/linux/types.h:
@@ -1016,6 +1037,12 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/endian.h:
 
+/usr/include/c++/15/cstddef:
+
+/usr/include/bits/getopt_posix.h:
+
+/usr/include/errno.h:
+
 /usr/include/features-time64.h:
 
 /usr/include/gnu/stubs-64.h:
@@ -1028,9 +1055,9 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/linux/sched/types.h:
 
-/usr/include/c++/15/bits/locale_classes.h:
-
 /usr/lib/gcc/x86_64-redhat-linux/15/include/stdint.h:
+
+/usr/include/c++/15/bits/locale_classes.h:
 
 /usr/include/linux/stddef.h:
 
@@ -1053,6 +1080,14 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 /usr/include/sodium/crypto_pwhash_argon2i.h:
 
 /usr/include/sodium/export.h:
+
+/usr/include/bits/environments.h:
+
+/usr/include/bits/types/struct_FILE.h:
+
+/usr/include/c++/15/cctype:
+
+/usr/include/sodium/crypto_pwhash_argon2id.h:
 
 /usr/lib64/crti.o:
 
@@ -1080,34 +1115,6 @@ CMakeFiles/client.dir/src/client/client.cpp.o:
 
 /usr/include/sys/single_threaded.h:
 
+/usr/include/unistd.h:
+
 /usr/lib/gcc/x86_64-redhat-linux/15/include/stdarg.h:
-
-/usr/include/c++/15/bits/localefwd.h:
-
-/usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h:
-
-/usr/lib/gcc/x86_64-redhat-linux/15/include/syslimits.h:
-
-/usr/include/c++/15/fstream:
-
-/usr/include/assert.h:
-
-/usr/include/bits/confname.h:
-
-/usr/include/bits/types/struct_FILE.h:
-
-/usr/include/c++/15/cctype:
-
-/usr/include/sodium/crypto_pwhash_argon2id.h:
-
-/usr/include/bits/environments.h:
-
-/usr/include/c++/15/debug/debug.h:
-
-/usr/include/bits/getopt_core.h:
-
-/usr/include/c++/15/cstddef:
-
-/usr/include/errno.h:
-
-/usr/include/bits/getopt_posix.h:

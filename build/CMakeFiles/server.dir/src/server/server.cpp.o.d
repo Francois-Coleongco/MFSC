@@ -243,6 +243,11 @@ CMakeFiles/server.dir/src/server/server.cpp.o: \
  /usr/include/sodium/crypto_stream_salsa208.h \
  /usr/include/sodium/crypto_stream_xchacha20.h \
  /usr/include/sodium/crypto_pwhash.h /usr/include/sqlite3.h \
+ /home/sleepy/vault/MFSC/src/server/../../include/common/constants.h \
+ /usr/include/unistd.h /usr/include/bits/posix_opt.h \
+ /usr/include/bits/environments.h /usr/include/bits/confname.h \
+ /usr/include/bits/getopt_posix.h /usr/include/bits/getopt_core.h \
+ /usr/include/bits/unistd_ext.h /usr/include/linux/close_range.h \
  /home/sleepy/vault/MFSC/src/server/../../include/read_write_handlers.h \
  /home/sleepy/vault/MFSC/src/server/../../include/../include/common/SessionEnc.h \
  /home/sleepy/vault/MFSC/src/server/../../include/../include/common/encryption_utils.h \
@@ -284,8 +289,4 @@ CMakeFiles/server.dir/src/server/server.cpp.o: \
  /usr/include/c++/15/bits/unique_lock.h /usr/include/sodium/utils.h \
  /usr/include/c++/15/thread /usr/include/c++/15/bits/std_thread.h \
  /usr/include/c++/15/bits/unique_ptr.h \
- /usr/include/c++/15/bits/this_thread_sleep.h /usr/include/unistd.h \
- /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
- /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
- /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
- /usr/include/linux/close_range.h
+ /usr/include/c++/15/bits/this_thread_sleep.h

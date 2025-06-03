@@ -161,11 +161,18 @@ int FS_Operator::read_intent() {
   return intent;
 }
 
-int receive_notice_of_new_action(int client_sock) {
+int FS_Operator::receive_notice_of_new_action() {
 
   int notice;
+  SessionEncWrapper notice_wrap = SessionEncWrapper(this->client_sock);
+  unsigned long long decrypted_notice_length;
+  notice_wrap.unwrap(this->server_rx, sizeof(notice),
+                     reinterpret_cast<unsigned char *>(&notice),
+                     &decrypted_notice_length);
 
   if (notice == NEW_ACTION) {
-
+    return 0;
+  } else {
+    return 1;
   }
 }

@@ -320,6 +320,7 @@ CMakeFiles/server.dir/src/server/auth.cpp.o: /home/sleepy/vault/MFSC/src/server/
 CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp \
   /home/sleepy/vault/MFSC/include/common/SessionEnc.h \
   /home/sleepy/vault/MFSC/include/common/encryption_utils.h \
+  /home/sleepy/vault/MFSC/include/common/constants.h \
   /home/sleepy/vault/MFSC/include/read_write_handlers.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -339,12 +340,16 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/M
   /usr/include/asm/types.h \
   /usr/include/bits/atomic_wide_counter.h \
   /usr/include/bits/byteswap.h \
+  /usr/include/bits/confname.h \
   /usr/include/bits/cpu-set.h \
   /usr/include/bits/endian.h \
   /usr/include/bits/endianness.h \
+  /usr/include/bits/environments.h \
   /usr/include/bits/errno.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
+  /usr/include/bits/getopt_core.h \
+  /usr/include/bits/getopt_posix.h \
   /usr/include/bits/in.h \
   /usr/include/bits/libc-header-start.h \
   /usr/include/bits/local_lim.h \
@@ -352,6 +357,7 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/M
   /usr/include/bits/long-double.h \
   /usr/include/bits/posix1_lim.h \
   /usr/include/bits/posix2_lim.h \
+  /usr/include/bits/posix_opt.h \
   /usr/include/bits/pthread_stack_min-dynamic.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
@@ -403,6 +409,7 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/M
   /usr/include/bits/typesizes.h \
   /usr/include/bits/uintn-identity.h \
   /usr/include/bits/uio_lim.h \
+  /usr/include/bits/unistd_ext.h \
   /usr/include/bits/waitflags.h \
   /usr/include/bits/waitstatus.h \
   /usr/include/bits/wchar.h \
@@ -525,6 +532,7 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/M
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
   /usr/include/limits.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
   /usr/include/linux/posix_types.h \
@@ -558,6 +566,7 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/M
   /usr/include/sys/socket.h \
   /usr/include/sys/types.h \
   /usr/include/time.h \
+  /usr/include/unistd.h \
   /usr/include/wchar.h \
   /usr/include/wctype.h \
   /usr/lib/gcc/x86_64-redhat-linux/15/include/limits.h \
@@ -570,6 +579,7 @@ CMakeFiles/server.dir/src/server/server.cpp.o: /home/sleepy/vault/MFSC/src/serve
   /home/sleepy/vault/MFSC/include/common/SessionEnc.h \
   /home/sleepy/vault/MFSC/include/common/encryption_utils.h \
   /home/sleepy/vault/MFSC/include/auth.h \
+  /home/sleepy/vault/MFSC/include/common/constants.h \
   /home/sleepy/vault/MFSC/include/read_write_handlers.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
@@ -994,8 +1004,6 @@ CMakeFiles/server.dir/src/server/server.cpp.o:
 
 /lib64/ld-linux-x86-64.so.2:
 
-/usr/include/linux/close_range.h:
-
 /usr/include/c++/15/vector:
 
 /usr/include/c++/15/unordered_map:
@@ -1028,27 +1036,31 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o:
 
 /usr/include/c++/15/array:
 
-/usr/include/c++/15/mutex:
-
-/usr/include/bits/unistd_ext.h:
-
-/usr/include/bits/posix_opt.h:
-
-/usr/include/bits/confname.h:
-
 /usr/include/sys/socket.h:
+
+/usr/include/linux/close_range.h:
 
 /usr/include/c++/15/x86_64-redhat-linux/bits/c++io.h:
 
 /usr/include/c++/15/x86_64-redhat-linux/bits/basic_file.h:
 
+/usr/include/c++/15/mutex:
+
+/usr/include/bits/unistd_ext.h:
+
 /usr/include/bits/types/struct_osockaddr.h:
 
+/usr/include/bits/posix_opt.h:
+
 /usr/include/bits/in.h:
+
+/usr/include/bits/confname.h:
 
 /usr/include/asm/socket.h:
 
 /usr/include/asm-generic/socket.h:
+
+/home/sleepy/vault/MFSC/include/common/constants.h:
 
 /home/sleepy/vault/MFSC/include/common/SessionEnc.h:
 

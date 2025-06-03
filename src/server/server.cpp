@@ -1,4 +1,5 @@
 #include "../../include/auth.h"
+#include "../../include/common/constants.h"
 #include "../../include/read_write_handlers.h"
 #include <array>
 #include <atomic>
@@ -20,7 +21,6 @@
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
-#include "../../include/common/constants.h"
 
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
@@ -268,36 +268,33 @@ void handle_conn(sqlite3 *DB, int client_sock) {
     return;
   }
 
-  send(client_sock, &ACK_SUC, sizeof(int), 0);
-
-  if (receive_notice_of_new_action()) {
-    std::cerr << "did not receive a notice of new action\n";
-    return;
-  };
+  send(client_sock, &ACK_SUC, sizeof(int), 0); // successful login
 
   FS_Operator OP = FS_Operator(client_sock, server_rx, server_tx);
-  // PAST THIS POINT THE SERVER TX AND RX ARE ZEROED OUT EXCEPT THE INSTANCE
-  // WITHIN OP
 
-  int intent;
-  unsigned long long decrypted_data_length;
-  SessionEncWrapper nonce_wrap = SessionEncWrapper(client_sock);
-  nonce_wrap.unwrap(server_rx, sizeof(intent),
-                    reinterpret_cast<unsigned char *>(&intent),
-                    &decrypted_data_length);
+  bool perform_next = false;
 
-  if (intent == READ_FROM_FILESYSTEM) {
-    OP.RFFS_Handler__Server();
-  } else if (intent == WRITE_TO_FILESYSTEM) {
-    OP.WTFS_Handler__Server();
-    std::cerr << "after WTFS_Handler\n";
-  } else {
-    std::cerr << "invalid intention\n";
-  }
+  do {
 
-  // end the loop here cuz zombify is after client ends communications
+    if (OP.receive_notice_of_new_action()) {
+      std::cerr << "did not receive a notice of new action\n";
+      perform_next = true;
+      return;
+    }
 
-  zombify(client_sock);
+    if (OP.read_intent() == READ_FROM_FILESYSTEM) {
+      OP.RFFS_Handler__Server();
+    } else if (OP.read_intent() == WRITE_TO_FILESYSTEM) {
+      OP.WTFS_Handler__Server();
+      std::cerr << "after WTFS_Handler\n";
+    } else {
+      std::cerr << "invalid intention\n";
+    }
+  } while (perform_next);
+
+      // end the loop here cuz zombify is after client ends communications
+
+      zombify(client_sock);
 }
 
 void kill_server(std::atomic<bool> &server_alive, int server_sock) {

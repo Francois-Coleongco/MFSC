@@ -6,12 +6,12 @@
 int encrypt_stream_buffer(
     unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
     unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES],
-    unsigned char *msg_box, unsigned long long message_len, unsigned char *ciphertext,
-    unsigned long long *ciphertext_len) {
+    const unsigned char *message, unsigned long long message_len,
+    unsigned char *ciphertext, unsigned long long *ciphertext_len) {
 
   randombytes_buf(nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
-  if (crypto_aead_chacha20poly1305_encrypt(ciphertext, ciphertext_len, msg_box,
+  if (crypto_aead_chacha20poly1305_encrypt(ciphertext, ciphertext_len, message,
                                            message_len, NULL, 0, NULL, nonce,
                                            client_tx)) {
     std::cerr << "encryption failed" << std::endl;
@@ -23,8 +23,8 @@ int encrypt_stream_buffer(
 }
 
 int server_crypt_gen(int client_sock, unsigned char *server_pk,
-              unsigned char *server_sk, unsigned char *server_rx,
-              unsigned char *server_tx) {
+                     unsigned char *server_sk, unsigned char *server_rx,
+                     unsigned char *server_tx) {
 
   crypto_kx_keypair(server_pk, server_sk);
   std::cerr << "this is server_pk" << std::endl;
@@ -57,10 +57,9 @@ int server_crypt_gen(int client_sock, unsigned char *server_pk,
   return 0;
 }
 
-
 int client_crypt_gen(int client_sock, unsigned char *client_pk,
-              unsigned char *client_sk, unsigned char *client_rx,
-              unsigned char *client_tx) {
+                     unsigned char *client_sk, unsigned char *client_rx,
+                     unsigned char *client_tx) {
 
   /* Generate the client's key pair */
   crypto_kx_keypair(client_pk, client_sk);

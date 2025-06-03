@@ -179,7 +179,7 @@ int authed_comms(int client_sock,
   char perform_next = 'n';
 
   do {
-    if (CA.notify_server_of_new_action() <= 0) {
+    if (CA.notify_server_of_new_action()) {
       std::cerr << "couldn't notify server of new user action\n";
       break;
     };
@@ -211,6 +211,7 @@ int authed_comms(int client_sock,
       std::cerr << "invalid intention\n";
     }
 
+    std::cout << "perform another action?\n";
     std::cin >> perform_next;
   } while (perform_next == 'y' || perform_next == 'Y');
 

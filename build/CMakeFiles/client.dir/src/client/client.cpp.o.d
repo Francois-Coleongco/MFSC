@@ -1,23 +1,28 @@
 CMakeFiles/client.dir/src/client/client.cpp.o: \
  /home/sleepy/vault/MFSC/src/client/client.cpp /usr/include/stdc-predef.h \
+ /home/sleepy/vault/MFSC/src/client/../../include/common/constants.h \
+ /usr/include/unistd.h /usr/include/features.h \
+ /usr/include/features-time64.h /usr/include/bits/wordsize.h \
+ /usr/include/bits/timesize.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/long-double.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-64.h /usr/include/bits/posix_opt.h \
+ /usr/include/bits/environments.h /usr/include/bits/types.h \
+ /usr/include/bits/typesizes.h /usr/include/bits/time64.h \
+ /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
+ /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
+ /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
+ /usr/include/linux/close_range.h \
  /home/sleepy/vault/MFSC/src/client/../../include/authed_entry.h \
  /usr/include/c++/15/cstring /usr/include/c++/15/bits/version.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
- /usr/include/bits/wordsize.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/os_defines.h \
- /usr/include/features.h /usr/include/features-time64.h \
- /usr/include/bits/timesize.h /usr/include/sys/cdefs.h \
- /usr/include/bits/long-double.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/cpu_defines.h \
  /usr/include/c++/15/pstl/pstl_config.h /usr/include/string.h \
- /usr/include/bits/libc-header-start.h \
- /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
- /usr/include/bits/types/locale_t.h /usr/include/bits/types/__locale_t.h \
- /usr/include/strings.h /usr/include/c++/15/fstream \
- /usr/include/c++/15/bits/requires_hosted.h /usr/include/c++/15/istream \
- /usr/include/c++/15/ios /usr/include/c++/15/iosfwd \
- /usr/include/c++/15/bits/stringfwd.h \
+ /usr/include/bits/libc-header-start.h /usr/include/bits/types/locale_t.h \
+ /usr/include/bits/types/__locale_t.h /usr/include/strings.h \
+ /usr/include/c++/15/fstream /usr/include/c++/15/bits/requires_hosted.h \
+ /usr/include/c++/15/istream /usr/include/c++/15/ios \
+ /usr/include/c++/15/iosfwd /usr/include/c++/15/bits/stringfwd.h \
  /usr/include/c++/15/bits/memoryfwd.h /usr/include/c++/15/bits/postypes.h \
  /usr/include/c++/15/cwchar /usr/include/wchar.h \
  /usr/include/bits/floatn.h /usr/include/bits/floatn-common.h \
@@ -39,10 +44,9 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++locale.h \
  /usr/include/c++/15/clocale /usr/include/locale.h \
  /usr/include/bits/locale.h /usr/include/c++/15/cctype \
- /usr/include/ctype.h /usr/include/bits/types.h \
- /usr/include/bits/typesizes.h /usr/include/bits/time64.h \
- /usr/include/bits/endian.h /usr/include/bits/endianness.h \
- /usr/include/c++/15/bits/ios_base.h /usr/include/c++/15/ext/atomicity.h \
+ /usr/include/ctype.h /usr/include/bits/endian.h \
+ /usr/include/bits/endianness.h /usr/include/c++/15/bits/ios_base.h \
+ /usr/include/c++/15/ext/atomicity.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/gthr.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/gthr-default.h \
  /usr/include/pthread.h /usr/include/sched.h \
@@ -163,15 +167,11 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /usr/include/asm/socket.h /usr/include/asm-generic/socket.h \
  /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
  /usr/include/bits/types/struct_osockaddr.h \
+ /home/sleepy/vault/MFSC/src/client/../../include/common/SessionEnc.h \
  /home/sleepy/vault/MFSC/src/client/../../include/common/encryption_utils.h \
  /usr/include/netinet/in.h /usr/include/bits/in.h \
  /usr/include/sodium/crypto_aead_chacha20poly1305.h \
- /usr/include/sodium/randombytes.h /usr/include/c++/15/array \
- /usr/include/c++/15/compare /usr/include/c++/15/cassert \
+ /usr/include/sodium/randombytes.h /usr/include/c++/15/cassert \
  /usr/include/assert.h /usr/include/c++/15/optional \
  /usr/include/c++/15/bits/enable_special_members.h \
- /usr/include/sodium/utils.h /usr/include/unistd.h \
- /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
- /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
- /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
- /usr/include/linux/close_range.h
+ /usr/include/sodium/utils.h
