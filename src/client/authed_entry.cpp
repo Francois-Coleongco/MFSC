@@ -1,5 +1,6 @@
 // everything in this file contains resources for the server after a user is
 // authenticated.
+#include "../../include/common/constants.h"
 #include "../../include/authed_entry.h"
 #include "../../include/common/SessionEnc.h"
 #include <cstring>
@@ -15,7 +16,7 @@
 Comms_Agent::Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
                          unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
                          int client_sock)
-    : client_sock(client_sock) {
+    : client_sock(client_sock), SA_active(false), RA_active(false) {
 
   std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->client_rx, client_rx, crypto_kx_SESSIONKEYBYTES);
@@ -30,11 +31,30 @@ Comms_Agent::~Comms_Agent() {
   sodium_memzero(this->client_tx, crypto_kx_SESSIONKEYBYTES);
 }
 
+void Comms_Agent::set_SA_status(bool stat) { this->SA_active = stat; }
+bool Comms_Agent::SA_stat() { return this->SA_active; }
+
+void Comms_Agent::set_RA_status(bool stat) { this->RA_active = stat; }
+bool Comms_Agent::RA_stat() { return this->RA_active; }
+
 int Comms_Agent::get_socket() { return this->client_sock; }
 
 unsigned char *Comms_Agent::get_client_tx() { return this->client_tx; }
 
 unsigned char *Comms_Agent::get_client_rx() { return this->client_rx; }
+
+int Comms_Agent::notify_server_of_new_action() {
+  SessionEncWrapper notif =
+      SessionEncWrapper(reinterpret_cast<const unsigned char *>(&NEW_ACTION),
+                        sizeof(NEW_ACTION), this->get_client_tx());
+
+  notif.send_data_length(this->client_sock);
+  notif.send_nonce(this->client_sock);
+  notif.send_data(this->client_sock);
+
+  return 0;
+
+}
 
 int Sender_Agent::send_buffer() {
   // just sends the buffer
@@ -125,7 +145,7 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   std::cerr << "debug end client\n";
 
-  unsigned char file_chunk[chunk_size];
+  unsigned char file_chunk[CHUNK_SIZE];
 
   int tag = 0;
 
@@ -133,7 +153,7 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
     std::cout << "encrypting a chunk wee woo" << std::endl;
 
-    file.read(reinterpret_cast<char *>(file_chunk), chunk_size);
+    file.read(reinterpret_cast<char *>(file_chunk), CHUNK_SIZE);
 
     unsigned long long file_chunk_len = file.gcount();
 
@@ -157,6 +177,11 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
 
   } while (!file.eof());
 
+  // when done with file, zero it out so next usage of Sender_Agent will use
+  // same object
+  sodium_memzero(this->key, crypto_box_SEEDBYTES);
+  sodium_memzero(this->salt, crypto_pwhash_SALTBYTES);
+
   return 0;
 }
 
@@ -170,13 +195,42 @@ void Sender_Agent::set_salt(unsigned char new_salt[crypto_pwhash_SALTBYTES]) {
   sodium_memzero(new_salt, crypto_pwhash_SALTBYTES);
 }
 
-Sender_Agent::Sender_Agent(Comms_Agent *CA)
-    : size{0}, CA(CA),
-      key{} {}; // remember the buffer here holds the ciphertext not the message
+int Sender_Agent::set_crypto(std::string &password) {
+  randombytes_buf(
+      this->salt,
+      crypto_pwhash_SALTBYTES); // this salt is for encryption NOT logging in.
+                                // for logging in, the salt is stored with the
+                                // hash on the server in the argon format. user
+                                // supplies password which is combined with salt
+                                // to create hash and if it matches they are in
+
+  std::cout << "made salt, creating key" << std::endl;
+
+  if (crypto_pwhash(this->key, crypto_box_SEEDBYTES, password.data(),
+                    password.size(), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
+                    crypto_pwhash_MEMLIMIT_INTERACTIVE,
+                    crypto_pwhash_ALG_DEFAULT) != 0) {
+    /* out of memory */
+    std::cerr << "out of mem" << std::endl;
+    return 1;
+  }
+  return 0;
+}
+
+Sender_Agent::Sender_Agent(Comms_Agent *CA, std::string &password)
+    : size{0}, CA(CA) {
+
+  if (set_crypto(password)) {
+    std::cerr << "error in set_crypto\n";
+  }
+
+  this->CA->set_SA_status(true);
+};
 
 Sender_Agent::~Sender_Agent() {
   this->size = 0;
   sodium_memzero(this->key, crypto_box_SEEDBYTES);
+  sodium_memzero(this->salt, crypto_pwhash_SALTBYTES);
+  CA->set_SA_status(false);
+  CA->set_RA_status(false);
 }
-
-;

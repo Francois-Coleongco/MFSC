@@ -1,4 +1,6 @@
 #include "../../include/read_write_handlers.h"
+#include "../../include/common/constants.h"
+
 #include <cstring>
 #include <sodium/utils.h>
 
@@ -6,7 +8,6 @@ const unsigned char FILE_NAME_BUF_SIZE =
     250; // remove 5 from 255 because that is reserved for the .enc extension
          // (null byte included)
 const std::string ext = ".enc";
-const unsigned long long CHUNK_SIZE = 4096;
 
 FS_Operator::FS_Operator(int client_sock,
                          unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
@@ -147,4 +148,24 @@ int FS_Operator::RFFS_Handler__Server() {
   } while (!file.eof());
 
   return 0;
+}
+
+int FS_Operator::read_intent() {
+  int intent;
+  unsigned long long decrypted_data_length;
+  SessionEncWrapper nonce_wrap = SessionEncWrapper(client_sock);
+  nonce_wrap.unwrap(server_rx, sizeof(intent),
+                    reinterpret_cast<unsigned char *>(&intent),
+                    &decrypted_data_length);
+
+  return intent;
+}
+
+int receive_notice_of_new_action(int client_sock) {
+
+  int notice;
+
+  if (notice == NEW_ACTION) {
+
+  }
 }

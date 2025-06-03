@@ -20,8 +20,8 @@
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
+#include "../../include/common/constants.h"
 
-const size_t CHUNK_SIZE = 4096;
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
 const int MAX_ZOMBIE_CONNS = 8;
@@ -137,8 +137,8 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 
   unsigned char password_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
-  if(recv(client_sock, username_nonce,
-                                  crypto_aead_chacha20poly1305_NPUBBYTES, 0) <= 0) {
+  if (recv(client_sock, username_nonce, crypto_aead_chacha20poly1305_NPUBBYTES,
+           0) <= 0) {
     std::cerr << "unable to read username_nonce\n";
     return 4;
   };
@@ -244,7 +244,8 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
       server_tx[crypto_kx_SESSIONKEYBYTES];
 
-  if (server_crypt_gen(client_sock, server_pk, server_sk, server_rx, server_tx)) {
+  if (server_crypt_gen(client_sock, server_pk, server_sk, server_rx,
+                       server_tx)) {
     std::cerr << "couldn't gen keys :c" << std::endl;
   }
 
@@ -269,50 +270,29 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
   send(client_sock, &ACK_SUC, sizeof(int), 0);
 
-  // need to move code starting from here
-  std::array<unsigned char, crypto_aead_chacha20poly1305_NPUBBYTES>
-      intention_nonce;
-
-  recv(client_sock, intention_nonce.data(),
-       crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-
-  int intent;
-
-  unsigned long long intent_len;
-
-  std::array<unsigned char, sizeof(intent)> intent_arr;
-
-  std::array<unsigned char,
-             sizeof(intent) + crypto_aead_chacha20poly1305_ABYTES>
-      intention_cipher;
-
-  recv(client_sock, intention_cipher.data(),
-       sizeof(intent) + crypto_aead_chacha20poly1305_ABYTES, 0);
-
-  if (crypto_aead_chacha20poly1305_decrypt(
-          intent_arr.data(), &intent_len, NULL,
-          reinterpret_cast<unsigned char *>((intention_cipher.data())),
-          intention_cipher.size(), NULL, 0, intention_nonce.data(),
-          server_rx) != 0) {
-    std::cerr << "error decrypting intention" << std::endl;
-
-    // loop again letting client know there was an error and to try again
-  }
-
-  std::memcpy(&intent, intent_arr.data(), intent_len);
-
-  std::cerr << "user's intention was " << intent << std::endl;
-  std::cerr << "SUCCESSFUL <INTENTION> DECRYPTION" << std::endl;
+  if (receive_notice_of_new_action()) {
+    std::cerr << "did not receive a notice of new action\n";
+    return;
+  };
 
   FS_Operator OP = FS_Operator(client_sock, server_rx, server_tx);
   // PAST THIS POINT THE SERVER TX AND RX ARE ZEROED OUT EXCEPT THE INSTANCE
   // WITHIN OP
+
+  int intent;
+  unsigned long long decrypted_data_length;
+  SessionEncWrapper nonce_wrap = SessionEncWrapper(client_sock);
+  nonce_wrap.unwrap(server_rx, sizeof(intent),
+                    reinterpret_cast<unsigned char *>(&intent),
+                    &decrypted_data_length);
 
   if (intent == READ_FROM_FILESYSTEM) {
     OP.RFFS_Handler__Server();
   } else if (intent == WRITE_TO_FILESYSTEM) {
     OP.WTFS_Handler__Server();
     std::cerr << "after WTFS_Handler\n";
+  } else {
+    std::cerr << "invalid intention\n";
   }
 
   // end the loop here cuz zombify is after client ends communications

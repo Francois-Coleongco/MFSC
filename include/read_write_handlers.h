@@ -20,6 +20,9 @@ private:
       unsigned char salt[crypto_pwhash_SALTBYTES]);
 
 public:
+
+  int read_intent();
+
   int WTFS_Handler__Server(); // Write To File System Handler
 
   int RFFS_Handler__Server(); // Read From File System Handler
@@ -29,3 +32,5 @@ public:
               unsigned char server_tx[crypto_kx_SESSIONKEYBYTES]);
   ~FS_Operator();
 };
+
+int receive_notice_of_new_action();

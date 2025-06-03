@@ -1,12 +1,12 @@
+#include "../../include/common/constants.h"
 #include "../../include/authed_entry.h"
+#include "../../include/common/SessionEnc.h"
 #include "../../include/common/encryption_utils.h"
-#include <array>
 #include <cassert>
-#include <chrono>
 #include <cstdio>
-#include <cstring>
 #include <iostream>
 #include <netinet/in.h>
+#include <optional>
 #include <sodium/crypto_aead_chacha20poly1305.h>
 #include <sodium/crypto_box.h>
 #include <sodium/crypto_kx.h>
@@ -15,7 +15,6 @@
 #include <sodium/randombytes.h>
 #include <sodium/utils.h>
 #include <sys/socket.h>
-#include <thread>
 #include <unistd.h>
 
 // intentions
@@ -35,10 +34,7 @@ template <typename T> void get_stuff(T &stuff_holder) {
 }
 
 int send_credentials(int client_sock, unsigned char *client_tx,
-                     std::string &pswd_tmp) {
-
-  std::string username;
-  std::string password;
+                     std::string &username, std::string &password) {
 
   std::cout << "enter username:" << std::endl;
   std::cin >> username;
@@ -46,6 +42,7 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   std::cin >> password;
 
   // encrypt the username and password and send it over to the server and wait
+  //
   // for a resposne
 
   unsigned char username_ciphertext[username.length() + 1 +
@@ -103,81 +100,53 @@ int send_credentials(int client_sock, unsigned char *client_tx,
     exit(-1);
   }
 
-  pswd_tmp = password;
-
-  // communications with the server are now authenticated to this point
-
-  sodium_memzero(password.data(), password.size());
   sodium_memzero(username.data(), username.size());
 
   return 0;
 }
 
-int Send_Intention(unsigned char *client_tx, int client_sock, int intent) {
+int send_intention(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                   int client_sock, int intent) {
 
-  std::array<unsigned char, sizeof(intent)> arr;
+  SessionEncWrapper intent_wrap = SessionEncWrapper(
+      reinterpret_cast<unsigned char *>(&intent), sizeof(intent), client_tx);
 
-  std::array<unsigned char,
-             sizeof(intent) + crypto_aead_chacha20poly1305_ABYTES>
-      intention_cipher;
-  std::memcpy(arr.data(), &intent, sizeof(intent));
-
-  unsigned long long intention_cipher_size;
-
-  unsigned char intention_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
-
-  if (encrypt_stream_buffer(client_tx, intention_nonce, arr.data(), arr.size(),
-                            intention_cipher.data(), &intention_cipher_size)) {
-    return -1;
-  }
-
-  // send the nonce and array
-  send(client_sock, intention_nonce, crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-
-  send(client_sock, intention_cipher.data(), intention_cipher.size(), 0);
+  intent_wrap.send_data_length(client_sock);
+  intent_wrap.send_nonce(client_sock);
+  intent_wrap.send_data(client_sock);
 
   return 0;
 }
 
-int WTFS_Handler(Comms_Agent *CA, int client_sock,
-                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-                 unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-                 std::string &pswd_tmp) {
+// int RFFS_Handler(Comms_Agent *CA, std::optional<Receiver_Agent> &RA,
+//                  int client_sock, std::string &password) {
+//   if (!CA->RA_stat()) {
+//     RA.emplace(CA, password);
+//   }
+//
+//   std::string file_name;
+//
+//   std::cin >> file_name;
+//
+//   // read file in chunks, decrypting it as it comes in and writing it to a
+//   // file of the same name user requested
+//   return 0;
+// }
+
+int WTFS_Handler(Comms_Agent *CA, std::optional<Sender_Agent> &SA,
+                 int client_sock, std::string &password) {
   std::cerr << "made it here in WTFS_Handler\n";
 
-  Sender_Agent s = Sender_Agent(CA);
-
-  unsigned char
-      salt[crypto_pwhash_SALTBYTES]; // needs to be stored in the sqlite db.
-
-  unsigned char key[crypto_box_SEEDBYTES];
-
-  randombytes_buf(
-      salt,
-      sizeof salt); // this salt is for encryption NOT logging in. for logging
-                    // in, the salt is stored with the hash on the server in the
-                    // argon format. user supplies password which is combined
-                    // with salt to create hash and if it matches they are in
-
-  std::cout << "made salt, creating key" << std::endl;
-
-  if (crypto_pwhash(key, sizeof key, pswd_tmp.data(), pswd_tmp.length(), salt,
-                    crypto_pwhash_OPSLIMIT_INTERACTIVE,
-                    crypto_pwhash_MEMLIMIT_INTERACTIVE,
-                    crypto_pwhash_ALG_DEFAULT) != 0) {
-    /* out of memory */
-    std::cerr << "out of mem" << std::endl;
+  if (!CA->SA_stat()) {
+    SA.emplace(CA, password);
+  } else {
+    // object alrdy exists, just need to reset the keys and salt for forward
+    // secrecy between files
+    if (SA->set_crypto(password)) {
+      std::cerr << "error in set_crypto\n";
+      return 1;
+    }
   }
-
-  std::cout << "made key!" << std::endl;
-
-  sodium_memzero(pswd_tmp.data(), pswd_tmp.size());
-
-  s.set_key(key);
-  s.set_salt(salt); // salt used to make key should be part of the prefix of
-                    // encrypted file on server fs
-
-  std::cout << "set key!" << std::endl;
 
   std::cout << "enter file name to send to server" << std::endl;
 
@@ -185,12 +154,11 @@ int WTFS_Handler(Comms_Agent *CA, int client_sock,
 
   get_stuff(file_name);
 
-  int enc_stat = s.encrypt_and_send_to_server(file_name);
+  int enc_stat = SA->encrypt_and_send_to_server(file_name);
 
   if (enc_stat != 0) {
     std::cerr << "error enc_stat was not 0. error in read_and_create"
               << std::endl;
-    return -1;
   }
 
   return 0;
@@ -199,45 +167,55 @@ int WTFS_Handler(Comms_Agent *CA, int client_sock,
 int authed_comms(int client_sock,
                  unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
                  unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-                 std::string &pswd_tmp) {
+                 std::string &username, std::string &password) {
 
   Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
-  /// loop from here to the end of the function depending on what the user syas
-  /// they want to do. aka if they wish to complete another action, don't
+  /// loop from here to the end of the function depending on what the user
+  /// syas they want to do. aka if they wish to complete another action, don't
   /// deconstruct the CA, save it for future. REMEMBER in creating CA you
   /// destroyed the original keys. you have no way of communication without
   /// them.
-  std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
-  int intention = CONFUSION;
 
-  get_stuff(intention);
+  char perform_next = 'n';
 
-  // when writing files, we use pswd_tmp to create a hash with a random salt.
-  // then we encrypt the data, and send it along with the random salt to store.
-  //
-  // when reading files, we use pswd_tmp to create a hash with the random salt
-  // attached to the encrypted data on the server, and use this derived key to
-  // decrypt on the client side.
-  //
-  // NO KEYS SHOULD EVER BE IN THE HANDS OF THE SERVER
-
-  // can store the bits of the intention as a char array and send it down the
-  // wire
-
-  if (intention == CONFUSION) {
-    return -1;
-  }
-
-  if (intention == READ_FROM_FILESYSTEM) {
-    Send_Intention(CA.get_client_tx(), client_sock, intention);
-    // if (RFFS_Handler(client_sock, CA.get_client_tx(), pswd_tmp)) {
-    //   send(client_sock, &ACK_FAIL, sizeof(ACK_SUC), 0);
-    // }
-  } else if (intention == WRITE_TO_FILESYSTEM) {
-    Send_Intention(CA.get_client_tx(), client_sock, intention);
-    if (WTFS_Handler(&CA, client_sock, client_tx, client_rx, pswd_tmp)) {
+  do {
+    if (CA.notify_server_of_new_action() <= 0) {
+      std::cerr << "couldn't notify server of new user action\n";
+      break;
     };
-  }
+
+    std::cout << "enter your intention (1 == read || 2 == write)" << std::endl;
+
+    int intention = CONFUSION;
+
+    get_stuff(intention);
+
+    std::optional<Sender_Agent> SA;
+    // std::optional<Receiver_Agent> RA;
+
+    if (intention == CONFUSION) {
+      return -1;
+    }
+
+    if (intention == READ_FROM_FILESYSTEM) {
+      send_intention(CA.get_client_tx(), client_sock, intention);
+      // if (RFFS_Handler(&CA, RA, client_sock, password)) {
+      //   std::cerr << "failed reading from file system\n";
+      // }
+    } else if (intention == WRITE_TO_FILESYSTEM) {
+      send_intention(CA.get_client_tx(), client_sock, intention);
+      if (WTFS_Handler(&CA, SA, client_sock, password)) {
+        std::cerr << "failed writing to file system\n";
+      };
+    } else {
+      std::cerr << "invalid intention\n";
+    }
+
+    std::cin >> perform_next;
+  } while (perform_next == 'y' || perform_next == 'Y');
+
+  // already memzeroed the username during send_credentials
+  sodium_memzero(password.data(), password.size());
   return 0;
 }
 
@@ -269,26 +247,18 @@ int main() {
 
   std::cerr << std::endl;
 
-  std::string pswd_tmp;
+  std::string username;
+  std::string password;
 
   int intention = CONFUSION;
 
-  if (send_credentials(client_sock, client_tx, pswd_tmp)) {
+  if (send_credentials(client_sock, client_tx, username, password)) {
     std::cerr << "exiting login_handle" << std::endl;
-  } else {
+    return 2;
+  }
 
-    char stat;
+  authed_comms(client_sock, client_tx, client_rx, username, password);
 
-    do {
-      authed_comms(client_sock, client_tx, client_rx, pswd_tmp);
-      std::cout
-          << "would you like to perform another action? yY/<any other key>"
-          << std::endl;
-      get_stuff(stat);
-    } while (stat == 'y' || stat == 'Y');
-
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-  }; // this will contain the rest of the follwoing after
-  // no signup, this is only done by the admin of the server who can add
-  // themselves to the sql db
-}
+} // this will contain the rest of the follwoing after
+// no signup, this is only done by the admin of the server who can add
+// themselves to the sql db

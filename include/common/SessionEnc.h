@@ -21,7 +21,7 @@ public:
 
   SessionEncWrapper(int client_sock); // for readers
   SessionEncWrapper(
-      unsigned char *data, unsigned long long data_length,
+      const unsigned char *data, unsigned long long data_length,
       unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]); // for writers
   // both of these constructors will use the encrypt_stream_buffer function in
   // encryption_utils.
