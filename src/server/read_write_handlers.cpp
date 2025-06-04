@@ -47,7 +47,8 @@ int FS_Operator::init_read(
     return 1;
   }
 
-  std::cerr << "decrypted_file_name_length: " << decrypted_file_name_length << "\n";
+  std::cerr << "decrypted_file_name_length: " << decrypted_file_name_length
+            << "\n";
 
   // decrypted file length will be NOT null terminated. so i need to null
   // terminate it before it leaves int_read
@@ -86,10 +87,12 @@ int FS_Operator::WTFS_Handler__Server() {
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
 
-  int init_read_err_code =
-      init_read(this->client_sock, file_name_buf, header, salt);
+  if (init_read(this->client_sock, file_name_buf, header, salt)) {
+    return 1;
+  }
 
   std::string file_name = file_name_buf;
+
   file_name.append(".enc");
 
   std::cerr << "this is file_name now after adding ext: " << file_name << "\n";
@@ -105,7 +108,8 @@ int FS_Operator::WTFS_Handler__Server() {
 
   while (true) {
     SessionEncWrapper encrypted_data_wrap = SessionEncWrapper(client_sock);
-    if (encrypted_data_wrap.get_data_length() == 0) {
+    if (encrypted_data_wrap.get_data_length() < stream_chunk_size) { // this works because we always fill the buffer to the max when we transmit if possible.
+      std::cerr << "found last chunk\n";
       break; // we came across the last chunk already in the previous iteration
     }
     encrypted_data_wrap.write_to_file(file);
@@ -173,11 +177,11 @@ int FS_Operator::receive_notice_of_new_action() {
                      reinterpret_cast<unsigned char *>(&notice),
                      &decrypted_notice_length);
 
-  if (notice == NEW_ACTION) {
-    std::cerr << "NEW ACTION INISIATED\n";
-    return 0;
-  } else {
+  if (notice != NEW_ACTION) {
     std::cerr << "RETURNED ONE FROM NEWACTION NOOOOOOOOOOOOOO\n";
     return 1;
+  } else {
+    std::cerr << "NEW ACTION INISIATED\n";
+    return 0;
   }
 }

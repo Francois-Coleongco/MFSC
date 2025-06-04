@@ -58,6 +58,8 @@ int Sender_Agent::send_buffer() {
   buf_wrap.send_nonce(
       client_sock); // around because i need to return if data lenght is 0
   buf_wrap.send_data(client_sock);
+  std::cerr << "this is the data length sent via send_buffer "
+            << buf_wrap.get_data_length() << "\n";
 
   return 0;
 }
@@ -92,6 +94,12 @@ int Sender_Agent::init_send(
   salt_wrap.send_data(client_sock);
 
   return 0;
+}
+
+void Sender_Agent::send_end_buffer() {
+  sodium_memzero(this->buffer,
+                 CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES);
+  this->size = CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES;
 }
 
 int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {

@@ -11,6 +11,7 @@ class SessionEncWrapper {
   // data under two layers of encryption. first by file encryption means, and
   // the next by session
   bool corrupted;
+  bool empty;
   unsigned char session_encrypted_data[stream_chunk_size];
   unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned long long session_encrypted_data_length;
@@ -39,4 +40,5 @@ public:
   int write_to_file(std::ofstream &file);
 
   bool is_corrupted();
+  bool is_empty();
 };

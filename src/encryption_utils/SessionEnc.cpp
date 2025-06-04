@@ -6,14 +6,16 @@
 
 SessionEncWrapper::SessionEncWrapper(
     const unsigned char *data, unsigned long long data_length,
-    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]) { // for writers
+    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES])
+    : session_encrypted_data_length(0) { // for writers
 
   encrypt_stream_buffer(client_tx, this->nonce, data, data_length,
                         this->session_encrypted_data,
                         &this->session_encrypted_data_length);
 };
 
-SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
+SessionEncWrapper::SessionEncWrapper(int client_sock)
+    : empty(true) { // for readers
   std::cerr << "started reading construction\n";
   if (recv(client_sock, &this->session_encrypted_data_length,
            sizeof(this->session_encrypted_data_length), 0) <= 0) {
@@ -21,8 +23,7 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
     return;
   };
 
-  if (session_encrypted_data_length == 0 ||
-      session_encrypted_data_length > stream_chunk_size) {
+  if (session_encrypted_data_length > stream_chunk_size) {
     this->corrupted = true;
     return;
   }
@@ -41,6 +42,7 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
   std::cerr << "this is the length of the data "
             << this->session_encrypted_data_length << "\n";
 
+  this->empty = false;
   this->corrupted = false;
   std::cerr << "finished reading construction\n";
 };
@@ -123,3 +125,4 @@ int SessionEncWrapper::write_to_file(std::ofstream &file) {
 };
 
 bool SessionEncWrapper::is_corrupted() { return this->corrupted; }
+bool SessionEncWrapper::is_empty() { return this->empty; }

@@ -59,6 +59,7 @@ class Sender_Agent {
 
 private:
   int send_buffer();
+  void send_end_buffer();
   int init_send(
       unsigned char file_name[255], unsigned long long file_name_length,
       unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],

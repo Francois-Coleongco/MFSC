@@ -279,7 +279,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
     if (OP.receive_notice_of_new_action()) {
       std::cerr << "did not receive a notice of new action\n";
       perform_next = false;
-      return;
+      break;
     } else {
       perform_next = true;
     }

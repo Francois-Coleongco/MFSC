@@ -5,7 +5,6 @@
 #include <cassert>
 #include <iostream>
 #include <netinet/in.h>
-#include <optional>
 #include <sodium/crypto_aead_chacha20poly1305.h>
 #include <sodium/crypto_box.h>
 #include <sodium/crypto_kx.h>
