@@ -1,6 +1,7 @@
 #include "../../include/auth.h"
 #include "../../include/common/constants.h"
 #include "../../include/read_write_handlers.h"
+#include "../../include/server_logger.h"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -32,12 +33,8 @@ const int CONFUSION = -420;
 const int READ_FROM_FILESYSTEM = 1;
 const int WRITE_TO_FILESYSTEM = 2;
 
-int total_connections = 0;
-int live_connections = 0;
-
-struct Client_Info {
-  std::thread client_thread;
-};
+size_t total_connections = 0;
+size_t live_connections = 0;
 
 std::unordered_map<int, Client_Info> clients;
 std::unordered_map<int, Client_Info> zombie_clients;
@@ -208,35 +205,6 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
   return 0;
 }
 
-void print_conns(std::unordered_map<int, Client_Info> &map) {
-  for (const auto &pair : map) {
-    std::cerr << "fd: " << pair.first << "\n";
-  }
-}
-
-void print_border_top() {
-  size_t len =
-      20; // might make this an argument in the future if u care enough lol
-  for (size_t i = 0; i < len; ++i) {
-    std::cerr << "-";
-  }
-}
-
-void logger(std::atomic<bool> &server_alive) {
-  while (server_alive) {
-    print_border_top();
-    std::cerr << "CURRENT CONNECTIONS =>" << live_connections;
-    print_border_top();
-    std::cerr << "LIVE CLIENTS =>" << clients.size() << "\n";
-    print_conns(clients);
-    print_border_top();
-    std::cerr << "ZOMBIE CLIENTS =>" << zombie_clients.size() << "\n";
-    print_conns(zombie_clients);
-    print_border_top();
-    std::this_thread::sleep_for(std::chrono::seconds(4));
-  }
-}
-
 void handle_conn(sqlite3 *DB, int client_sock) {
 
   unsigned char server_pk[crypto_kx_PUBLICKEYBYTES],
@@ -276,6 +244,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
   do {
 
+    std::cerr << "asking for notice of new action\n";
     if (OP.receive_notice_of_new_action()) {
       std::cerr << "did not receive a notice of new action\n";
       perform_next = false;
@@ -301,7 +270,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 }
 
 void kill_server(std::atomic<bool> &server_alive, int server_sock) {
-  std::cout << "kill the server by typing (q)\n";
+  std::cout << red << "kill the server by typing (q)\n" << norm;
   char switch_char;
   std::cin >> switch_char;
   if (switch_char == 'q') {
@@ -364,7 +333,10 @@ int main() {
 
   std::cout << "accepting\n";
 
-  std::thread log_thread = std::thread(logger, std::ref(server_alive));
+  std::thread log_thread =
+      std::thread(logger, std::ref(server_alive), std::ref(clients),
+                  std::ref(zombie_clients), std::ref(live_connections),
+                  std::ref(total_connections));
   std::thread cleanup_intermittent_thread =
       std::thread(cleanup_intermittent, std::ref(server_alive));
   std::thread kill_server_listener =

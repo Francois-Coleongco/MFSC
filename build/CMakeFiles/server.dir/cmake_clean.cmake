@@ -6,6 +6,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o.d"
   "CMakeFiles/server.dir/src/server/server.cpp.o"
   "CMakeFiles/server.dir/src/server/server.cpp.o.d"
+  "CMakeFiles/server.dir/src/server/server_logger.cpp.o"
+  "CMakeFiles/server.dir/src/server/server_logger.cpp.o.d"
   "server"
   "server.pdb"
 )

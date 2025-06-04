@@ -159,7 +159,7 @@ int authed_comms(int client_sock,
   char perform_next = 'n';
 
   do {
-    if (CA.notify_server_of_new_action()) {
+    if (CA.notify_server_of_action(NEW_ACTION)) {
       std::cerr << "couldn't notify server of new user action\n";
       break;
     };
@@ -197,6 +197,8 @@ int authed_comms(int client_sock,
     std::cout << "perform another action?\n";
     std::cin >> perform_next;
   } while (perform_next == 'y' || perform_next == 'Y');
+
+  CA.notify_server_of_action(NO_ACTION);
 
   // already memzeroed the username during send_credentials
   sodium_memzero(password.data(), password.size());

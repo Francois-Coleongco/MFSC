@@ -26,6 +26,7 @@ add_executable(server
     src/server/server.cpp 
     src/server/auth.cpp 
     src/server/read_write_handlers.cpp
+    src/server/server_logger.cpp
 )
 
 target_include_directories(server PUBLIC include)

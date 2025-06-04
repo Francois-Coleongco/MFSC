@@ -323,6 +323,30 @@ src/server/server.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/src/server/server.cpp.s
 .PHONY : src/server/server.cpp.s
 
+src/server/server_logger.o: src/server/server_logger.cpp.o
+.PHONY : src/server/server_logger.o
+
+# target to build an object file
+src/server/server_logger.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/src/server/server_logger.cpp.o
+.PHONY : src/server/server_logger.cpp.o
+
+src/server/server_logger.i: src/server/server_logger.cpp.i
+.PHONY : src/server/server_logger.i
+
+# target to preprocess a source file
+src/server/server_logger.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/src/server/server_logger.cpp.i
+.PHONY : src/server/server_logger.cpp.i
+
+src/server/server_logger.s: src/server/server_logger.cpp.s
+.PHONY : src/server/server_logger.s
+
+# target to generate assembly for a file
+src/server/server_logger.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/src/server/server_logger.cpp.s
+.PHONY : src/server/server_logger.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -355,6 +379,9 @@ help:
 	@echo "... src/server/server.o"
 	@echo "... src/server/server.i"
 	@echo "... src/server/server.s"
+	@echo "... src/server/server_logger.o"
+	@echo "... src/server/server_logger.i"
+	@echo "... src/server/server_logger.s"
 .PHONY : help
 
 

@@ -2,7 +2,6 @@
 // authenticated.
 #include "../../include/authed_entry.h"
 #include "../../include/common/SessionEnc.h"
-#include "../../include/common/constants.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -37,11 +36,12 @@ unsigned char *Comms_Agent::get_client_tx() { return this->client_tx; }
 
 unsigned char *Comms_Agent::get_client_rx() { return this->client_rx; }
 
-int Comms_Agent::notify_server_of_new_action() {
+int Comms_Agent::notify_server_of_action(int action) {
   SessionEncWrapper notif =
-      SessionEncWrapper(reinterpret_cast<const unsigned char *>(&NEW_ACTION),
-                        sizeof(NEW_ACTION), this->get_client_tx());
+      SessionEncWrapper(reinterpret_cast<const unsigned char *>(&action),
+                        sizeof(action), this->get_client_tx());
 
+  std::cerr << "data length of notif is: " << notif.get_data_length();
   notif.send_data_length(this->client_sock);
   notif.send_nonce(this->client_sock);
   notif.send_data(this->client_sock);
@@ -161,6 +161,19 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name) {
         &state, this->buffer, &ciphertext_len, file_chunk, file_chunk_len, NULL,
         0,
         tag); // encrypt it straight into the buffer
+
+    SessionEncWrapper prefix =
+        tag == crypto_secretstream_xchacha20poly1305_TAG_FINAL
+            ? SessionEncWrapper(
+                  reinterpret_cast<const unsigned char *>(&END_CHUNK),
+                  sizeof(END_CHUNK), this->CA->get_client_tx())
+            : SessionEncWrapper(
+                  reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
+                  sizeof(MEAT_CHUNK), this->CA->get_client_tx());
+
+    prefix.send_data_length(this->CA->get_socket());
+    prefix.send_nonce(this->CA->get_socket());
+    prefix.send_data(this->CA->get_socket());
 
     int send_stat = this->send_buffer();
 

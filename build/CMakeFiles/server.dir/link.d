@@ -5,6 +5,7 @@ server: \
   CMakeFiles/server.dir/src/server/server.cpp.o \
   CMakeFiles/server.dir/src/server/auth.cpp.o \
   CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o \
+  CMakeFiles/server.dir/src/server/server_logger.cpp.o \
   libcommon_lib.a \
   /usr/lib64/libsqlite3.so \
   /usr/lib64/libsodium.so \
@@ -48,6 +49,8 @@ CMakeFiles/server.dir/src/server/server.cpp.o:
 CMakeFiles/server.dir/src/server/auth.cpp.o:
 
 CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o:
+
+CMakeFiles/server.dir/src/server/server_logger.cpp.o:
 
 libcommon_lib.a:
 

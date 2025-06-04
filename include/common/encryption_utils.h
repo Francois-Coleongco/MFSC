@@ -5,9 +5,8 @@
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sodium/randombytes.h>
 
-#pragma once
-
-const size_t stream_chunk_size = 4096 + crypto_secretstream_xchacha20poly1305_ABYTES + crypto_aead_chacha20poly1305_ABYTES;
+#ifndef MFSC_ENCRYPTION_UTILS
+#define MFSC_ENCRYPTION_UTILS
 
 int encrypt_stream_buffer(
     unsigned char tx[crypto_kx_SESSIONKEYBYTES],
@@ -16,9 +15,11 @@ int encrypt_stream_buffer(
     unsigned char *ciphertext, unsigned long long *ciphertext_len);
 
 int server_crypt_gen(int client_sock, unsigned char *server_pk,
-              unsigned char *server_sk, unsigned char *server_rx,
-              unsigned char *server_tx);
+                     unsigned char *server_sk, unsigned char *server_rx,
+                     unsigned char *server_tx);
 
 int client_crypt_gen(int client_sock, unsigned char *client_pk,
-              unsigned char *client_sk, unsigned char *client_rx,
-              unsigned char *client_tx);
+                     unsigned char *client_sk, unsigned char *client_rx,
+                     unsigned char *client_tx);
+
+#endif

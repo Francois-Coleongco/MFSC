@@ -11,6 +11,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/sleepy/vault/MFSC/src/server/auth.cpp" "CMakeFiles/server.dir/src/server/auth.cpp.o" "gcc" "CMakeFiles/server.dir/src/server/auth.cpp.o.d"
   "/home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp" "CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o" "gcc" "CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o.d"
   "/home/sleepy/vault/MFSC/src/server/server.cpp" "CMakeFiles/server.dir/src/server/server.cpp.o" "gcc" "CMakeFiles/server.dir/src/server/server.cpp.o.d"
+  "/home/sleepy/vault/MFSC/src/server/server_logger.cpp" "CMakeFiles/server.dir/src/server/server_logger.cpp.o" "gcc" "CMakeFiles/server.dir/src/server/server_logger.cpp.o.d"
   "" "server" "gcc" "CMakeFiles/server.dir/link.d"
   )
 

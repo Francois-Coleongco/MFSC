@@ -1,12 +1,8 @@
 #include "../../include/read_write_handlers.h"
-#include "../../include/common/constants.h"
-
+#include <cstdio>
 #include <cstring>
 #include <sodium/utils.h>
 
-const unsigned char FILE_NAME_BUF_SIZE =
-    250; // remove 5 from 255 because that is reserved for the .enc extension
-         // (null byte included)
 const std::string ext = ".enc";
 
 FS_Operator::FS_Operator(int client_sock,
@@ -40,7 +36,7 @@ int FS_Operator::init_read(
     return 2;
   }
 
-  if (file_name_wrap.unwrap(this->server_rx, FILE_NAME_BUF_SIZE,
+  if (file_name_wrap.unwrap(this->server_rx, PRE_EXT_FILE_NAME_LEN,
                             reinterpret_cast<unsigned char *>(file_name_buf),
                             &decrypted_file_name_length) == 2) {
     std::cerr << "couldn't read file name, ABORT\n";
@@ -53,7 +49,7 @@ int FS_Operator::init_read(
   // decrypted file length will be NOT null terminated. so i need to null
   // terminate it before it leaves int_read
 
-  if (decrypted_file_name_length + ext.length() > 255) {
+  if (decrypted_file_name_length + ext.length() > MAX_FILE_NAME_LENGTH) {
     return 2;
   }
 
@@ -82,7 +78,7 @@ int FS_Operator::WTFS_Handler__Server() {
   // when doing multiple files and directories, this function could be called in
   // a separate thread perhaps for each file
 
-  char file_name_buf[FILE_NAME_BUF_SIZE];
+  char file_name_buf[PRE_EXT_FILE_NAME_LEN];
 
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
@@ -106,27 +102,33 @@ int FS_Operator::WTFS_Handler__Server() {
   unsigned char read_buf[stream_chunk_size];
   size_t read_bytes;
 
-  while (true) {
+  int prefix = END_CHUNK;
+  do {
+    unsigned long long decrypted_prefix_len;
+    SessionEncWrapper prefix_wrap = SessionEncWrapper(client_sock);
     SessionEncWrapper encrypted_data_wrap = SessionEncWrapper(client_sock);
-    if (encrypted_data_wrap.get_data_length() < stream_chunk_size) { // this works because we always fill the buffer to the max when we transmit if possible.
+    prefix_wrap.unwrap(this->server_rx, sizeof(prefix),
+                       reinterpret_cast<unsigned char *>(&prefix),
+                       &decrypted_prefix_len);
+    if (prefix == END_CHUNK) {
       std::cerr << "found last chunk\n";
       break; // we came across the last chunk already in the previous iteration
     }
     encrypted_data_wrap.write_to_file(file);
-  };
+  } while (prefix != END_CHUNK);
 
   return 0;
 }
 
 int FS_Operator::RFFS_Handler__Server() {
 
-  char file_name_buf[FILE_NAME_BUF_SIZE];
+  char file_name_buf[MAX_FILE_NAME_LENGTH];
 
   unsigned long long decrypted_file_name_length;
 
   SessionEncWrapper encrypted_file_name = SessionEncWrapper(client_sock);
 
-  encrypted_file_name.unwrap(this->server_rx, FILE_NAME_BUF_SIZE,
+  encrypted_file_name.unwrap(this->server_rx, PRE_EXT_FILE_NAME_LEN,
                              reinterpret_cast<unsigned char *>(file_name_buf),
                              &decrypted_file_name_length);
 

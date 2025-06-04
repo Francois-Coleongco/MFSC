@@ -1,59 +1,44 @@
-CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: \
- /home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp \
+CMakeFiles/server.dir/src/server/server_logger.cpp.o: \
+ /home/sleepy/vault/MFSC/src/server/server_logger.cpp \
  /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/server/../../include/read_write_handlers.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/SessionEnc.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/./constants.h \
- /usr/include/sodium/crypto_aead_chacha20poly1305.h \
- /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
- /usr/include/sodium/export.h \
+ /home/sleepy/vault/MFSC/src/server/../../include/server_logger.h \
+ /usr/include/c++/15/atomic /usr/include/c++/15/bits/version.h \
+ /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
+ /usr/include/bits/wordsize.h \
+ /usr/include/c++/15/x86_64-redhat-linux/bits/os_defines.h \
+ /usr/include/features.h /usr/include/features-time64.h \
+ /usr/include/bits/timesize.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/long-double.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-64.h \
+ /usr/include/c++/15/x86_64-redhat-linux/bits/cpu_defines.h \
+ /usr/include/c++/15/pstl/pstl_config.h \
+ /usr/include/c++/15/bits/atomic_base.h /usr/include/c++/15/new \
+ /usr/include/c++/15/bits/exception.h \
+ /usr/include/c++/15/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/15/bits/move.h /usr/include/c++/15/type_traits \
+ /usr/include/c++/15/cstdint \
  /usr/lib/gcc/x86_64-redhat-linux/15/include/stdint.h \
  /usr/include/stdint.h /usr/include/bits/libc-header-start.h \
- /usr/include/features.h /usr/include/features-time64.h \
- /usr/include/bits/wordsize.h /usr/include/bits/timesize.h \
- /usr/include/sys/cdefs.h /usr/include/bits/long-double.h \
- /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
  /usr/include/bits/time64.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
- /usr/include/bits/stdint-least.h \
- /usr/lib/gcc/x86_64-redhat-linux/15/include/limits.h \
- /usr/lib/gcc/x86_64-redhat-linux/15/include/syslimits.h \
- /usr/include/limits.h /usr/include/bits/posix1_lim.h \
- /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
- /usr/include/bits/pthread_stack_min-dynamic.h \
- /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
- /usr/include/bits/uio_lim.h \
- /usr/include/sodium/crypto_secretstream_xchacha20poly1305.h \
- /usr/include/sodium/crypto_aead_xchacha20poly1305.h \
- /usr/include/sodium/crypto_stream_chacha20.h /usr/include/unistd.h \
- /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
- /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
- /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
- /usr/include/linux/close_range.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/encryption_utils.h \
- /usr/include/c++/15/iostream /usr/include/c++/15/bits/requires_hosted.h \
- /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
- /usr/include/c++/15/x86_64-redhat-linux/bits/os_defines.h \
- /usr/include/c++/15/x86_64-redhat-linux/bits/cpu_defines.h \
- /usr/include/c++/15/pstl/pstl_config.h /usr/include/c++/15/ostream \
+ /usr/include/bits/stdint-least.h /usr/include/c++/15/iostream \
+ /usr/include/c++/15/bits/requires_hosted.h /usr/include/c++/15/ostream \
  /usr/include/c++/15/bits/ostream.h /usr/include/c++/15/ios \
  /usr/include/c++/15/iosfwd /usr/include/c++/15/bits/stringfwd.h \
  /usr/include/c++/15/bits/memoryfwd.h /usr/include/c++/15/bits/postypes.h \
  /usr/include/c++/15/cwchar /usr/include/wchar.h \
  /usr/include/bits/floatn.h /usr/include/bits/floatn-common.h \
+ /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
  /usr/lib/gcc/x86_64-redhat-linux/15/include/stdarg.h \
  /usr/include/bits/types/wint_t.h /usr/include/bits/types/mbstate_t.h \
  /usr/include/bits/types/__mbstate_t.h /usr/include/bits/types/__FILE.h \
  /usr/include/bits/types/FILE.h /usr/include/bits/types/locale_t.h \
  /usr/include/bits/types/__locale_t.h /usr/include/c++/15/exception \
- /usr/include/c++/15/bits/exception.h /usr/include/c++/15/bits/version.h \
  /usr/include/c++/15/bits/exception_ptr.h \
  /usr/include/c++/15/bits/exception_defines.h \
  /usr/include/c++/15/bits/cxxabi_init_exception.h \
  /usr/include/c++/15/typeinfo /usr/include/c++/15/bits/hash_bytes.h \
- /usr/include/c++/15/new /usr/include/c++/15/bits/move.h \
- /usr/include/c++/15/type_traits \
  /usr/include/c++/15/bits/nested_exception.h \
  /usr/include/c++/15/bits/char_traits.h \
  /usr/include/c++/15/bits/localefwd.h \
@@ -86,6 +71,7 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: \
  /usr/include/bits/struct_rwlock.h /usr/include/bits/setjmp.h \
  /usr/include/bits/types/__sigset_t.h \
  /usr/include/bits/types/struct___jmp_buf_tag.h \
+ /usr/include/bits/pthread_stack_min-dynamic.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/atomic_word.h \
  /usr/include/sys/single_threaded.h \
  /usr/include/c++/15/bits/locale_classes.h /usr/include/c++/15/string \
@@ -155,20 +141,18 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: \
  /usr/include/c++/15/bits/locale_facets.tcc \
  /usr/include/c++/15/bits/basic_ios.tcc \
  /usr/include/c++/15/bits/ostream.tcc /usr/include/c++/15/istream \
- /usr/include/c++/15/bits/istream.tcc /usr/include/netinet/in.h \
- /usr/include/sys/socket.h /usr/include/bits/types/struct_iovec.h \
- /usr/include/bits/socket.h /usr/include/bits/socket_type.h \
- /usr/include/bits/sockaddr.h /usr/include/asm/socket.h \
- /usr/include/asm-generic/socket.h /usr/include/asm/sockios.h \
- /usr/include/asm-generic/sockios.h \
- /usr/include/bits/types/struct_osockaddr.h /usr/include/bits/in.h \
- /usr/include/sodium/crypto_kx.h /usr/include/sodium/randombytes.h \
- /usr/include/c++/15/fstream /usr/include/c++/15/bits/codecvt.h \
- /usr/include/c++/15/x86_64-redhat-linux/bits/basic_file.h \
- /usr/include/c++/15/x86_64-redhat-linux/bits/c++io.h \
- /usr/include/c++/15/bits/fstream.tcc \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/encryption_utils.h \
- /usr/include/sodium/crypto_pwhash.h \
- /usr/include/sodium/crypto_pwhash_argon2i.h \
- /usr/include/sodium/crypto_pwhash_argon2id.h /usr/include/c++/15/cstring \
- /usr/include/string.h /usr/include/strings.h /usr/include/sodium/utils.h
+ /usr/include/c++/15/bits/istream.tcc /usr/include/c++/15/thread \
+ /usr/include/c++/15/bits/std_thread.h \
+ /usr/include/c++/15/bits/unique_ptr.h \
+ /usr/include/c++/15/bits/this_thread_sleep.h \
+ /usr/include/c++/15/bits/chrono.h /usr/include/c++/15/ratio \
+ /usr/include/c++/15/limits /usr/include/c++/15/ctime \
+ /usr/include/c++/15/bits/parse_numbers.h \
+ /usr/include/c++/15/unordered_map \
+ /usr/include/c++/15/bits/unordered_map.h \
+ /usr/include/c++/15/bits/hashtable.h \
+ /usr/include/c++/15/bits/hashtable_policy.h \
+ /usr/include/c++/15/ext/aligned_buffer.h \
+ /usr/include/c++/15/bits/enable_special_members.h \
+ /usr/include/c++/15/bits/node_handle.h \
+ /usr/include/c++/15/bits/erase_if.h

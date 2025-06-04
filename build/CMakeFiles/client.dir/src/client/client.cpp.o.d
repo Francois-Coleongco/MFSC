@@ -2,14 +2,30 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /home/sleepy/vault/MFSC/src/client/client.cpp /usr/include/stdc-predef.h \
  /home/sleepy/vault/MFSC/src/client/../../include/authed_entry.h \
  /home/sleepy/vault/MFSC/src/client/../../include/./common/constants.h \
- /usr/include/unistd.h /usr/include/features.h \
- /usr/include/features-time64.h /usr/include/bits/wordsize.h \
- /usr/include/bits/timesize.h /usr/include/sys/cdefs.h \
- /usr/include/bits/long-double.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h /usr/include/bits/posix_opt.h \
- /usr/include/bits/environments.h /usr/include/bits/types.h \
- /usr/include/bits/typesizes.h /usr/include/bits/time64.h \
+ /usr/include/sodium/crypto_aead_chacha20poly1305.h \
  /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
+ /usr/include/sodium/export.h \
+ /usr/lib/gcc/x86_64-redhat-linux/15/include/stdint.h \
+ /usr/include/stdint.h /usr/include/bits/libc-header-start.h \
+ /usr/include/features.h /usr/include/features-time64.h \
+ /usr/include/bits/wordsize.h /usr/include/bits/timesize.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/long-double.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/include/bits/types.h /usr/include/bits/typesizes.h \
+ /usr/include/bits/time64.h /usr/include/bits/wchar.h \
+ /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
+ /usr/include/bits/stdint-least.h \
+ /usr/lib/gcc/x86_64-redhat-linux/15/include/limits.h \
+ /usr/lib/gcc/x86_64-redhat-linux/15/include/syslimits.h \
+ /usr/include/limits.h /usr/include/bits/posix1_lim.h \
+ /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
+ /usr/include/bits/pthread_stack_min-dynamic.h \
+ /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
+ /usr/include/bits/uio_lim.h \
+ /usr/include/sodium/crypto_secretstream_xchacha20poly1305.h \
+ /usr/include/sodium/crypto_aead_xchacha20poly1305.h \
+ /usr/include/sodium/crypto_stream_chacha20.h /usr/include/unistd.h \
+ /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
  /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
  /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
  /usr/include/linux/close_range.h /usr/include/c++/15/cstring \
@@ -18,17 +34,16 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /usr/include/c++/15/x86_64-redhat-linux/bits/os_defines.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/cpu_defines.h \
  /usr/include/c++/15/pstl/pstl_config.h /usr/include/string.h \
- /usr/include/bits/libc-header-start.h /usr/include/bits/types/locale_t.h \
- /usr/include/bits/types/__locale_t.h /usr/include/strings.h \
- /usr/include/c++/15/fstream /usr/include/c++/15/bits/requires_hosted.h \
- /usr/include/c++/15/istream /usr/include/c++/15/ios \
- /usr/include/c++/15/iosfwd /usr/include/c++/15/bits/stringfwd.h \
+ /usr/include/bits/types/locale_t.h /usr/include/bits/types/__locale_t.h \
+ /usr/include/strings.h /usr/include/c++/15/fstream \
+ /usr/include/c++/15/bits/requires_hosted.h /usr/include/c++/15/istream \
+ /usr/include/c++/15/ios /usr/include/c++/15/iosfwd \
+ /usr/include/c++/15/bits/stringfwd.h \
  /usr/include/c++/15/bits/memoryfwd.h /usr/include/c++/15/bits/postypes.h \
  /usr/include/c++/15/cwchar /usr/include/wchar.h \
  /usr/include/bits/floatn.h /usr/include/bits/floatn-common.h \
  /usr/lib/gcc/x86_64-redhat-linux/15/include/stdarg.h \
- /usr/include/bits/wchar.h /usr/include/bits/types/wint_t.h \
- /usr/include/bits/types/mbstate_t.h \
+ /usr/include/bits/types/wint_t.h /usr/include/bits/types/mbstate_t.h \
  /usr/include/bits/types/__mbstate_t.h /usr/include/bits/types/__FILE.h \
  /usr/include/bits/types/FILE.h /usr/include/c++/15/exception \
  /usr/include/c++/15/bits/exception.h \
@@ -70,7 +85,6 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /usr/include/bits/struct_rwlock.h /usr/include/bits/setjmp.h \
  /usr/include/bits/types/__sigset_t.h \
  /usr/include/bits/types/struct___jmp_buf_tag.h \
- /usr/include/bits/pthread_stack_min-dynamic.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/atomic_word.h \
  /usr/include/sys/single_threaded.h \
  /usr/include/c++/15/bits/locale_classes.h /usr/include/c++/15/string \
@@ -108,13 +122,13 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /usr/include/c++/15/ext/string_conversions.h /usr/include/c++/15/cstdlib \
  /usr/include/stdlib.h /usr/include/bits/waitflags.h \
  /usr/include/bits/waitstatus.h /usr/include/sys/types.h \
- /usr/include/bits/stdint-intn.h /usr/include/endian.h \
- /usr/include/bits/byteswap.h /usr/include/bits/uintn-identity.h \
- /usr/include/sys/select.h /usr/include/bits/select.h \
- /usr/include/bits/types/sigset_t.h /usr/include/alloca.h \
- /usr/include/bits/stdlib-float.h /usr/include/c++/15/bits/std_abs.h \
- /usr/include/c++/15/cstdio /usr/include/stdio.h \
- /usr/include/bits/types/__fpos_t.h /usr/include/bits/types/__fpos64_t.h \
+ /usr/include/endian.h /usr/include/bits/byteswap.h \
+ /usr/include/bits/uintn-identity.h /usr/include/sys/select.h \
+ /usr/include/bits/select.h /usr/include/bits/types/sigset_t.h \
+ /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
+ /usr/include/c++/15/bits/std_abs.h /usr/include/c++/15/cstdio \
+ /usr/include/stdio.h /usr/include/bits/types/__fpos_t.h \
+ /usr/include/bits/types/__fpos64_t.h \
  /usr/include/bits/types/struct_FILE.h \
  /usr/include/bits/types/cookie_io_functions_t.h \
  /usr/include/bits/stdio_lim.h /usr/include/c++/15/cerrno \
@@ -147,31 +161,20 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /usr/include/sodium/crypto_box.h \
  /usr/include/sodium/crypto_box_curve25519xsalsa20poly1305.h \
  /usr/include/sodium/crypto_stream_xsalsa20.h \
- /usr/lib/gcc/x86_64-redhat-linux/15/include/stdint.h \
- /usr/include/stdint.h /usr/include/bits/stdint-uintn.h \
- /usr/include/bits/stdint-least.h /usr/include/sodium/export.h \
- /usr/lib/gcc/x86_64-redhat-linux/15/include/limits.h \
- /usr/lib/gcc/x86_64-redhat-linux/15/include/syslimits.h \
- /usr/include/limits.h /usr/include/bits/posix1_lim.h \
- /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
- /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
- /usr/include/bits/uio_lim.h /usr/include/sodium/crypto_kx.h \
- /usr/include/sodium/crypto_pwhash.h \
+ /usr/include/sodium/crypto_kx.h /usr/include/sodium/crypto_pwhash.h \
  /usr/include/sodium/crypto_pwhash_argon2i.h \
- /usr/include/sodium/crypto_pwhash_argon2id.h \
- /usr/include/sodium/crypto_secretstream_xchacha20poly1305.h \
- /usr/include/sodium/crypto_aead_xchacha20poly1305.h \
- /usr/include/sodium/crypto_stream_chacha20.h /usr/include/sys/socket.h \
+ /usr/include/sodium/crypto_pwhash_argon2id.h /usr/include/sys/socket.h \
  /usr/include/bits/types/struct_iovec.h /usr/include/bits/socket.h \
  /usr/include/bits/socket_type.h /usr/include/bits/sockaddr.h \
  /usr/include/asm/socket.h /usr/include/asm-generic/socket.h \
  /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
  /usr/include/bits/types/struct_osockaddr.h \
  /home/sleepy/vault/MFSC/src/client/../../include/common/SessionEnc.h \
+ /home/sleepy/vault/MFSC/src/client/../../include/common/./constants.h \
  /home/sleepy/vault/MFSC/src/client/../../include/common/encryption_utils.h \
  /usr/include/netinet/in.h /usr/include/bits/in.h \
- /usr/include/sodium/crypto_aead_chacha20poly1305.h \
  /usr/include/sodium/randombytes.h \
  /home/sleepy/vault/MFSC/src/client/../../include/common/constants.h \
+ /home/sleepy/vault/MFSC/src/client/../../include/common/encryption_utils.h \
  /usr/include/c++/15/cassert /usr/include/assert.h \
  /usr/include/sodium/utils.h

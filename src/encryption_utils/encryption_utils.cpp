@@ -64,12 +64,6 @@ int client_crypt_gen(int client_sock, unsigned char *client_pk,
   /* Generate the client's key pair */
   crypto_kx_keypair(client_pk, client_sk);
 
-  std::cerr << "this is client_pk" << std::endl;
-
-  for (int i = 0; i < crypto_kx_PUBLICKEYBYTES; ++i) {
-    printf("%c", client_pk[i]);
-  }
-
   std::cout << std::endl;
 
   send(client_sock, client_pk, crypto_kx_PUBLICKEYBYTES, 0);
@@ -78,15 +72,6 @@ int client_crypt_gen(int client_sock, unsigned char *client_pk,
 
   int crypto_bytes_read =
       recv(client_sock, server_pk, crypto_kx_PUBLICKEYBYTES, 0);
-
-  std::cout << "ON THE CLIENT cryptobytesread: " << crypto_bytes_read
-            << std::endl;
-
-  std::cerr << "this is server_pk" << std::endl;
-
-  for (int i = 0; i < crypto_kx_PUBLICKEYBYTES; ++i) {
-    printf("%c", server_pk[i]);
-  }
 
   std::cout << std::endl;
 

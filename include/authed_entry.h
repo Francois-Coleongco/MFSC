@@ -31,7 +31,7 @@ class Comms_Agent {
 public:
   int get_socket();
 
-  int notify_server_of_new_action();
+  int notify_server_of_action(int action);
 
   unsigned char *get_client_tx();
   unsigned char *get_client_rx();

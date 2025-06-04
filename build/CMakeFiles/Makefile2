@@ -123,12 +123,12 @@ CMakeFiles/common_lib.dir/clean:
 CMakeFiles/server.dir/all: CMakeFiles/common_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=7,8,9,10 "Built target server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=7,8,9,10,11 "Built target server"
 .PHONY : CMakeFiles/server.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/server.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/server.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 0
 .PHONY : CMakeFiles/server.dir/rule
@@ -140,7 +140,7 @@ server: CMakeFiles/server.dir/rule
 # codegen rule for target.
 CMakeFiles/server.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=7,8,9,10 "Finished codegen for target server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=7,8,9,10,11 "Finished codegen for target server"
 .PHONY : CMakeFiles/server.dir/codegen
 
 # clean rule for target.
