@@ -27,6 +27,7 @@ class Comms_Agent {
   // to complete so it's SA/RA goes out of scope and destructor is callsed
   unsigned char client_tx[crypto_kx_SESSIONKEYBYTES];
   unsigned char client_rx[crypto_kx_SESSIONKEYBYTES];
+  unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
 public:
   int get_socket();
@@ -35,15 +36,18 @@ public:
 
   unsigned char *get_client_tx();
   unsigned char *get_client_rx();
+  unsigned char *get_nonce();
 
   // these will be
   int set_client_tx(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]);
   int set_client_rx(unsigned char client_rx[crypto_kx_SESSIONKEYBYTES]);
   // used to rotate the keys
 
-  Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-              unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-              int client_sock);
+  Comms_Agent(
+      unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+      unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+      unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES],
+      int client_sock);
   ~Comms_Agent();
 };
 
@@ -71,7 +75,7 @@ private:
 
 public:
   // add functionality for directories later
-  int encrypt_and_send_to_server(std::string &file_name);
+  int encrypt_and_send_to_server(std::string &file_name, std::string &password);
   int fill_and_send(std::string &file_name);
 
   Sender_Agent(Comms_Agent *CA, std::string &password);

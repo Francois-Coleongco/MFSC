@@ -1,5 +1,5 @@
-#include "../../include/common/constants.h"
 #include "../../include/common/SessionEnc.h"
+#include "../../include/common/constants.h"
 #include "../../include/common/encryption_utils.h"
 #include <cstring>
 #include <sodium/crypto_kx.h>
@@ -7,7 +7,8 @@
 
 SessionEncWrapper::SessionEncWrapper(
     const unsigned char *data, unsigned long long data_length,
-    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES])
+    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES])
     : session_encrypted_data_length(0) { // for writers
 
   if (encrypt_stream_buffer(client_tx, this->nonce, data, data_length,

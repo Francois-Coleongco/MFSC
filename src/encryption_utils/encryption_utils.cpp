@@ -9,7 +9,7 @@ int encrypt_stream_buffer(
     const unsigned char *message, unsigned long long message_len,
     unsigned char *ciphertext, unsigned long long *ciphertext_len) {
 
-  randombytes_buf(nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
+  sodium_increment(nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
   if (crypto_aead_chacha20poly1305_encrypt(ciphertext, ciphertext_len, message,
                                            message_len, NULL, 0, NULL, nonce,
@@ -22,16 +22,13 @@ int encrypt_stream_buffer(
   return 0;
 }
 
+// kiiiinda violating DRY past here
+
 int server_crypt_gen(int client_sock, unsigned char *server_pk,
                      unsigned char *server_sk, unsigned char *server_rx,
                      unsigned char *server_tx) {
 
   crypto_kx_keypair(server_pk, server_sk);
-  std::cerr << "this is server_pk" << std::endl;
-
-  for (int i = 0; i < crypto_kx_PUBLICKEYBYTES; ++i) {
-    printf("%c", server_pk[i]);
-  }
 
   std::cout << std::endl;
 

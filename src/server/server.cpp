@@ -127,72 +127,27 @@ void clean_all(std::thread &log_thread, std::thread &kill_server_listener,
 
 int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
 
-  std::array<char, CHUNK_SIZE> username_buffer{0};
-  std::array<char, CHUNK_SIZE> password_buffer{0};
-
-  unsigned char username_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
-
-  unsigned char password_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
-
-  if (recv(client_sock, username_nonce, crypto_aead_chacha20poly1305_NPUBBYTES,
-           0) <= 0) {
-    std::cerr << "unable to read username_nonce\n";
-    return 4;
-  };
-
-  int password_nonce_bytes = recv(client_sock, password_nonce,
-                                  crypto_aead_chacha20poly1305_NPUBBYTES, 0);
-
-  int username_bytes_read = recv(client_sock, &username_buffer, CHUNK_SIZE, 0);
-
-  send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
-
-  int password_bytes_read = recv(client_sock, &password_buffer, CHUNK_SIZE, 0);
-  std::cerr << "read password YIPPIEEE this was how many bytes it was: "
-            << password_bytes_read << std::endl;
-
-  send(client_sock, &ACK_SUC, sizeof(ACK_SUC), 0);
-
-  if (username_bytes_read <= 0 || password_bytes_read <= 0) {
-    std::cerr << "one of these username_bytes_read or password_bytes_read "
-                 "returned a value less than or equal to 0"
-              << std::endl;
-    return 1;
-  }
-
-  char decrypted_username[username_bytes_read];
+  unsigned char decrypted_username[FILE_ENCRYPTED_CHUNK_SIZE];
+  unsigned char decrypted_password[FILE_ENCRYPTED_CHUNK_SIZE];
 
   unsigned long long decrypted_username_len;
-
-  if (crypto_aead_chacha20poly1305_decrypt(
-          reinterpret_cast<unsigned char *>(decrypted_username),
-          &decrypted_username_len, NULL,
-          reinterpret_cast<unsigned char *>((username_buffer.data())),
-          username_bytes_read, NULL, 0, username_nonce, server_rx) != 0) {
-    std::cerr << "error decrypting the username" << std::endl;
-  } else {
-    std::cerr << "SUCCESSFUL <USERNAME> DECRYPTION ==== " << decrypted_username
-              << std::endl;
-  }
-
-  char decrypted_password[password_bytes_read];
-
   unsigned long long decrypted_password_len;
 
-  if (crypto_aead_chacha20poly1305_decrypt(
-          reinterpret_cast<unsigned char *>(decrypted_password),
-          &decrypted_password_len, NULL,
-          reinterpret_cast<unsigned char *>(password_buffer.data()),
-          password_bytes_read, NULL, 0, password_nonce, server_rx) != 0) {
-    std::cerr << "error decrypting the password" << std::endl;
-  } else {
-    std::cerr << "password cipher" << password_buffer.data() << "password"
-              << std::endl;
-    std::cerr << "SUCCESSFUL <PASSWORD> DECRYPTION" << decrypted_password
-              << std::endl;
-  }
+  std::cerr << "starting username construction\n";
+  SessionEncWrapper username_wrapper = SessionEncWrapper(client_sock);
+  username_wrapper.unwrap(server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
+                          decrypted_username, &decrypted_username_len);
 
-  if (login(DB, decrypted_username, decrypted_username_len, decrypted_password,
+  std::cerr << "this was username " << decrypted_username << "\n";
+  std::cerr << "starting password construction\n";
+  SessionEncWrapper password_wrapper = SessionEncWrapper(client_sock);
+  password_wrapper.unwrap(server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
+                          decrypted_password, &decrypted_password_len);
+  std::cerr << "this was password " << decrypted_password << "\n";
+
+  if (login(DB, reinterpret_cast<char *>(decrypted_username),
+            decrypted_username_len,
+            reinterpret_cast<char *>(decrypted_password),
             decrypted_password_len)) { // login implicitly zeroes out my
                                        // decrypted_username and
                                        // decrypted_password with sodium_memzero
@@ -215,30 +170,27 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   if (server_crypt_gen(client_sock, server_pk, server_sk, server_rx,
                        server_tx)) {
     std::cerr << "couldn't gen keys :c" << std::endl;
+    return;
   }
-
-  std::cerr << "this is server_tx" << std::endl;
-
-  for (int i = 0; i < crypto_kx_SESSIONKEYBYTES; ++i) {
-    printf("%c", server_tx[i]);
-  }
-
-  std::cerr << std::endl;
-
-  std::array<char, CHUNK_SIZE> buffer{0};
 
   // make sure the last character the 4095th index is not overwritten
   // cuz this is the null pointer for you cstring
+  std::cerr << " WE ARE STARTING VERYIFY CREDSSS\n";
   if (verify_credentials(DB, client_sock, server_rx)) {
     std::cerr << "couldn't verify creds, ignoring";
     send(client_sock, &ACK_FAIL, sizeof(int), 0);
     zombify(client_sock);
     return;
+  } else {
+    send(client_sock, &ACK_SUC, sizeof(int), 0); // successful login
   }
 
-  send(client_sock, &ACK_SUC, sizeof(int), 0); // successful login
+  unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
-  FS_Operator OP = FS_Operator(client_sock, server_rx, server_tx);
+  randombytes_buf(original_nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
+
+  FS_Operator OP =
+      FS_Operator(client_sock, server_rx, server_tx, original_nonce);
 
   bool perform_next = false;
 
@@ -256,6 +208,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
     if (intent == READ_FROM_FILESYSTEM) {
       OP.RFFS_Handler__Server();
+      std::cerr << "after RFFS_Handler\n";
     } else if (intent == WRITE_TO_FILESYSTEM) {
       OP.WTFS_Handler__Server();
       std::cerr << "after WTFS_Handler\n";

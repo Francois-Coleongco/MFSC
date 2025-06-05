@@ -79,8 +79,8 @@ int create_user(sqlite3 *DB, std::string &username, std::string &password) {
   return 0;
 }
 
-int login(sqlite3 *DB, char username[], size_t username_len, char password[],
-          size_t password_len) {
+int login(sqlite3 *DB, char username[], unsigned long long username_len, char password[],
+          unsigned long long password_len) {
 
   sqlite3_stmt *stmt;
 

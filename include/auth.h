@@ -10,4 +10,4 @@
 #include <string>
 
 int initialize_server(sqlite3 **DB);
-int login(sqlite3 *DB, char username[], size_t username_len, char password_hash[], size_t password_hash_len);
+int login(sqlite3 *DB, char username[], unsigned long long username_len, char password_hash[], unsigned long long password_hash_len);

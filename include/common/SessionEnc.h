@@ -23,7 +23,9 @@ public:
   SessionEncWrapper(int client_sock); // for readers
   SessionEncWrapper(
       const unsigned char *data, unsigned long long data_length,
-      unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]); // for writers
+      unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+      unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]);
+  // for writers
   // both of these constructors will use the encrypt_stream_buffer function in
   // encryption_utils.
   ~SessionEncWrapper(); // zeroes out it's array

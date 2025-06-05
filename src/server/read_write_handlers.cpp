@@ -7,14 +7,17 @@ const std::string ext = ".enc";
 
 FS_Operator::FS_Operator(int client_sock,
                          unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
-                         unsigned char server_tx[crypto_kx_SESSIONKEYBYTES])
+                         unsigned char server_tx[crypto_kx_SESSIONKEYBYTES],
+                         unsigned char nonce[crypto_kx_SESSIONKEYBYTES])
     : client_sock(client_sock) {
 
   std::memcpy(this->server_tx, server_tx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->server_rx, server_rx, crypto_kx_SESSIONKEYBYTES);
+  std::memcpy(this->nonce, server_rx, crypto_kx_SESSIONKEYBYTES);
 
   sodium_memzero(server_tx, crypto_kx_SESSIONKEYBYTES);
   sodium_memzero(server_rx, crypto_kx_SESSIONKEYBYTES);
+  sodium_memzero(nonce, crypto_kx_SESSIONKEYBYTES);
 }
 
 FS_Operator::~FS_Operator() {
@@ -78,7 +81,7 @@ int FS_Operator::WTFS_Handler__Server() {
   // when doing multiple files and directories, this function could be called in
   // a separate thread perhaps for each file
 
-  char file_name_buf[PRE_EXT_FILE_NAME_LEN];
+  char file_name_buf[FILE_ENCRYPTED_CHUNK_SIZE];
 
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
@@ -152,26 +155,11 @@ int FS_Operator::RFFS_Handler__Server() {
     std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
 
     send(this->client_sock, file_chunk, file_chunk_len, 0);
-
   } while (!file.eof());
-
   return 0;
 }
 
-int FS_Operator::read_intent() {
-  int intent;
-  unsigned long long decrypted_data_length;
-  SessionEncWrapper nonce_wrap = SessionEncWrapper(client_sock);
-  nonce_wrap.unwrap(server_rx, sizeof(intent),
-                    reinterpret_cast<unsigned char *>(&intent),
-                    &decrypted_data_length);
-  std::cerr << "this was the intent read: " << intent << "\n";
-
-  return intent;
-}
-
 int FS_Operator::receive_notice_of_new_action() {
-
   int notice;
   SessionEncWrapper notice_wrap = SessionEncWrapper(this->client_sock);
   unsigned long long decrypted_notice_length;
@@ -186,4 +174,20 @@ int FS_Operator::receive_notice_of_new_action() {
     std::cerr << "NEW ACTION INISIATED\n";
     return 0;
   }
+}
+
+int FS_Operator::read_intent() {
+
+  int intent;
+
+  unsigned long long decrypted_data_length;
+
+  SessionEncWrapper nonce_wrap = SessionEncWrapper(client_sock);
+
+  nonce_wrap.unwrap(server_rx, sizeof(intent),
+                    reinterpret_cast<unsigned char *>(&intent),
+                    &decrypted_data_length);
+
+  std::cerr << "this was the intent read: " << intent << "\n";
+  return intent;
 }
