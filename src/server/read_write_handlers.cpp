@@ -1,6 +1,7 @@
 #include "../../include/read_write_handlers.h"
 #include <cstdio>
 #include <cstring>
+#include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sodium/utils.h>
 
 const std::string ext = ".enc";
@@ -145,8 +146,30 @@ int FS_Operator::RFFS_Handler__Server() {
   }
 
   unsigned char file_chunk[CHUNK_SIZE];
+  unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
+  unsigned char salt[crypto_pwhash_SALTBYTES];
 
   int tag = 0;
+
+  file.read(reinterpret_cast<char *>(header),
+            crypto_secretstream_xchacha20poly1305_HEADERBYTES);
+
+  SessionEncWrapper header_wrap = SessionEncWrapper(
+      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES,
+      this->server_tx, this->nonce);
+
+  header_wrap.send_data_length(this->client_sock);
+  header_wrap.send_nonce(this->client_sock);
+  header_wrap.send_data(this->client_sock);
+
+  file.read(reinterpret_cast<char *>(salt), crypto_pwhash_SALTBYTES);
+
+  SessionEncWrapper salt_wrap = SessionEncWrapper(salt, crypto_pwhash_SALTBYTES,
+                                                  this->server_tx, this->nonce);
+
+  salt_wrap.send_data_length(this->client_sock);
+  salt_wrap.send_nonce(this->client_sock);
+  salt_wrap.send_data(this->client_sock);
 
   do {
 
@@ -155,11 +178,27 @@ int FS_Operator::RFFS_Handler__Server() {
     unsigned long long file_chunk_len = file.gcount();
 
     std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
+    SessionEncWrapper prefix_wrap =
+        file.eof() ? SessionEncWrapper(
+                         reinterpret_cast<const unsigned char *>(&END_CHUNK),
+                         sizeof(END_CHUNK), this->server_tx, this->nonce)
+                   : SessionEncWrapper(
+                         reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
+                         sizeof(MEAT_CHUNK), this->server_tx, this->nonce);
 
-    send(this->client_sock, &file_chunk_len, sizeof(file_chunk_len), 0);
+    prefix_wrap.send_data_length(this->client_sock);
+    prefix_wrap.send_nonce(this->client_sock);
+    prefix_wrap.send_data(this->client_sock);
 
-    send(this->client_sock, file_chunk, file_chunk_len, 0);
+    SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
+        file_chunk, file_chunk_len, this->server_tx, this->nonce);
+
+    file_chunk_wrap.send_data_length(this->client_sock);
+    file_chunk_wrap.send_nonce(this->client_sock);
+    file_chunk_wrap.send_data(this->client_sock);
+
   } while (!file.eof());
+
   return 0;
 }
 

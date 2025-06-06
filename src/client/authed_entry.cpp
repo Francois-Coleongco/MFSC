@@ -148,7 +148,7 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
 
   unsigned char file_chunk[CHUNK_SIZE];
 
-  int tag = 0;
+  unsigned char tag = 0;
 
   do {
 
@@ -277,7 +277,10 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
 
-  init_read(header, salt);
+  if (init_read(header, salt)) {
+    std::cerr << "error in init_read\n";
+    return 1;
+  };
 
   if (crypto_pwhash(this->key, crypto_box_SEEDBYTES, password.data(),
                     password.length(), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
@@ -287,6 +290,61 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
     std::cerr << "out of mem" << std::endl;
     return 1;
   }
+
+  crypto_secretstream_xchacha20poly1305_state state;
+
+  if (crypto_secretstream_xchacha20poly1305_init_pull(&state, header,
+                                                      this->key) != 0) {
+    std::cerr << "invalid header\n";
+    return 2;
+  }
+
+  unsigned char tag = 0;
+
+  int prefix = END_CHUNK;
+
+  do {
+    unsigned char *rx = this->CA->get_client_rx();
+
+    unsigned char file_chunk[FILE_ENCRYPTED_CHUNK_SIZE];
+
+    unsigned long long decrypted_prefix_len;
+
+    SessionEncWrapper prefix_wrap = SessionEncWrapper(this->CA->get_socket());
+
+    prefix_wrap.unwrap(rx, sizeof(prefix),
+                       reinterpret_cast<unsigned char *>(&prefix),
+                       &decrypted_prefix_len);
+
+    SessionEncWrapper file_chunk_wrap =
+        SessionEncWrapper(this->CA->get_socket());
+
+    unsigned long long decrypted_file_chunk_len;
+
+    if (file_chunk_wrap.unwrap(this->CA->get_client_rx(),
+                               FILE_ENCRYPTED_CHUNK_SIZE, file_chunk,
+                               &decrypted_file_chunk_len)) {
+      std::cerr << "error decrypting file_chunk_wrap in pulling loop\n";
+      return 1;
+    }
+
+    unsigned char decrypted_file_chunk
+        [FILE_ENCRYPTED_CHUNK_SIZE]; // just to be safe, keep buffer size the
+                                     // same, not smaller, we can just use
+                                     // decrypted_len from the pull function
+                                     // below to tell how many bytes to write to
+                                     // the end file
+
+    if (crypto_secretstream_xchacha20poly1305_pull(
+            &state, file_chunk, NULL, &tag, decrypted_file_chunk,
+            FILE_ENCRYPTED_CHUNK_SIZE, NULL, 0) != 0) {
+      std::cerr << "decryption failed in "
+                   "crypto_secretstream_xchacha20poly1305_pull\n";
+      return 2;
+    }
+
+  } while (prefix != END_CHUNK);
+
   return 0;
 }
 
