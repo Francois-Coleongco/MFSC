@@ -62,13 +62,19 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   // sort, it is the caller's responsibility to decrypt that.
   if (this->corrupted) {
     std::cerr << "this wrapper already contains corrupted data\n";
+    return 4;
+  }
+
+  if (this->session_encrypted_data_length -
+          crypto_secretstream_xchacha20poly1305_ABYTES >
+      stream_chunk_size) {
+    std::cerr << "invalid size, it is larger than stream_chunk_size\n";
     return 3;
   }
 
   if (this->session_encrypted_data_length -
           crypto_secretstream_xchacha20poly1305_ABYTES >
       decrypted_data_capacity) {
-
     std::cerr << "WARNING COULD OVERFLOW | TRYING TO PUT "
               << this->session_encrypted_data_length << " BYTES INTO "
               << decrypted_data_capacity << "\n";

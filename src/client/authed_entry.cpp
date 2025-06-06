@@ -253,6 +253,8 @@ int Receiver_Agent::init_read(
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
   SessionEncWrapper header_wrap = SessionEncWrapper(this->CA->get_socket());
+  std::cerr << "reading header" << std::endl;
+
   unsigned long long decrypted_header_len;
   if (header_wrap.unwrap(this->CA->get_client_rx(),
                          crypto_secretstream_xchacha20poly1305_HEADERBYTES,
@@ -262,10 +264,11 @@ int Receiver_Agent::init_read(
   };
 
   SessionEncWrapper salt_wrap = SessionEncWrapper(this->CA->get_socket());
+  std::cerr << "reading salt" << std::endl;
   unsigned long long decrypted_salt_len;
   if (salt_wrap.unwrap(this->CA->get_client_rx(), crypto_pwhash_SALTBYTES, salt,
                        &decrypted_salt_len)) {
-    std::cerr << "couldn't unwrap header\n";
+    std::cerr << "couldn't unwrap salt\n";
     return 1;
   }
 

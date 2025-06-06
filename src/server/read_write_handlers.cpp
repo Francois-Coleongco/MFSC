@@ -146,6 +146,7 @@ int FS_Operator::RFFS_Handler__Server() {
   }
 
   unsigned char file_chunk[CHUNK_SIZE];
+
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
 
@@ -158,6 +159,7 @@ int FS_Operator::RFFS_Handler__Server() {
       header, crypto_secretstream_xchacha20poly1305_HEADERBYTES,
       this->server_tx, this->nonce);
 
+  std::cerr << "sending header" << std::endl;
   header_wrap.send_data_length(this->client_sock);
   header_wrap.send_nonce(this->client_sock);
   header_wrap.send_data(this->client_sock);
