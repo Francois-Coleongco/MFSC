@@ -95,7 +95,7 @@ class Receiver_Agent {
 
 public:
   int decrypt_and_read_from_server(
-      std::ofstream file,
+      std::ofstream &file,
       std::string &password); // internally handles set_crypto for itself
   Receiver_Agent(Comms_Agent *CA);
 

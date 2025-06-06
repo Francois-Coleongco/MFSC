@@ -107,6 +107,10 @@ int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
   file_name_wrapper.send_nonce(client_sock);
   file_name_wrapper.send_data(client_sock);
 
+  std::ofstream file(file_name, std::ios::binary);
+
+  RA.decrypt_and_read_from_server(file, password);
+
   return 0;
 }
 

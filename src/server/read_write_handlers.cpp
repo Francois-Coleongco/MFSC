@@ -135,6 +135,8 @@ int FS_Operator::RFFS_Handler__Server() {
                              reinterpret_cast<unsigned char *>(file_name_buf),
                              &decrypted_file_name_length);
 
+  std::cerr << "this is decrypted file name RFFS: " << file_name_buf << "\n";
+
   std::ifstream file(file_name_buf, std::ios::binary);
 
   if (!file) {
@@ -153,6 +155,8 @@ int FS_Operator::RFFS_Handler__Server() {
     unsigned long long file_chunk_len = file.gcount();
 
     std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
+
+    send(this->client_sock, &file_chunk_len, sizeof(file_chunk_len), 0);
 
     send(this->client_sock, file_chunk, file_chunk_len, 0);
   } while (!file.eof());

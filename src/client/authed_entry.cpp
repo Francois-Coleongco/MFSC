@@ -272,7 +272,7 @@ int Receiver_Agent::init_read(
   return 0;
 }
 
-int Receiver_Agent::decrypt_and_read_from_server(std::ofstream file,
+int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
                                                  std::string &password) {
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
@@ -280,7 +280,7 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream file,
   init_read(header, salt);
 
   if (crypto_pwhash(this->key, crypto_box_SEEDBYTES, password.data(),
-                    password.size(), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
+                    password.length(), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
                     crypto_pwhash_MEMLIMIT_INTERACTIVE,
                     crypto_pwhash_ALG_DEFAULT) != 0) {
     /* out of memory */
