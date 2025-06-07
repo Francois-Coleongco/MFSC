@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+std::string save_dir = "MFSC_SAVE_DIR/";
 // intentions
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
@@ -106,6 +107,10 @@ int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
   file_name_wrapper.send_data_length(client_sock);
   file_name_wrapper.send_nonce(client_sock);
   file_name_wrapper.send_data(client_sock);
+
+  file_name.insert(0, save_dir);
+
+  std::cerr << "this is file_name after insertion: " << file_name << std::endl;
 
   std::ofstream file(file_name, std::ios::binary);
 

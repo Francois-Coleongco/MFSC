@@ -134,12 +134,28 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
   unsigned char
       header[crypto_secretstream_xchacha20poly1305_HEADERBYTES]; // 24 bytes
 
+  std::cerr << "key printed" << std::endl;
+
+  for (size_t i = 0; i < 32; ++i) {
+    std::cerr << this->key[i];
+  }
+
   crypto_secretstream_xchacha20poly1305_init_push(
       &state, header,
       this->key); //  the salt used to create this key needs to be saved with
                   //  the encrypted file. this is to be combined with the user's
                   //  password to recreate this exact key which is what's needed
                   //  for decryption
+
+  std::cerr << "header printed" << std::endl;
+  for (size_t i = 0; i < crypto_secretstream_xchacha20poly1305_HEADERBYTES;
+       ++i) {
+    std::cerr << header[i];
+  }
+  std::cerr << "salt printed" << std::endl;
+  for (size_t i = 0; i < crypto_pwhash_SALTBYTES; ++i) {
+    std::cerr << this->salt[i];
+  }
 
   int init_stat = init_send(
       reinterpret_cast<unsigned char *>(file_name.data()), file_name.length(),
@@ -296,6 +312,8 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
 
   crypto_secretstream_xchacha20poly1305_state state;
 
+  std::cerr << "this was key used to decrypt: " << this->key;
+
   if (crypto_secretstream_xchacha20poly1305_init_pull(&state, header,
                                                       this->key) != 0) {
     std::cerr << "invalid header\n";
@@ -318,6 +336,8 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
     prefix_wrap.unwrap(rx, sizeof(prefix),
                        reinterpret_cast<unsigned char *>(&prefix),
                        &decrypted_prefix_len);
+
+    std::cerr << "read prefix was: " << prefix << std::endl;
 
     SessionEncWrapper file_chunk_wrap =
         SessionEncWrapper(this->CA->get_socket());

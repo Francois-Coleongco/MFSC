@@ -1,4 +1,5 @@
 #include "../../include/read_write_handlers.h"
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
@@ -91,6 +92,19 @@ int FS_Operator::WTFS_Handler__Server() {
     return 1;
   }
 
+  std::cerr << "header printed" << std::endl;
+  for (size_t i = 0; i < crypto_secretstream_xchacha20poly1305_HEADERBYTES;
+       ++i) {
+    std::cerr << header[i];
+  }
+  std::cerr << "salt printed" << std::endl;
+  for (size_t i = 0; i < crypto_pwhash_SALTBYTES; ++i) {
+    std::cerr << salt[i];
+  }
+  std::cerr << std::endl;
+
+  std::cerr << std::endl;
+
   std::string file_name = file_name_buf;
 
   file_name.append(".enc");
@@ -161,6 +175,7 @@ int FS_Operator::RFFS_Handler__Server() {
 
   std::cerr << "sending header" << std::endl;
   header_wrap.send_data_length(this->client_sock);
+  std::cerr << "got header legnth" << std::endl;
   header_wrap.send_nonce(this->client_sock);
   header_wrap.send_data(this->client_sock);
 
@@ -169,9 +184,26 @@ int FS_Operator::RFFS_Handler__Server() {
   SessionEncWrapper salt_wrap = SessionEncWrapper(salt, crypto_pwhash_SALTBYTES,
                                                   this->server_tx, this->nonce);
 
+  std::cerr << "sending salt" << std::endl;
   salt_wrap.send_data_length(this->client_sock);
+  std::cerr << "got salt legnth" << std::endl;
   salt_wrap.send_nonce(this->client_sock);
   salt_wrap.send_data(this->client_sock);
+
+  std::cerr << "header printed" << std::endl;
+  for (size_t i = 0; i < crypto_secretstream_xchacha20poly1305_HEADERBYTES;
+       ++i) {
+    std::cerr << header[i];
+  }
+  std::cerr << "salt printed" << std::endl;
+  for (size_t i = 0; i < crypto_pwhash_SALTBYTES; ++i) {
+    std::cerr << salt[i];
+  }
+  if (!file) {
+    std::cerr << "file not valid\n";
+  } else if (file.eof()) {
+    std::cerr << "eof\n";
+  }
 
   do {
 
@@ -191,6 +223,8 @@ int FS_Operator::RFFS_Handler__Server() {
     prefix_wrap.send_data_length(this->client_sock);
     prefix_wrap.send_nonce(this->client_sock);
     prefix_wrap.send_data(this->client_sock);
+
+    std::cerr << "sent prefix\n";
 
     SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
         file_chunk, file_chunk_len, this->server_tx, this->nonce);
