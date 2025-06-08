@@ -134,11 +134,9 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
   unsigned char
       header[crypto_secretstream_xchacha20poly1305_HEADERBYTES]; // 24 bytes
 
-  std::cerr << "key printed" << std::endl;
-
-  for (size_t i = 0; i < 32; ++i) {
-    std::cerr << this->key[i];
-  }
+  std::ofstream key_file_client("key_file_client", std::ios::binary);
+  key_file_client.write(reinterpret_cast<char *>(this->key),
+                        crypto_box_SEEDBYTES);
 
   crypto_secretstream_xchacha20poly1305_init_push(
       &state, header,
@@ -147,15 +145,13 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
                   //  password to recreate this exact key which is what's needed
                   //  for decryption
 
-  std::cerr << "header printed" << std::endl;
-  for (size_t i = 0; i < crypto_secretstream_xchacha20poly1305_HEADERBYTES;
-       ++i) {
-    std::cerr << header[i];
-  }
-  std::cerr << "salt printed" << std::endl;
-  for (size_t i = 0; i < crypto_pwhash_SALTBYTES; ++i) {
-    std::cerr << this->salt[i];
-  }
+  std::ofstream header_file_client("header_file_client", std::ios::binary);
+  header_file_client.write(reinterpret_cast<char *>(header),
+                           crypto_secretstream_xchacha20poly1305_HEADERBYTES);
+
+  std::ofstream salt_file_client("salt_file_client", std::ios::binary);
+  salt_file_client.write(reinterpret_cast<char *>(salt),
+                         crypto_pwhash_SALTBYTES);
 
   int init_stat = init_send(
       reinterpret_cast<unsigned char *>(file_name.data()), file_name.length(),
@@ -165,6 +161,7 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
   unsigned char file_chunk[CHUNK_SIZE];
 
   unsigned char tag = 0;
+  std::ofstream file_out_test("test_out_client_encryption", std::ios::binary);
 
   do {
 
@@ -176,9 +173,12 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
 
     std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
 
+    file_out_test.write(reinterpret_cast<char *>(file_chunk),
+                        FILE_ENCRYPTED_CHUNK_SIZE);
     unsigned long long ciphertext_len =
         crypto_secretstream_xchacha20poly1305_ABYTES + file_chunk_len;
 
+    std::cerr << "this is ciphertext_len " << ciphertext_len << std::endl;
     this->size = ciphertext_len;
 
     tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
@@ -324,49 +324,54 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
 
   int prefix = END_CHUNK;
 
-  do {
-    unsigned char *rx = this->CA->get_client_rx();
+  unsigned char file_chunk[FILE_ENCRYPTED_CHUNK_SIZE];
+  unsigned char decrypted_file_chunk[CHUNK_SIZE];
 
-    unsigned char file_chunk[FILE_ENCRYPTED_CHUNK_SIZE];
+  // do {
+  unsigned char *rx = this->CA->get_client_rx();
 
-    unsigned long long decrypted_prefix_len;
+  unsigned long long decrypted_prefix_len;
 
-    SessionEncWrapper prefix_wrap = SessionEncWrapper(this->CA->get_socket());
+  SessionEncWrapper prefix_wrap = SessionEncWrapper(this->CA->get_socket());
 
-    prefix_wrap.unwrap(rx, sizeof(prefix),
-                       reinterpret_cast<unsigned char *>(&prefix),
-                       &decrypted_prefix_len);
+  prefix_wrap.unwrap(rx, sizeof(prefix),
+                     reinterpret_cast<unsigned char *>(&prefix),
+                     &decrypted_prefix_len);
 
-    std::cerr << "read prefix was: " << prefix << std::endl;
+  std::cerr << "read prefix was: " << prefix << std::endl;
 
-    SessionEncWrapper file_chunk_wrap =
-        SessionEncWrapper(this->CA->get_socket());
+  SessionEncWrapper file_chunk_wrap = SessionEncWrapper(this->CA->get_socket());
 
-    unsigned long long decrypted_file_chunk_len;
+  unsigned long long decrypted_file_chunk_len;
 
-    if (file_chunk_wrap.unwrap(this->CA->get_client_rx(),
-                               FILE_ENCRYPTED_CHUNK_SIZE, file_chunk,
-                               &decrypted_file_chunk_len)) {
-      std::cerr << "error decrypting file_chunk_wrap in pulling loop\n";
-      return 1;
-    }
+  if (file_chunk_wrap.unwrap(this->CA->get_client_rx(),
+                             FILE_ENCRYPTED_CHUNK_SIZE, file_chunk,
+                             &decrypted_file_chunk_len)) {
+    std::cerr << "error decrypting file_chunk_wrap in pulling loop\n";
+    return 1;
+  }
 
-    unsigned char decrypted_file_chunk
-        [FILE_ENCRYPTED_CHUNK_SIZE]; // just to be safe, keep buffer size the
-                                     // same, not smaller, we can just use
-                                     // decrypted_len from the pull function
-                                     // below to tell how many bytes to write to
-                                     // the end file
+  std::ofstream file_out_test("test_out_client", std::ios::binary);
 
-    if (crypto_secretstream_xchacha20poly1305_pull(
-            &state, file_chunk, NULL, &tag, decrypted_file_chunk,
-            FILE_ENCRYPTED_CHUNK_SIZE, NULL, 0) != 0) {
-      std::cerr << "decryption failed in "
-                   "crypto_secretstream_xchacha20poly1305_pull\n";
-      return 2;
-    }
+  file_out_test.write(reinterpret_cast<char *>(file_chunk),
+                      FILE_ENCRYPTED_CHUNK_SIZE);
 
-  } while (prefix != END_CHUNK);
+  if (crypto_secretstream_xchacha20poly1305_pull(
+          &state, decrypted_file_chunk, NULL, &tag, file_chunk,
+          decrypted_file_chunk_len, NULL, 0) != 0) {
+    std::cerr << "decryption failed in "
+                 "crypto_secretstream_xchacha20poly1305_pull\n";
+    return 2;
+  }
+
+  std::cerr << "SUCCESSFUL DECRYPTION IN FILE CHUNK\n";
+
+  file.write(reinterpret_cast<char *>(file_chunk),
+             decrypted_file_chunk_len -
+                 crypto_secretstream_xchacha20poly1305_ABYTES);
+
+  // }
+  // while (prefix != END_CHUNK);
 
   return 0;
 }

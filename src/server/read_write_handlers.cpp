@@ -92,15 +92,6 @@ int FS_Operator::WTFS_Handler__Server() {
     return 1;
   }
 
-  std::cerr << "header printed" << std::endl;
-  for (size_t i = 0; i < crypto_secretstream_xchacha20poly1305_HEADERBYTES;
-       ++i) {
-    std::cerr << header[i];
-  }
-  std::cerr << "salt printed" << std::endl;
-  for (size_t i = 0; i < crypto_pwhash_SALTBYTES; ++i) {
-    std::cerr << salt[i];
-  }
   std::cerr << std::endl;
 
   std::cerr << std::endl;
@@ -159,7 +150,7 @@ int FS_Operator::RFFS_Handler__Server() {
     return -1;
   }
 
-  unsigned char file_chunk[CHUNK_SIZE];
+  unsigned char file_chunk[FILE_ENCRYPTED_CHUNK_SIZE];
 
   unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
   unsigned char salt[crypto_pwhash_SALTBYTES];
@@ -190,50 +181,56 @@ int FS_Operator::RFFS_Handler__Server() {
   salt_wrap.send_nonce(this->client_sock);
   salt_wrap.send_data(this->client_sock);
 
-  std::cerr << "header printed" << std::endl;
-  for (size_t i = 0; i < crypto_secretstream_xchacha20poly1305_HEADERBYTES;
-       ++i) {
-    std::cerr << header[i];
-  }
-  std::cerr << "salt printed" << std::endl;
-  for (size_t i = 0; i < crypto_pwhash_SALTBYTES; ++i) {
-    std::cerr << salt[i];
-  }
+  std::ofstream header_file_server("header_file_server", std::ios::binary);
+  header_file_server.write(reinterpret_cast<char *>(header),
+                           crypto_secretstream_xchacha20poly1305_HEADERBYTES);
+
+  std::ofstream salt_file_server("salt_file_server", std::ios::binary);
+  salt_file_server.write(reinterpret_cast<char *>(salt),
+                         crypto_pwhash_SALTBYTES);
+
   if (!file) {
     std::cerr << "file not valid\n";
   } else if (file.eof()) {
     std::cerr << "eof\n";
   }
 
-  do {
+  // do {
 
-    file.read(reinterpret_cast<char *>(file_chunk), CHUNK_SIZE);
+  file.read(reinterpret_cast<char *>(file_chunk), FILE_ENCRYPTED_CHUNK_SIZE);
 
-    unsigned long long file_chunk_len = file.gcount();
+  unsigned long long file_chunk_len = file.gcount();
 
-    std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
-    SessionEncWrapper prefix_wrap =
-        file.eof() ? SessionEncWrapper(
-                         reinterpret_cast<const unsigned char *>(&END_CHUNK),
-                         sizeof(END_CHUNK), this->server_tx, this->nonce)
-                   : SessionEncWrapper(
-                         reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
-                         sizeof(MEAT_CHUNK), this->server_tx, this->nonce);
+  std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
+  SessionEncWrapper prefix_wrap =
+      file.eof() ? SessionEncWrapper(
+                       reinterpret_cast<const unsigned char *>(&END_CHUNK),
+                       sizeof(END_CHUNK), this->server_tx, this->nonce)
+                 : SessionEncWrapper(
+                       reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
+                       sizeof(MEAT_CHUNK), this->server_tx, this->nonce);
 
-    prefix_wrap.send_data_length(this->client_sock);
-    prefix_wrap.send_nonce(this->client_sock);
-    prefix_wrap.send_data(this->client_sock);
+  prefix_wrap.send_data_length(this->client_sock);
+  prefix_wrap.send_nonce(this->client_sock);
+  prefix_wrap.send_data(this->client_sock);
 
-    std::cerr << "sent prefix\n";
+  std::cerr << "sent prefix\n";
 
-    SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
-        file_chunk, file_chunk_len, this->server_tx, this->nonce);
+  std::cerr << "printing file chunk" << std::endl;
 
-    file_chunk_wrap.send_data_length(this->client_sock);
-    file_chunk_wrap.send_nonce(this->client_sock);
-    file_chunk_wrap.send_data(this->client_sock);
+  std::ofstream file_out_test("test_out_server", std::ios::binary);
 
-  } while (!file.eof());
+  file_out_test.write(reinterpret_cast<char *>(file_chunk),
+                      FILE_ENCRYPTED_CHUNK_SIZE);
+
+  SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
+      file_chunk, file_chunk_len, this->server_tx, this->nonce);
+
+  file_chunk_wrap.send_data_length(this->client_sock);
+  file_chunk_wrap.send_nonce(this->client_sock);
+  file_chunk_wrap.send_data(this->client_sock);
+
+  // } while (!file.eof());
 
   return 0;
 }

@@ -66,14 +66,14 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   }
 
   if (this->session_encrypted_data_length -
-          crypto_secretstream_xchacha20poly1305_ABYTES >
+          crypto_aead_chacha20poly1305_ABYTES >
       stream_chunk_size) {
     std::cerr << "invalid size, it is larger than stream_chunk_size\n";
     return 3;
   }
 
   if (this->session_encrypted_data_length -
-          crypto_secretstream_xchacha20poly1305_ABYTES >
+          crypto_aead_chacha20poly1305_ABYTES >
       decrypted_data_capacity) {
     std::cerr << "WARNING COULD OVERFLOW | TRYING TO PUT "
               << this->session_encrypted_data_length << " BYTES INTO "
