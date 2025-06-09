@@ -42,6 +42,7 @@ terminal 2
 ```./client```
 
 testing credentials:
+
 username: henry
 
 password: swabber
