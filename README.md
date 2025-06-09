@@ -43,10 +43,10 @@ terminal 2
 
 testing credentials:
 
-username: henry
+username: `henry`
 
-password: swabber
+password: `swabber`
 
-Don't ask why I picked the names, for some reason I was of superman then cotton swabs.
+Don't ask why I picked the names, for some reason I was thinking of superman then shortly after, cotton swabs.
 
 Follow the prompts given on client side and quit server by pressing `q` and `enter` when done :)
