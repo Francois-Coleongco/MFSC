@@ -32,8 +32,6 @@ sudo dnf install sqlite-devel libsodium-devel libsodium-devel make cmake
 ```cd build
 cmake ..
 make
-
-mkdir MEF_S
 ```
 ## using
 
