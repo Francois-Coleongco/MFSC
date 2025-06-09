@@ -43,6 +43,7 @@ terminal 2
 
 testing credentials:
 username: henry
+
 password: swabber
 
 Don't ask why I picked the names, for some reason I was of superman then cotton swabs.
