@@ -8,6 +8,10 @@ I want to make my own cloud storage essentially via an encrypted file server on 
 
 Authentication is done via an sqlite3 database on the server side. Once authenticated, the user can do two actions. First is to encrypt and write a file to the server's file system, second is to decrypt and read a file from the server's file system. Encrypted files will be written to `MEF_S/<username>` directory on the server. The decrypted files will be written to the current working directory ./client program was executed in.
 
+I used the libsodium for the cryptography and the standard library for the rest.
+
+The underlying network protocol is TCP mainly to ensure packets arrive in order, encrypted chunks arriving in sequence is obviously important haha.
+
 As you can guess from the directory naming, this server client model supports multiple clients writing to the file system.
 
 
