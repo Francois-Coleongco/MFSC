@@ -123,15 +123,4 @@ unsigned long long SessionEncWrapper::get_data_length() {
   return this->session_encrypted_data_length;
 };
 
-int SessionEncWrapper::write_to_file(std::ofstream &file) {
-  file.write(reinterpret_cast<const char *>(this->session_encrypted_data),
-             this->session_encrypted_data_length);
-
-  if (!file) {
-    return 1;
-  }
-
-  return 0;
-};
-
 bool SessionEncWrapper::is_corrupted() { return this->corrupted; }

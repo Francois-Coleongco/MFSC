@@ -39,7 +39,5 @@ public:
   int send_nonce(int client_sock);
   int send_data(int client_sock);
 
-  int write_to_file(std::ofstream &file);
-
   bool is_corrupted();
 };

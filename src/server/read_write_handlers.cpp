@@ -108,7 +108,7 @@ int FS_Operator::WTFS_Handler__Server() {
              crypto_secretstream_xchacha20poly1305_HEADERBYTES);
   file.write(reinterpret_cast<const char *>(salt), crypto_pwhash_SALTBYTES);
 
-  unsigned char read_buf[stream_chunk_size];
+  unsigned char decrypted_file_chunk[FILE_ENCRYPTED_CHUNK_SIZE];
   size_t read_bytes;
 
   int prefix = END_CHUNK;
@@ -119,11 +119,17 @@ int FS_Operator::WTFS_Handler__Server() {
     prefix_wrap.unwrap(this->server_rx, sizeof(prefix),
                        reinterpret_cast<unsigned char *>(&prefix),
                        &decrypted_prefix_len);
+
+    unsigned long long decrypted_file_chunk_len;
+    encrypted_data_wrap.unwrap(this->server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
+                               decrypted_file_chunk, &decrypted_file_chunk_len);
+    file.write(reinterpret_cast<char *>(decrypted_file_chunk),
+               decrypted_file_chunk_len);
     if (prefix == END_CHUNK) {
       std::cerr << "found last chunk\n";
-      break; // we came across the last chunk already in the previous iteration
+      break;
     }
-    encrypted_data_wrap.write_to_file(file);
+
   } while (prefix != END_CHUNK);
 
   return 0;
