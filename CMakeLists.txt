@@ -36,9 +36,14 @@ target_link_libraries(server PRIVATE
     SQLite::SQLite3
 )
 
+
 add_executable(client 
     src/client/client.cpp 
     src/client/authed_entry.cpp
+)
+
+set_target_properties(client PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/client_fs"
 )
 
 target_include_directories(client PUBLIC include)

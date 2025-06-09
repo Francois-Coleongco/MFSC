@@ -2,17 +2,23 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sodium/utils.h>
 
 const std::string ext = ".enc";
+const std::string base_dir = "MEF_S/"; //  to be appended to later
 
-FS_Operator::FS_Operator(int client_sock,
+FS_Operator::FS_Operator(int client_sock, std::string username,
                          unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
                          unsigned char server_tx[crypto_kx_SESSIONKEYBYTES],
                          unsigned char nonce[crypto_kx_SESSIONKEYBYTES])
     : client_sock(client_sock) {
 
+  this->user_dir = base_dir + username; // need to make this directory
+  if (!std::filesystem::create_directories(this->user_dir)) {
+    std::cerr << "couldn't create user_dir: " << this->user_dir << std::endl;
+  };
   std::memcpy(this->server_tx, server_tx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->server_rx, server_rx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->nonce, server_rx, crypto_kx_SESSIONKEYBYTES);
@@ -37,7 +43,7 @@ int FS_Operator::init_read(
   SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
   std::cerr << "outside construction now\n";
   if (file_name_wrap.is_corrupted()) {
-    std::cerr << "it's corrupted i see from outsideeeeeeee\n";
+    std::cerr << "file_name_wrap in init_read was corrupted\n";
     return 2;
   }
 
@@ -92,11 +98,7 @@ int FS_Operator::WTFS_Handler__Server() {
     return 1;
   }
 
-  std::cerr << std::endl;
-
-  std::cerr << std::endl;
-
-  std::string file_name = file_name_buf;
+  std::string file_name = this->user_dir + file_name_buf;
 
   file_name.append(".enc");
 
@@ -149,10 +151,12 @@ int FS_Operator::RFFS_Handler__Server() {
 
   std::cerr << "this is decrypted file name RFFS: " << file_name_buf << "\n";
 
-  std::ifstream file(file_name_buf, std::ios::binary);
+  std::string file_name = this->user_dir + file_name_buf;
+
+  std::ifstream file(file_name, std::ios::binary);
 
   if (!file) {
-    std::cerr << "couldn't open the file" << std::endl;
+    std::cerr << "couldn't open the file\n";
     return -1;
   }
 
@@ -170,9 +174,7 @@ int FS_Operator::RFFS_Handler__Server() {
       header, crypto_secretstream_xchacha20poly1305_HEADERBYTES,
       this->server_tx, this->nonce);
 
-  std::cerr << "sending header" << std::endl;
   header_wrap.send_data_length(this->client_sock);
-  std::cerr << "got header legnth" << std::endl;
   header_wrap.send_nonce(this->client_sock);
   header_wrap.send_data(this->client_sock);
 
@@ -181,9 +183,7 @@ int FS_Operator::RFFS_Handler__Server() {
   SessionEncWrapper salt_wrap = SessionEncWrapper(salt, crypto_pwhash_SALTBYTES,
                                                   this->server_tx, this->nonce);
 
-  std::cerr << "sending salt" << std::endl;
   salt_wrap.send_data_length(this->client_sock);
-  std::cerr << "got salt legnth" << std::endl;
   salt_wrap.send_nonce(this->client_sock);
   salt_wrap.send_data(this->client_sock);
 
@@ -201,42 +201,38 @@ int FS_Operator::RFFS_Handler__Server() {
     std::cerr << "eof\n";
   }
 
-  // do {
+  do {
 
-  file.read(reinterpret_cast<char *>(file_chunk), FILE_ENCRYPTED_CHUNK_SIZE);
+    file.read(reinterpret_cast<char *>(file_chunk), FILE_ENCRYPTED_CHUNK_SIZE);
 
-  unsigned long long file_chunk_len = file.gcount();
+    unsigned long long file_chunk_len = file.gcount();
 
-  std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
-  SessionEncWrapper prefix_wrap =
-      file.eof() ? SessionEncWrapper(
-                       reinterpret_cast<const unsigned char *>(&END_CHUNK),
-                       sizeof(END_CHUNK), this->server_tx, this->nonce)
-                 : SessionEncWrapper(
-                       reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
-                       sizeof(MEAT_CHUNK), this->server_tx, this->nonce);
+    std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
+    SessionEncWrapper prefix_wrap =
+        file.eof() ? SessionEncWrapper(
+                         reinterpret_cast<const unsigned char *>(&END_CHUNK),
+                         sizeof(END_CHUNK), this->server_tx, this->nonce)
+                   : SessionEncWrapper(
+                         reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
+                         sizeof(MEAT_CHUNK), this->server_tx, this->nonce);
 
-  prefix_wrap.send_data_length(this->client_sock);
-  prefix_wrap.send_nonce(this->client_sock);
-  prefix_wrap.send_data(this->client_sock);
+    prefix_wrap.send_data_length(this->client_sock);
+    prefix_wrap.send_nonce(this->client_sock);
+    prefix_wrap.send_data(this->client_sock);
 
-  std::cerr << "sent prefix\n";
+    std::ofstream file_out_test("test_out_server", std::ios::binary);
 
-  std::cerr << "printing file chunk" << std::endl;
+    file_out_test.write(reinterpret_cast<char *>(file_chunk),
+                        FILE_ENCRYPTED_CHUNK_SIZE);
 
-  std::ofstream file_out_test("test_out_server", std::ios::binary);
+    SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
+        file_chunk, file_chunk_len, this->server_tx, this->nonce);
 
-  file_out_test.write(reinterpret_cast<char *>(file_chunk),
-                      FILE_ENCRYPTED_CHUNK_SIZE);
+    file_chunk_wrap.send_data_length(this->client_sock);
+    file_chunk_wrap.send_nonce(this->client_sock);
+    file_chunk_wrap.send_data(this->client_sock);
 
-  SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
-      file_chunk, file_chunk_len, this->server_tx, this->nonce);
-
-  file_chunk_wrap.send_data_length(this->client_sock);
-  file_chunk_wrap.send_nonce(this->client_sock);
-  file_chunk_wrap.send_data(this->client_sock);
-
-  // } while (!file.eof());
+  } while (!file.eof());
 
   return 0;
 }

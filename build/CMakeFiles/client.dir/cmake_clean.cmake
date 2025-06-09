@@ -4,8 +4,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/client.dir/src/client/authed_entry.cpp.o.d"
   "CMakeFiles/client.dir/src/client/client.cpp.o"
   "CMakeFiles/client.dir/src/client/client.cpp.o.d"
-  "client"
-  "client.pdb"
+  "client_fs/client"
+  "client_fs/client.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

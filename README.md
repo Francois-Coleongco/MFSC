@@ -1,29 +1,48 @@
-# Encrypted Multithreaded File Server & Client
+# Multithreaded Encrypted File Server & Client
 
 ## what is this?
 
 I want to make my own cloud storage essentially via an encrypted file server on some piece of hardware that i hook up with tailscale. (I'd rather not expose my home network to the internet thank you very much xd)
 
+## how it works
+
+Authentication is done via an sqlite3 database on the server side. Once authenticated, the user can do two actions. First is to encrypt and write a file to the server's file system, second is to decrypt and read a file from the server's file system. Encrypted files will be written to `MEF_S/<username>` directory on the server. The decrypted files will be written to the current working directory ./client program was executed in.
+
+As you can guess from the directory naming, this server client model supports multiple clients writing to the file system.
+
+
 ## dependencies:
 
-ubuntu/ubuntu based (sorry idk if these pkgs are on debian):
+Ubuntu/Ubuntu based (sorry if these pkgs are not on debian, i don't have a debian system TwT):
 ```
-sudo apt install sqlite3 libsqlite3-dev libsodium-dev
+sudo apt install sqlite3 libsqlite3-dev libsodium-dev cmake build-essential
 ```
 
-fedora (what i'm using rn):
+Fedora (what i'm using rn):
 ```
-sudo dnf sqlite3 libsqlite3-dev libsodium-dev
+sudo dnf install sqlite-devel libsodium-devel libsodium-devel make cmake
 ```
 
 ## building
 
-just default c++ 17 standard works
+```cd build
+cmake ..
+make
 
-must therefore build with respective linking (there is a build bash script that builds both the server and client ./create which builds it it into the ./test_build/ directory) i honestly had an acronym for atsic but i forgot what it meant so... whoops.
+mkdir MEF_S
+```
+## using
 
-## todo:
+terminal 1
+```./server```
 
-read from file system
+terminal 2
+```./client```
 
-key rotation (need to halt all communications to prevent data loss from missing matching keys)
+testing credentials:
+username: henry
+password: swabber
+
+Don't ask why I picked the names, for some reason I was of superman then cotton swabs.
+
+Follow the prompts given on client side and quit server by pressing `q` and `enter` when done :)

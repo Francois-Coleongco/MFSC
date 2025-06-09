@@ -125,7 +125,8 @@ void clean_all(std::thread &log_thread, std::thread &kill_server_listener,
   }
 }
 
-int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
+int verify_credentials(sqlite3 *DB, std::string &username, int client_sock,
+                       unsigned char *server_rx) {
 
   unsigned char decrypted_username[FILE_ENCRYPTED_CHUNK_SIZE];
   unsigned char decrypted_password[FILE_ENCRYPTED_CHUNK_SIZE];
@@ -139,6 +140,7 @@ int verify_credentials(sqlite3 *DB, int client_sock, unsigned char *server_rx) {
                           decrypted_username, &decrypted_username_len);
 
   std::cerr << "this was username " << decrypted_username << "\n";
+  username = reinterpret_cast<char *>(decrypted_username);
   std::cerr << "starting password construction\n";
   SessionEncWrapper password_wrapper = SessionEncWrapper(client_sock);
   password_wrapper.unwrap(server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
@@ -176,7 +178,10 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   // make sure the last character the 4095th index is not overwritten
   // cuz this is the null pointer for you cstring
   std::cerr << " WE ARE STARTING VERYIFY CREDSSS\n";
-  if (verify_credentials(DB, client_sock, server_rx)) {
+
+  std::string username;
+
+  if (verify_credentials(DB, username, client_sock, server_rx)) {
     std::cerr << "couldn't verify creds, ignoring";
     send(client_sock, &ACK_FAIL, sizeof(int), 0);
     zombify(client_sock);
@@ -190,7 +195,7 @@ void handle_conn(sqlite3 *DB, int client_sock) {
   randombytes_buf(original_nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
   FS_Operator OP =
-      FS_Operator(client_sock, server_rx, server_tx, original_nonce);
+      FS_Operator(client_sock, username, server_rx, server_tx, original_nonce);
 
   bool perform_next = false;
 

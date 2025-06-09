@@ -7,6 +7,7 @@
 
 class FS_Operator {
   int client_sock;
+  std::string user_dir;
   unsigned char server_rx[crypto_kx_SESSIONKEYBYTES];
   unsigned char server_tx[crypto_kx_SESSIONKEYBYTES];
   unsigned char nonce[crypto_kx_SESSIONKEYBYTES];
@@ -27,7 +28,8 @@ public:
   int RFFS_Handler__Server(); // Read From File System Handler
 
   FS_Operator(
-      int client_sock, unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
+      int client_sock, std::string username,
+      unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
       unsigned char server_tx[crypto_kx_SESSIONKEYBYTES],
       unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]);
   ~FS_Operator();

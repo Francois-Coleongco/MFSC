@@ -177,4 +177,23 @@ CMakeFiles/client.dir/src/client/client.cpp.o: \
  /home/sleepy/vault/MFSC/src/client/../../include/common/constants.h \
  /home/sleepy/vault/MFSC/src/client/../../include/common/encryption_utils.h \
  /usr/include/c++/15/cassert /usr/include/assert.h \
+ /usr/include/c++/15/filesystem /usr/include/c++/15/bits/fs_fwd.h \
+ /usr/include/c++/15/cstdint /usr/include/c++/15/bits/chrono.h \
+ /usr/include/c++/15/ratio /usr/include/c++/15/limits \
+ /usr/include/c++/15/ctime /usr/include/c++/15/bits/parse_numbers.h \
+ /usr/include/c++/15/bits/fs_path.h /usr/include/c++/15/locale \
+ /usr/include/c++/15/bits/locale_facets_nonio.h \
+ /usr/include/c++/15/x86_64-redhat-linux/bits/time_members.h \
+ /usr/include/c++/15/x86_64-redhat-linux/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/15/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/15/bits/locale_conv.h /usr/include/c++/15/iomanip \
+ /usr/include/c++/15/bits/quoted_string.h /usr/include/c++/15/sstream \
+ /usr/include/c++/15/bits/sstream.tcc /usr/include/c++/15/codecvt \
+ /usr/include/c++/15/ext/concurrence.h \
+ /usr/include/c++/15/bits/shared_ptr.h \
+ /usr/include/c++/15/bits/shared_ptr_base.h \
+ /usr/include/c++/15/bits/allocated_ptr.h \
+ /usr/include/c++/15/bits/unique_ptr.h \
+ /usr/include/c++/15/ext/aligned_buffer.h \
+ /usr/include/c++/15/bits/fs_dir.h /usr/include/c++/15/bits/fs_ops.h \
  /usr/include/sodium/utils.h

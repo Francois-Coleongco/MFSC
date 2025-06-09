@@ -3,6 +3,7 @@
 #include "../../include/common/constants.h"
 #include "../../include/common/encryption_utils.h"
 #include <cassert>
+#include <filesystem>
 #include <iostream>
 #include <netinet/in.h>
 #include <sodium/crypto_aead_chacha20poly1305.h>
@@ -14,7 +15,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-std::string save_dir = "MFSC_SAVE_DIR/";
 // intentions
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
@@ -96,9 +96,11 @@ int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
                  std::string &password) {
 
   std::string file_name;
-  std::cout << "enter file name to grab from server:\n";
+  std::cout << "enter file name to grab from server (ends in .enc extension): ";
 
   std::cin >> file_name;
+
+  std::cout << "\n";
 
   SessionEncWrapper file_name_wrapper = SessionEncWrapper(
       reinterpret_cast<unsigned char *>(file_name.data()),
@@ -108,10 +110,8 @@ int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
   file_name_wrapper.send_nonce(client_sock);
   file_name_wrapper.send_data(client_sock);
 
-  file_name.insert(0, save_dir);
-
-  std::cerr << "this is file_name after insertion: " << file_name << std::endl;
-
+  file_name.resize(file_name.length() -
+                   4); // REMOVE LAST 4 BECAUSE THIS IS .enc
   std::ofstream file(file_name, std::ios::binary);
 
   RA.decrypt_and_read_from_server(file, password);

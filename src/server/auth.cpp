@@ -135,7 +135,7 @@ int initialize_server(sqlite3 **DB) {
 
   int exit = 0;
 
-  exit = sqlite3_open("term_chat_users.db", DB);
+  exit = sqlite3_open("MEFSC_DB.db", DB);
 
   if (exit != 0) {
     std::cerr << "couldn't open database" << std::endl;
