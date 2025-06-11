@@ -34,3 +34,4 @@ public:
       unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]);
   ~FS_Operator();
 };
+

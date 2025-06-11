@@ -5,6 +5,7 @@
 #ifndef MFSC_CONSTANTS
 #define MFSC_CONSTANTS
 
+const int INVALID_READ_INTENT = -45;
 const int NO_ACTION = 99;
 const int NEW_ACTION = 88;
 const int END_CHUNK = 77;

@@ -209,7 +209,12 @@ void handle_conn(sqlite3 *DB, int client_sock) {
     } else {
       perform_next = true;
     }
+
     int intent = OP.read_intent();
+
+    if (intent == INVALID_READ_INTENT) {
+      continue;
+    }
 
     if (intent == READ_FROM_FILESYSTEM) {
       OP.RFFS_Handler__Server();

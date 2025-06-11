@@ -25,7 +25,6 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
   std::cerr << "started reading construction\n";
   if (recv(client_sock, &this->session_encrypted_data_length,
            sizeof(this->session_encrypted_data_length), 0) <= 0) {
-    std::cerr << "error in 1\n";
     std::cerr << "error in 1 was caused by datalength of: "
               << session_encrypted_data_length << "\n";
   };
@@ -95,8 +94,6 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
 
 SessionEncWrapper::~SessionEncWrapper() {
   // maybe just zero everything regardless of whether it's corrupt or not
-  sodium_memzero(this->session_encrypted_data,
-                 this->session_encrypted_data_length);
   this->session_encrypted_data_length = 0;
 }
 

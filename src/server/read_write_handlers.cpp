@@ -6,8 +6,10 @@
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sodium/utils.h>
 
-const std::string ext = ".enc";
-const std::string base_dir = "MEF_S/"; //  to be appended to later
+const char *ext = ".enc";
+const unsigned char ext_len = strlen(ext);
+
+const char *base_dir = "MEF_S/"; //  to be appended to later
 
 FS_Operator::FS_Operator(int client_sock, std::string username,
                          unsigned char server_rx[crypto_kx_SESSIONKEYBYTES],
@@ -39,47 +41,60 @@ int FS_Operator::init_read(
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
-  unsigned long long decrypted_file_name_length;
   SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
-  std::cerr << "outside construction now\n";
   if (file_name_wrap.is_corrupted()) {
     std::cerr << "file_name_wrap in init_read was corrupted\n";
-    return 2;
+    return 7;
   }
+
+  unsigned long long decrypted_file_name_length;
 
   if (file_name_wrap.unwrap(this->server_rx, PRE_EXT_FILE_NAME_LEN,
                             reinterpret_cast<unsigned char *>(file_name_buf),
                             &decrypted_file_name_length) == 2) {
     std::cerr << "couldn't read file name, ABORT\n";
-    return 1;
+    return 6;
   }
-
-  std::cerr << "decrypted_file_name_length: " << decrypted_file_name_length
-            << "\n";
 
   // decrypted file length will be NOT null terminated. so i need to null
   // terminate it before it leaves int_read
 
-  if (decrypted_file_name_length + ext.length() > MAX_FILE_NAME_LENGTH) {
-    return 2;
+  if (decrypted_file_name_length + strlen(ext) > MAX_FILE_NAME_LENGTH) {
+    return 5;
   }
 
   file_name_buf[decrypted_file_name_length] = '\0';
 
-  unsigned long long decrypted_header_length;
   SessionEncWrapper header_wrap = SessionEncWrapper(client_sock);
-  header_wrap.unwrap(this->server_rx,
-                     crypto_secretstream_xchacha20poly1305_HEADERBYTES, header,
-                     &decrypted_header_length);
 
-  std::cerr << "decrypted header length\n" << decrypted_header_length << "\n";
+  if (header_wrap.is_corrupted()) {
+    std::cerr << "header was corrupted\n";
+    return 4;
+  }
+
+  unsigned long long decrypted_header_length;
+
+  if (header_wrap.unwrap(this->server_rx,
+                         crypto_secretstream_xchacha20poly1305_HEADERBYTES,
+                         header, &decrypted_header_length)) {
+    if (header_wrap.is_corrupted()) {
+      std::cerr << "header was corrupted (discovered in unwrap)\n";
+      return 3;
+    }
+  };
 
   SessionEncWrapper salt_wrap = SessionEncWrapper(client_sock);
+  if (salt_wrap.is_corrupted()) {
+    std::cerr << "salt_wrap was corrupted\n";
+    return 2;
+  }
   unsigned long long decrypted_salt_length;
-  salt_wrap.unwrap(this->server_rx, crypto_pwhash_SALTBYTES, salt,
-                   &decrypted_salt_length);
+  if (salt_wrap.unwrap(this->server_rx, crypto_pwhash_SALTBYTES, salt,
+                       &decrypted_salt_length)) {
 
-  std::cerr << "decrypted salt length\n" << decrypted_salt_length << "\n";
+    std::cerr << "salt_wrap was corrupted (discovered in unwrap)\n";
+    return 1;
+  };
 
   return 0;
 }
@@ -95,6 +110,7 @@ int FS_Operator::WTFS_Handler__Server() {
   unsigned char salt[crypto_pwhash_SALTBYTES];
 
   if (init_read(this->client_sock, file_name_buf, header, salt)) {
+    std::cerr << "error with init_read\n";
     return 1;
   }
 
@@ -115,24 +131,48 @@ int FS_Operator::WTFS_Handler__Server() {
 
   int prefix = END_CHUNK;
   do {
-    unsigned long long decrypted_prefix_len;
     SessionEncWrapper prefix_wrap = SessionEncWrapper(client_sock);
-    SessionEncWrapper encrypted_data_wrap = SessionEncWrapper(client_sock);
-    prefix_wrap.unwrap(this->server_rx, sizeof(prefix),
-                       reinterpret_cast<unsigned char *>(&prefix),
-                       &decrypted_prefix_len);
+    unsigned long long decrypted_prefix_len;
 
+    if (prefix_wrap.is_corrupted()) {
+      std::cerr << "prefix was corrupted\n";
+      break;
+    }
+
+    if (prefix_wrap.unwrap(this->server_rx, sizeof(prefix),
+                           reinterpret_cast<unsigned char *>(&prefix),
+                           &decrypted_prefix_len)) {
+      std::cerr << "prefix was corrupted (discovered in unwrap)\n";
+      break;
+    };
+
+    SessionEncWrapper encrypted_data_wrap = SessionEncWrapper(client_sock);
     unsigned long long decrypted_file_chunk_len;
-    encrypted_data_wrap.unwrap(this->server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
-                               decrypted_file_chunk, &decrypted_file_chunk_len);
+
+    if (encrypted_data_wrap.is_corrupted()) {
+      std::cerr << "encrypted chunk data was corrupted\n";
+      break;
+    }
+
+    if (encrypted_data_wrap.unwrap(this->server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
+                                   decrypted_file_chunk,
+                                   &decrypted_file_chunk_len)) {
+      std::cerr
+          << "encrypted chunk data was corrupted (discovered in unwrap)\n";
+      break;
+    };
+
     file.write(reinterpret_cast<char *>(decrypted_file_chunk),
                decrypted_file_chunk_len);
+
     if (prefix == END_CHUNK) {
       std::cerr << "found last chunk\n";
       break;
     }
 
-  } while (prefix != END_CHUNK);
+  } while (prefix ==
+           MEAT_CHUNK); // changing this to MEAT_CHUNK not != END_CHUNK
+                        // explicitness or whatever the word is
 
   return 0;
 }
@@ -145,11 +185,17 @@ int FS_Operator::RFFS_Handler__Server() {
 
   SessionEncWrapper encrypted_file_name = SessionEncWrapper(client_sock);
 
-  encrypted_file_name.unwrap(this->server_rx, PRE_EXT_FILE_NAME_LEN,
-                             reinterpret_cast<unsigned char *>(file_name_buf),
-                             &decrypted_file_name_length);
+  if (encrypted_file_name.is_corrupted()) {
+    std::cerr << "file_name was corrupted\n";
+    return 3;
+  }
 
-  std::cerr << "this is decrypted file name RFFS: " << file_name_buf << "\n";
+  if (encrypted_file_name.unwrap(this->server_rx, PRE_EXT_FILE_NAME_LEN,
+                             reinterpret_cast<unsigned char *>(file_name_buf),
+                             &decrypted_file_name_length)) {
+    std::cerr << "file_name was corrupted (discovered in unwrap)\n";
+    return 2;
+  };
 
   std::string file_name = this->user_dir + file_name_buf;
 
@@ -157,7 +203,7 @@ int FS_Operator::RFFS_Handler__Server() {
 
   if (!file) {
     std::cerr << "couldn't open the file\n";
-    return -1;
+    return 1;
   }
 
   unsigned char file_chunk[FILE_ENCRYPTED_CHUNK_SIZE];
@@ -240,10 +286,17 @@ int FS_Operator::RFFS_Handler__Server() {
 int FS_Operator::receive_notice_of_new_action() {
   int notice;
   SessionEncWrapper notice_wrap = SessionEncWrapper(this->client_sock);
+  if (notice_wrap.is_corrupted()) {
+    return 3;
+  }
+
   unsigned long long decrypted_notice_length;
-  notice_wrap.unwrap(this->server_rx, sizeof(notice),
+
+  if (notice_wrap.unwrap(this->server_rx, sizeof(notice),
                      reinterpret_cast<unsigned char *>(&notice),
-                     &decrypted_notice_length);
+                     &decrypted_notice_length)) {
+    return 2;
+  };
 
   if (notice != NEW_ACTION) {
     std::cerr << "RETURNED ONE FROM NEWACTION NOOOOOOOOOOOOOO\n";
@@ -260,12 +313,16 @@ int FS_Operator::read_intent() {
 
   unsigned long long decrypted_data_length;
 
-  SessionEncWrapper nonce_wrap = SessionEncWrapper(client_sock);
+  SessionEncWrapper intent_wrap = SessionEncWrapper(client_sock);
+  if (intent_wrap.is_corrupted()) {
+    return INVALID_READ_INTENT;
+  }
 
-  nonce_wrap.unwrap(server_rx, sizeof(intent),
-                    reinterpret_cast<unsigned char *>(&intent),
-                    &decrypted_data_length);
+  if (intent_wrap.unwrap(server_rx, sizeof(intent),
+                         reinterpret_cast<unsigned char *>(&intent),
+                         &decrypted_data_length)) {
+    return INVALID_READ_INTENT;
+  };
 
-  std::cerr << "this was the intent read: " << intent << "\n";
   return intent;
 }
