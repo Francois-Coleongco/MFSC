@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/sleepy/vault/MFSC/include/common
 
-CXX_FLAGS = -std=gnu++17
+CXX_FLAGS = -g -O0 -DDEBUG -std=gnu++17
 

@@ -1,0 +1,607 @@
+==9652== Memcheck, a memory error detector
+==9652== Copyright (C) 2002-2024, and GNU GPL'd, by Julian Seward et al.
+==9652== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==9652== Command: ./server
+==9652== 
+==9652== (action at startup) vgdb me ... 
+==9652== 
+==9652== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==9652==   /path/to/gdb ./server
+==9652== and then give GDB the following command
+==9652==   target remote | /usr/libexec/valgrind/../../bin/vgdb --pid=9652
+==9652== --pid is optional if only one valgrind process is running
+==9652== 
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS   => 0[0m
+[0;33mCURRENT CONNECTIONS => 0[0m
+[0;36mLIVE CLIENTS        => 0[0m
+file descriptors:
+
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+DIDNT BAIL WE HAVE VALID KEYSSS YAYYY
+ WE ARE STARTING VERYIFY CREDSSS
+starting username construction
+started reading construction
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS   => 1[0m
+[0;33mCURRENT CONNECTIONS => 1[0m
+[0;36mLIVE CLIENTS        => 1[0m
+file descriptors:
+5    
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+this is the length of this->session_encrypted_data_length: 22
+finished reading construction
+this was username henry
+starting password construction
+started reading construction
+this is the length of this->session_encrypted_data_length: 24
+finished reading construction
+this was password swabber
+grabbed username was henry
+ this was password swabber
+this was DB 0x500a140
+db  val: 0x500a140
+==9652== Warning: set address range perms: large range [0x73fc000, 0x473fc000) (defined)
+--------------------------------
+[38;5;10m==9652== Warning: set address range perms: large range [0x73fc000, 0x473fc000) (noaccess)
+TOTAL CONNECTIONS   => 1[0m
+[0;33mCURRENT CONNECTIONS => 1[0m
+[0;36mLIVE CLIENTS        => 1[0m
+file descriptors:
+5    
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+made past login
+couldn't create user_dir: MEF_S/henry
+asking for notice of new action
+started reading construction
+this is the length of this->session_encrypted_data_length: 20
+finished reading construction
+NEW ACTION INISIATED
+started reading construction
+this is the length of this->session_encrypted_data_length: 20
+finished reading construction
+this was the intent read: 1
+started reading construction
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS   => 1[0m
+[0;33mCURRENT CONNECTIONS => 1[0m
+[0;36mLIVE CLIENTS        => 1[0m
+file descriptors:
+5    
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS   => 1[0m
+[0;33mCURRENT CONNECTIONS => 1[0m
+[0;36mLIVE CLIENTS        => 1[0m
+file descriptors:
+5    
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+this is the length of this->session_encrypted_data_length: 27
+finished reading construction
+this is decrypted file name RFFS: client.enc
+datalength sent 40
+
+
+==9652== Thread 5:
+==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A3AC: SessionEncWrapper::send_nonce(int) (SessionEnc.cpp:109)
+==9652==    by 0x40857A: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:178)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f8542 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS   => 1[0m==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A36C: SessionEncWrapper::send_data(int) (SessionEnc.cpp:104)
+==9652==    by 0x408594: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:179)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f7521 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+
+[0;33mCURRENT CONNECTIONS => 1[0m
+[0;36mLIVE CLIENTS        => 1[0m
+file descriptors:
+5    
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+datalength sent 32
+
+
+==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A3AC: SessionEncWrapper::send_nonce(int) (SessionEnc.cpp:109)
+==9652==    by 0x40861D: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:187)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f7502 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A36C: SessionEncWrapper::send_data(int) (SessionEnc.cpp:104)
+==9652==    by 0x408637: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:188)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f64e1 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+read file_chunk_len 4113
+datalength sent 20
+
+
+==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A3AC: SessionEncWrapper::send_nonce(int) (SessionEnc.cpp:109)
+==9652==    by 0x40880F: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:220)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f5082 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+--------------------------------
+[38;5;10m==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A36C: SessionEncWrapper::send_data(int) (SessionEnc.cpp:104)
+==9652==    by 0x408829: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:221)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f4061 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+TOTAL CONNECTIONS   => 1[0m
+[0;33mCURRENT CONNECTIONS => 1[0m
+[0;36mLIVE CLIENTS        => 1[0m
+file descriptors:
+5    
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+datalength sent 4129
+
+
+==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A3AC: SessionEncWrapper::send_nonce(int) (SessionEnc.cpp:109)
+==9652==    by 0x4088C7: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:232)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f60c2 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+==9652== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==9652==    at 0x4ED486E: send (send.c:28)
+==9652==    by 0x40A36C: SessionEncWrapper::send_data(int) (SessionEnc.cpp:104)
+==9652==    by 0x4088E1: FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:233)
+==9652==    by 0x4012DB: handle_conn(sqlite3*, int) (server.cpp:215)
+==9652==    by 0x406E12: void std::__invoke_impl<void, void (*)(sqlite3*, int), sqlite3*, int>(std::__invoke_other, void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:63)
+==9652==    by 0x406B0F: std::__invoke_result<void (*)(sqlite3*, int), sqlite3*, int>::type std::__invoke<void (*)(sqlite3*, int), sqlite3*, int>(void (*&&)(sqlite3*, int), sqlite3*&&, int&&) (invoke.h:98)
+==9652==    by 0x4068E4: void std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::_M_invoke<0ul, 1ul, 2ul>(std::_Index_tuple<0ul, 1ul, 2ul>) (std_thread.h:303)
+==9652==    by 0x40682D: std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> >::operator()() (std_thread.h:310)
+==9652==    by 0x4067B1: std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(sqlite3*, int), sqlite3*, int> > >::_M_run() (std_thread.h:255)
+==9652==  Address 0x73f50a1 is on thread 5's stack
+==9652==  in frame #2, created by FS_Operator::RFFS_Handler__Server() (read_write_handlers.cpp:140)
+==9652== 
+==9652== (action on error) vgdb me ... 
+==9652== Continuing ...
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS   => 1[0m
+[0;33mCURRENT CONNECTIONS => 1[0m
+[0;36mLIVE CLIENTS        => 1[0m
+file descriptors:
+5    
+[0;35mZOMBIE CLIENTS      => 0[0m
+file descriptors:
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 4113
+datalength sent 20
+
+
+datalength sent 4129
+
+
+read file_chunk_len 2393
+datalength sent 20
+
+
+datalength sent 2409
+
+
+after RFFS_Handler
+asking for notice of new action
+started reading construction
+this is the length of this->session_encrypted_data_length: 20
+finished reading construction
+RETURNED ONE FROM NEWACTION NOOOOOOOOOOOOOO
+did not receive a notice of new action
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS   => 0[0m
+[0;33mCURRENT CONNECTIONS => 0[0m
+[0;36mLIVE CLIENTS        => 0[0m
+file descriptors:
+
+[0;35mZOMBIE CLIENTS      => 1[0m
+file descriptors:
+5    
+==9652== Warning: invalid file descriptor -1 in syscall close()
+stopped accepting clients
+starting clean_all
+processing client 5
+completed log_thread
+completed kill_server_listener
+completed clean_intermittent_thread
+==9652== 
+==9652== HEAP SUMMARY:
+==9652==     in use at exit: 0 bytes in 0 blocks
+==9652==   total heap usage: 276 allocs, 276 frees, 2,761,699 bytes allocated
+==9652== 
+==9652== All heap blocks were freed -- no leaks are possible
+==9652== 
+==9652== Use --track-origins=yes to see where uninitialised values come from
+==9652== For lists of detected and suppressed errors, rerun with: -s
+==9652== ERROR SUMMARY: 192 errors from 8 contexts (suppressed: 0 from 0)

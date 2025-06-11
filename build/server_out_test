@@ -1,0 +1,3 @@
+success making server_sock
+starting bind
+Failed to bind socket. Address already in use

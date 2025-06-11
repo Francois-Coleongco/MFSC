@@ -1,0 +1,43 @@
+DIDNT BAIL WE HAVE VALID KEYSSS YAYAYYYYY
+
+this was username length 5
+this was password length 7
+datalength sent 22
+
+
+datalength sent 24
+
+
+data length of notif is: 20datalength sent 20
+
+
+datalength sent 20
+
+
+made it here in WTFS_Handler
+starting encrypt_and_send_to_server
+test: 
+4
+sending file_name: ./enc_test_files/gummy_bear down the wire
+datalength sent 43
+
+
+datalength sent 40
+
+
+datalength sent 32
+
+
+read file_chunk_len 97
+this is ciphertext_len 114
+tag is 
+datalength sent 20
+
+
+datalength sent 130
+
+
+this is the data length sent via send_buffer 130
+data length of notif is: 20datalength sent 20
+
+

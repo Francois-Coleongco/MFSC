@@ -1,1 +1,1 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/client.dir/link.d CMakeFiles/client.dir/src/client/client.cpp.o CMakeFiles/client.dir/src/client/authed_entry.cpp.o -o client_fs/client  libcommon_lib.a /usr/lib64/libsodium.so
+/usr/bin/c++ -g -O0 -DDEBUG -Wl,--dependency-file=CMakeFiles/client.dir/link.d CMakeFiles/client.dir/src/client/client.cpp.o CMakeFiles/client.dir/src/client/authed_entry.cpp.o -o client_fs/client  libcommon_lib.a /usr/lib64/libsodium.so
