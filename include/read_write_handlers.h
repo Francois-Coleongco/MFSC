@@ -10,7 +10,7 @@ class FS_Operator {
   std::string user_dir;
   unsigned char server_rx[crypto_kx_SESSIONKEYBYTES];
   unsigned char server_tx[crypto_kx_SESSIONKEYBYTES];
-  unsigned char nonce[crypto_kx_SESSIONKEYBYTES];
+  unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
 private:
   int init_read(
@@ -34,4 +34,3 @@ public:
       unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]);
   ~FS_Operator();
 };
-

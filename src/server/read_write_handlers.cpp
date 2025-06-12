@@ -118,6 +118,14 @@ int FS_Operator::WTFS_Handler__Server() {
 
   file_name.append(".enc");
 
+  std::cerr << "THIS IS FILENAME " << file_name << std::endl;
+  std::cerr << "THIS IS FILENAME " << file_name << std::endl;
+  std::cerr << "THIS IS FILENAME " << file_name << std::endl;
+  std::cerr << "THIS IS FILENAME " << file_name << std::endl;
+  std::cerr << "THIS IS FILENAME " << file_name << std::endl;
+  std::cerr << "THIS IS FILENAME " << file_name << std::endl;
+  std::cerr << "THIS IS FILENAME " << file_name << std::endl;
+
   std::cerr << "this is file_name now after adding ext: " << file_name << "\n";
 
   std::ofstream file(file_name, std::ios::binary);
@@ -190,9 +198,10 @@ int FS_Operator::RFFS_Handler__Server() {
     return 3;
   }
 
-  if (encrypted_file_name.unwrap(this->server_rx, PRE_EXT_FILE_NAME_LEN,
-                             reinterpret_cast<unsigned char *>(file_name_buf),
-                             &decrypted_file_name_length)) {
+  if (encrypted_file_name.unwrap(
+          this->server_rx, PRE_EXT_FILE_NAME_LEN,
+          reinterpret_cast<unsigned char *>(file_name_buf),
+          &decrypted_file_name_length)) {
     std::cerr << "file_name was corrupted (discovered in unwrap)\n";
     return 2;
   };
@@ -293,8 +302,8 @@ int FS_Operator::receive_notice_of_new_action() {
   unsigned long long decrypted_notice_length;
 
   if (notice_wrap.unwrap(this->server_rx, sizeof(notice),
-                     reinterpret_cast<unsigned char *>(&notice),
-                     &decrypted_notice_length)) {
+                         reinterpret_cast<unsigned char *>(&notice),
+                         &decrypted_notice_length)) {
     return 2;
   };
 
