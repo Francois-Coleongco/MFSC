@@ -12,7 +12,7 @@ I used the libsodium for the cryptography and the standard library for the rest.
 
 The underlying network protocol is TCP mainly to ensure packets arrive in order, encrypted chunks arriving in sequence is obviously important haha.
 
-As you can guess from the directory naming, this server client model supports multiple clients writing to the file system.
+As you can guess from the directory naming, this server client model supports multiple clients reading and writing to the file system.
 
 
 ## dependencies:
