@@ -17,7 +17,7 @@ FS_Operator::FS_Operator(int client_sock, std::string username,
                          unsigned char nonce[crypto_kx_SESSIONKEYBYTES])
     : client_sock(client_sock) {
 
-  this->user_dir = base_dir + username; // need to make this directory
+  this->user_dir = base_dir + username + "/"; // need to make this directory
   if (!std::filesystem::create_directories(this->user_dir)) {
     std::cerr << "couldn't create user_dir: " << this->user_dir << std::endl;
   };

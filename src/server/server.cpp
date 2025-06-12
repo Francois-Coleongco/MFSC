@@ -2,8 +2,8 @@
 #include "../../include/common/constants.h"
 #include "../../include/read_write_handlers.h"
 #include "../../include/server_logger.h"
-#include <array>
 #include <atomic>
+#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -22,10 +22,11 @@
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
+#include <vector>
 
 const int ACK_SUC = 0;
 const int ACK_FAIL = -1;
-const int MAX_ZOMBIE_CONNS = 8;
+const int MAX_ZOMBIE_CONNS = 2;
 
 enum CONN_TYPE { LIVE, ZOMBIE };
 
@@ -35,81 +36,62 @@ const int WRITE_TO_FILESYSTEM = 2;
 
 size_t total_connections = 0;
 size_t live_connections = 0;
+size_t zombies_counter = 0;
 
 std::unordered_map<int, Client_Info> clients;
-std::unordered_map<int, Client_Info> zombie_clients;
 std::mutex clients_mutex;
-std::mutex zombie_clients_mutex;
 
 void zombify(int client_sock) {
   std::cout << "zombify called" << std::endl;
   // i dont think i need ot check if it exists because if cleanup was called,
   // the handle_conn func has a live thread and therefore Client_Info associated
   // with it
-  std::lock_guard<std::mutex> zomb_lock(zombie_clients_mutex);
   std::lock_guard<std::mutex> client_lock(clients_mutex);
-  zombie_clients.insert(
-      {client_sock, std::move(clients.find(client_sock)->second)});
-  close(client_sock);
-  clients.erase(client_sock);
+  clients.find(client_sock)->second.zombie = true;
+  ++zombies_counter;
   --live_connections;
-}
-
-void iter_clean_live(std::unordered_map<int, Client_Info> &map) {
-  for (auto &pair : map) {
-    std::cerr << "processing client " << pair.first << "\n";
-    if (pair.second.client_thread.joinable()) {
-      std::cout << "joined thread\n";
-      pair.second.client_thread.join();
-      std::cout << "completed thread\n";
-      close(pair.first);
-    }
-  }
-}
-
-void iter_clean_zombie(std::unordered_map<int, Client_Info> &map) {
-  for (auto &pair : map) {
-    std::cerr << "processing client " << pair.first << "\n";
-    if (pair.second.client_thread.joinable()) {
-      std::cout << "joined thread\n";
-      pair.second.client_thread.join();
-      std::cout << "completed thread\n";
-    }
-  }
 }
 
 void cleanup_intermittent(std::atomic<bool> &server_alive) {
   // this will just clean up the zombie clients in std::unordered_map<int,
-  // Client_Info> zombie_clients;
   while (server_alive) {
-    if (zombie_clients.size() < MAX_ZOMBIE_CONNS) {
-      std::this_thread::sleep_for(std::chrono::seconds(2));
+    if (zombies_counter < MAX_ZOMBIE_CONNS) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
       continue;
     }
-    std::cerr << "cleanup intermittent called\n";
-    std::unique_lock<std::mutex> zombie_lock(zombie_clients_mutex);
-    std::cerr << "zombie client count before loop " << zombie_clients.size()
-              << "\n";
+    std::lock_guard<std::mutex> locker(clients_mutex);
+    std::cerr << "cleanup inter" << std::endl;
 
-    iter_clean_zombie(zombie_clients);
+    std::vector<int> to_erase;
+    for (auto &[fd, inf] : clients) {
+      std::cerr << "cleanup fd: " << fd << std::endl;
+      if (inf.zombie && inf.client_thread.joinable()) {
+        inf.client_thread.join();
+        close(fd);
+        to_erase.push_back(fd);
+        --zombies_counter;
+      }
+    }
 
-    zombie_clients.clear();
-
-    zombie_lock.unlock();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cerr << "exited cleanup_intermittent\n";
+    for (int i : to_erase) {
+      clients.erase(i);
+    }
   }
 }
 
 void clean_all(std::thread &log_thread, std::thread &kill_server_listener,
                std::thread &clean_intermittent_thread) {
   std::cerr << "starting clean_all\n";
-  // destroy the active clients and zombie clients
-  std::lock_guard<std::mutex> client_lock(clients_mutex);
-  std::lock_guard<std::mutex> zombie_lock(zombie_clients_mutex);
 
-  iter_clean_live(clients);
-  iter_clean_zombie(zombie_clients);
+  std::lock_guard<std::mutex> client_lock(clients_mutex);
+
+  for (auto &[fd, inf] : clients) {
+    if (inf.client_thread.joinable()) {
+      inf.client_thread.join();
+    }
+  }
+
+  clients.clear();
 
   if (log_thread.joinable()) {
     log_thread.join();
@@ -298,8 +280,7 @@ int main() {
 
   std::thread log_thread =
       std::thread(logger, std::ref(server_alive), std::ref(clients),
-                  std::ref(zombie_clients), std::ref(live_connections),
-                  std::ref(total_connections));
+                  std::ref(live_connections), std::ref(total_connections));
   std::thread cleanup_intermittent_thread =
       std::thread(cleanup_intermittent, std::ref(server_alive));
   std::thread kill_server_listener =
