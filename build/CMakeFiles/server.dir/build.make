@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/sleepy/vault/MFSC
+CMAKE_SOURCE_DIR = /home/sleepy/vault/__MVPs__/MEFSC
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/sleepy/vault/MFSC/build
+CMAKE_BINARY_DIR = /home/sleepy/vault/__MVPs__/MEFSC/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/server.dir/depend.make
@@ -73,60 +73,60 @@ CMakeFiles/server.dir/codegen:
 .PHONY : CMakeFiles/server.dir/codegen
 
 CMakeFiles/server.dir/src/server/server.cpp.o: CMakeFiles/server.dir/flags.make
-CMakeFiles/server.dir/src/server/server.cpp.o: /home/sleepy/vault/MFSC/src/server/server.cpp
+CMakeFiles/server.dir/src/server/server.cpp.o: /home/sleepy/vault/__MVPs__/MEFSC/src/server/server.cpp
 CMakeFiles/server.dir/src/server/server.cpp.o: CMakeFiles/server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/server.dir/src/server/server.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/server.cpp.o -MF CMakeFiles/server.dir/src/server/server.cpp.o.d -o CMakeFiles/server.dir/src/server/server.cpp.o -c /home/sleepy/vault/MFSC/src/server/server.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/server.dir/src/server/server.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/server.cpp.o -MF CMakeFiles/server.dir/src/server/server.cpp.o.d -o CMakeFiles/server.dir/src/server/server.cpp.o -c /home/sleepy/vault/__MVPs__/MEFSC/src/server/server.cpp
 
 CMakeFiles/server.dir/src/server/server.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/server.dir/src/server/server.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/MFSC/src/server/server.cpp > CMakeFiles/server.dir/src/server/server.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/__MVPs__/MEFSC/src/server/server.cpp > CMakeFiles/server.dir/src/server/server.cpp.i
 
 CMakeFiles/server.dir/src/server/server.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/server.dir/src/server/server.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/MFSC/src/server/server.cpp -o CMakeFiles/server.dir/src/server/server.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/__MVPs__/MEFSC/src/server/server.cpp -o CMakeFiles/server.dir/src/server/server.cpp.s
 
 CMakeFiles/server.dir/src/server/auth.cpp.o: CMakeFiles/server.dir/flags.make
-CMakeFiles/server.dir/src/server/auth.cpp.o: /home/sleepy/vault/MFSC/src/server/auth.cpp
+CMakeFiles/server.dir/src/server/auth.cpp.o: /home/sleepy/vault/__MVPs__/MEFSC/src/server/auth.cpp
 CMakeFiles/server.dir/src/server/auth.cpp.o: CMakeFiles/server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/server.dir/src/server/auth.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/auth.cpp.o -MF CMakeFiles/server.dir/src/server/auth.cpp.o.d -o CMakeFiles/server.dir/src/server/auth.cpp.o -c /home/sleepy/vault/MFSC/src/server/auth.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/server.dir/src/server/auth.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/auth.cpp.o -MF CMakeFiles/server.dir/src/server/auth.cpp.o.d -o CMakeFiles/server.dir/src/server/auth.cpp.o -c /home/sleepy/vault/__MVPs__/MEFSC/src/server/auth.cpp
 
 CMakeFiles/server.dir/src/server/auth.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/server.dir/src/server/auth.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/MFSC/src/server/auth.cpp > CMakeFiles/server.dir/src/server/auth.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/__MVPs__/MEFSC/src/server/auth.cpp > CMakeFiles/server.dir/src/server/auth.cpp.i
 
 CMakeFiles/server.dir/src/server/auth.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/server.dir/src/server/auth.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/MFSC/src/server/auth.cpp -o CMakeFiles/server.dir/src/server/auth.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/__MVPs__/MEFSC/src/server/auth.cpp -o CMakeFiles/server.dir/src/server/auth.cpp.s
 
 CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: CMakeFiles/server.dir/flags.make
-CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp
+CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: /home/sleepy/vault/__MVPs__/MEFSC/src/server/read_write_handlers.cpp
 CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: CMakeFiles/server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o -MF CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o.d -o CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o -c /home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o -MF CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o.d -o CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o -c /home/sleepy/vault/__MVPs__/MEFSC/src/server/read_write_handlers.cpp
 
 CMakeFiles/server.dir/src/server/read_write_handlers.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/server.dir/src/server/read_write_handlers.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp > CMakeFiles/server.dir/src/server/read_write_handlers.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/__MVPs__/MEFSC/src/server/read_write_handlers.cpp > CMakeFiles/server.dir/src/server/read_write_handlers.cpp.i
 
 CMakeFiles/server.dir/src/server/read_write_handlers.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/server.dir/src/server/read_write_handlers.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp -o CMakeFiles/server.dir/src/server/read_write_handlers.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/__MVPs__/MEFSC/src/server/read_write_handlers.cpp -o CMakeFiles/server.dir/src/server/read_write_handlers.cpp.s
 
 CMakeFiles/server.dir/src/server/server_logger.cpp.o: CMakeFiles/server.dir/flags.make
-CMakeFiles/server.dir/src/server/server_logger.cpp.o: /home/sleepy/vault/MFSC/src/server/server_logger.cpp
+CMakeFiles/server.dir/src/server/server_logger.cpp.o: /home/sleepy/vault/__MVPs__/MEFSC/src/server/server_logger.cpp
 CMakeFiles/server.dir/src/server/server_logger.cpp.o: CMakeFiles/server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/server.dir/src/server/server_logger.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/server_logger.cpp.o -MF CMakeFiles/server.dir/src/server/server_logger.cpp.o.d -o CMakeFiles/server.dir/src/server/server_logger.cpp.o -c /home/sleepy/vault/MFSC/src/server/server_logger.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/server.dir/src/server/server_logger.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server.dir/src/server/server_logger.cpp.o -MF CMakeFiles/server.dir/src/server/server_logger.cpp.o.d -o CMakeFiles/server.dir/src/server/server_logger.cpp.o -c /home/sleepy/vault/__MVPs__/MEFSC/src/server/server_logger.cpp
 
 CMakeFiles/server.dir/src/server/server_logger.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/server.dir/src/server/server_logger.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/MFSC/src/server/server_logger.cpp > CMakeFiles/server.dir/src/server/server_logger.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/__MVPs__/MEFSC/src/server/server_logger.cpp > CMakeFiles/server.dir/src/server/server_logger.cpp.i
 
 CMakeFiles/server.dir/src/server/server_logger.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/server.dir/src/server/server_logger.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/MFSC/src/server/server_logger.cpp -o CMakeFiles/server.dir/src/server/server_logger.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/__MVPs__/MEFSC/src/server/server_logger.cpp -o CMakeFiles/server.dir/src/server/server_logger.cpp.s
 
 # Object files for target server
 server_OBJECTS = \
@@ -148,7 +148,7 @@ server: libcommon_lib.a
 server: /usr/lib64/libsqlite3.so
 server: /usr/lib64/libsodium.so
 server: CMakeFiles/server.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable server"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/server.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -160,6 +160,6 @@ CMakeFiles/server.dir/clean:
 .PHONY : CMakeFiles/server.dir/clean
 
 CMakeFiles/server.dir/depend:
-	cd /home/sleepy/vault/MFSC/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/sleepy/vault/MFSC /home/sleepy/vault/MFSC /home/sleepy/vault/MFSC/build /home/sleepy/vault/MFSC/build /home/sleepy/vault/MFSC/build/CMakeFiles/server.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/sleepy/vault/__MVPs__/MEFSC/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/sleepy/vault/__MVPs__/MEFSC /home/sleepy/vault/__MVPs__/MEFSC /home/sleepy/vault/__MVPs__/MEFSC/build /home/sleepy/vault/__MVPs__/MEFSC/build /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles/server.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/server.dir/depend
 

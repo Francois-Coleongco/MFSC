@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/sleepy/vault/MFSC
+CMAKE_SOURCE_DIR = /home/sleepy/vault/__MVPs__/MEFSC
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/sleepy/vault/MFSC/build
+CMAKE_BINARY_DIR = /home/sleepy/vault/__MVPs__/MEFSC/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/client.dir/depend.make
@@ -73,32 +73,32 @@ CMakeFiles/client.dir/codegen:
 .PHONY : CMakeFiles/client.dir/codegen
 
 CMakeFiles/client.dir/src/client/client.cpp.o: CMakeFiles/client.dir/flags.make
-CMakeFiles/client.dir/src/client/client.cpp.o: /home/sleepy/vault/MFSC/src/client/client.cpp
+CMakeFiles/client.dir/src/client/client.cpp.o: /home/sleepy/vault/__MVPs__/MEFSC/src/client/client.cpp
 CMakeFiles/client.dir/src/client/client.cpp.o: CMakeFiles/client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/client.dir/src/client/client.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/client.dir/src/client/client.cpp.o -MF CMakeFiles/client.dir/src/client/client.cpp.o.d -o CMakeFiles/client.dir/src/client/client.cpp.o -c /home/sleepy/vault/MFSC/src/client/client.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/client.dir/src/client/client.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/client.dir/src/client/client.cpp.o -MF CMakeFiles/client.dir/src/client/client.cpp.o.d -o CMakeFiles/client.dir/src/client/client.cpp.o -c /home/sleepy/vault/__MVPs__/MEFSC/src/client/client.cpp
 
 CMakeFiles/client.dir/src/client/client.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/client.dir/src/client/client.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/MFSC/src/client/client.cpp > CMakeFiles/client.dir/src/client/client.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/__MVPs__/MEFSC/src/client/client.cpp > CMakeFiles/client.dir/src/client/client.cpp.i
 
 CMakeFiles/client.dir/src/client/client.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/client.dir/src/client/client.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/MFSC/src/client/client.cpp -o CMakeFiles/client.dir/src/client/client.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/__MVPs__/MEFSC/src/client/client.cpp -o CMakeFiles/client.dir/src/client/client.cpp.s
 
 CMakeFiles/client.dir/src/client/authed_entry.cpp.o: CMakeFiles/client.dir/flags.make
-CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/MFSC/src/client/authed_entry.cpp
+CMakeFiles/client.dir/src/client/authed_entry.cpp.o: /home/sleepy/vault/__MVPs__/MEFSC/src/client/authed_entry.cpp
 CMakeFiles/client.dir/src/client/authed_entry.cpp.o: CMakeFiles/client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/client.dir/src/client/authed_entry.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/client.dir/src/client/authed_entry.cpp.o -MF CMakeFiles/client.dir/src/client/authed_entry.cpp.o.d -o CMakeFiles/client.dir/src/client/authed_entry.cpp.o -c /home/sleepy/vault/MFSC/src/client/authed_entry.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/client.dir/src/client/authed_entry.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/client.dir/src/client/authed_entry.cpp.o -MF CMakeFiles/client.dir/src/client/authed_entry.cpp.o.d -o CMakeFiles/client.dir/src/client/authed_entry.cpp.o -c /home/sleepy/vault/__MVPs__/MEFSC/src/client/authed_entry.cpp
 
 CMakeFiles/client.dir/src/client/authed_entry.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/client.dir/src/client/authed_entry.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/MFSC/src/client/authed_entry.cpp > CMakeFiles/client.dir/src/client/authed_entry.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sleepy/vault/__MVPs__/MEFSC/src/client/authed_entry.cpp > CMakeFiles/client.dir/src/client/authed_entry.cpp.i
 
 CMakeFiles/client.dir/src/client/authed_entry.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/client.dir/src/client/authed_entry.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/MFSC/src/client/authed_entry.cpp -o CMakeFiles/client.dir/src/client/authed_entry.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sleepy/vault/__MVPs__/MEFSC/src/client/authed_entry.cpp -o CMakeFiles/client.dir/src/client/authed_entry.cpp.s
 
 # Object files for target client
 client_OBJECTS = \
@@ -115,7 +115,7 @@ client_fs/client: CMakeFiles/client.dir/compiler_depend.ts
 client_fs/client: libcommon_lib.a
 client_fs/client: /usr/lib64/libsodium.so
 client_fs/client: CMakeFiles/client.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable client_fs/client"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable client_fs/client"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/client.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -127,6 +127,6 @@ CMakeFiles/client.dir/clean:
 .PHONY : CMakeFiles/client.dir/clean
 
 CMakeFiles/client.dir/depend:
-	cd /home/sleepy/vault/MFSC/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/sleepy/vault/MFSC /home/sleepy/vault/MFSC /home/sleepy/vault/MFSC/build /home/sleepy/vault/MFSC/build /home/sleepy/vault/MFSC/build/CMakeFiles/client.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/sleepy/vault/__MVPs__/MEFSC/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/sleepy/vault/__MVPs__/MEFSC /home/sleepy/vault/__MVPs__/MEFSC /home/sleepy/vault/__MVPs__/MEFSC/build /home/sleepy/vault/__MVPs__/MEFSC/build /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles/client.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/client.dir/depend
 

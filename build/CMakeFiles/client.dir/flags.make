@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/sleepy/vault/MFSC/include -I/home/sleepy/vault/MFSC/include/common
+CXX_INCLUDES = -I/home/sleepy/vault/__MVPs__/MEFSC/include -I/home/sleepy/vault/__MVPs__/MEFSC/include/common
 
-CXX_FLAGS = -g -O0 -DDEBUG -std=gnu++17
+CXX_FLAGS = -std=gnu++17
 

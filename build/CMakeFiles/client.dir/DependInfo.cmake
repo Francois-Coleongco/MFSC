@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/sleepy/vault/MFSC/src/client/authed_entry.cpp" "CMakeFiles/client.dir/src/client/authed_entry.cpp.o" "gcc" "CMakeFiles/client.dir/src/client/authed_entry.cpp.o.d"
-  "/home/sleepy/vault/MFSC/src/client/client.cpp" "CMakeFiles/client.dir/src/client/client.cpp.o" "gcc" "CMakeFiles/client.dir/src/client/client.cpp.o.d"
+  "/home/sleepy/vault/__MVPs__/MEFSC/src/client/authed_entry.cpp" "CMakeFiles/client.dir/src/client/authed_entry.cpp.o" "gcc" "CMakeFiles/client.dir/src/client/authed_entry.cpp.o.d"
+  "/home/sleepy/vault/__MVPs__/MEFSC/src/client/client.cpp" "CMakeFiles/client.dir/src/client/client.cpp.o" "gcc" "CMakeFiles/client.dir/src/client/client.cpp.o.d"
   "" "client_fs/client" "gcc" "CMakeFiles/client.dir/link.d"
   )
 

@@ -54,10 +54,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/sleepy/vault/MFSC
+CMAKE_SOURCE_DIR = /home/sleepy/vault/__MVPs__/MEFSC
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/sleepy/vault/MFSC/build
+CMAKE_BINARY_DIR = /home/sleepy/vault/__MVPs__/MEFSC/build
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -91,14 +91,14 @@ clean: CMakeFiles/client.dir/clean
 CMakeFiles/common_lib.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/common_lib.dir/build.make CMakeFiles/common_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/common_lib.dir/build.make CMakeFiles/common_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=4,5,6 "Built target common_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=4,5,6 "Built target common_lib"
 .PHONY : CMakeFiles/common_lib.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/common_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles 3
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/common_lib.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles 0
 .PHONY : CMakeFiles/common_lib.dir/rule
 
 # Convenience name for target.
@@ -108,7 +108,7 @@ common_lib: CMakeFiles/common_lib.dir/rule
 # codegen rule for target.
 CMakeFiles/common_lib.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/common_lib.dir/build.make CMakeFiles/common_lib.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=4,5,6 "Finished codegen for target common_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=4,5,6 "Finished codegen for target common_lib"
 .PHONY : CMakeFiles/common_lib.dir/codegen
 
 # clean rule for target.
@@ -123,14 +123,14 @@ CMakeFiles/common_lib.dir/clean:
 CMakeFiles/server.dir/all: CMakeFiles/common_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=7,8,9,10,11 "Built target server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=7,8,9,10,11 "Built target server"
 .PHONY : CMakeFiles/server.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/server.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 8
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/server.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles 0
 .PHONY : CMakeFiles/server.dir/rule
 
 # Convenience name for target.
@@ -140,7 +140,7 @@ server: CMakeFiles/server.dir/rule
 # codegen rule for target.
 CMakeFiles/server.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=7,8,9,10,11 "Finished codegen for target server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=7,8,9,10,11 "Finished codegen for target server"
 .PHONY : CMakeFiles/server.dir/codegen
 
 # clean rule for target.
@@ -155,14 +155,14 @@ CMakeFiles/server.dir/clean:
 CMakeFiles/client.dir/all: CMakeFiles/common_lib.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=1,2,3 "Built target client"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=1,2,3 "Built target client"
 .PHONY : CMakeFiles/client.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/client.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles 6
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/client.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/MFSC/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles 0
 .PHONY : CMakeFiles/client.dir/rule
 
 # Convenience name for target.
@@ -172,7 +172,7 @@ client: CMakeFiles/client.dir/rule
 # codegen rule for target.
 CMakeFiles/client.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/MFSC/build/CMakeFiles --progress-num=1,2,3 "Finished codegen for target client"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles --progress-num=1,2,3 "Finished codegen for target client"
 .PHONY : CMakeFiles/client.dir/codegen
 
 # clean rule for target.
