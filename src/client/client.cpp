@@ -31,10 +31,8 @@ template <typename T> void get_stuff(T &stuff_holder) {
   } while (std::cin.fail());
 }
 
-int send_credentials(
-    int client_sock,
-    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES],
-    unsigned char *client_tx, std::string &username, std::string &password) {
+int send_credentials(int client_sock, unsigned char *client_tx,
+                     std::string &username, std::string &password) {
 
   std::cout << "enter username:" << std::endl;
   std::cin >> username;
@@ -49,14 +47,14 @@ int send_credentials(
 
   SessionEncWrapper username_wrapper =
       SessionEncWrapper(reinterpret_cast<unsigned char *>(username.data()),
-                        username.length() + 1, client_tx, original_nonce);
+                        username.length() + 1, client_tx);
 
   username_wrapper.send_data_length(client_sock);
   username_wrapper.send_nonce(client_sock);
   username_wrapper.send_data(client_sock);
   SessionEncWrapper password_wrapper =
       SessionEncWrapper(reinterpret_cast<unsigned char *>(password.data()),
-                        password.length() + 1, client_tx, original_nonce);
+                        password.length() + 1, client_tx);
 
   password_wrapper.send_data_length(client_sock);
   password_wrapper.send_nonce(client_sock);
@@ -76,14 +74,11 @@ int send_credentials(
   return 0;
 }
 
-int send_intention(
-    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES],
-    int client_sock, int intent) {
+int send_intention(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                   int client_sock, int intent) {
 
-  SessionEncWrapper intent_wrap =
-      SessionEncWrapper(reinterpret_cast<unsigned char *>(&intent),
-                        sizeof(intent), client_tx, original_nonce);
+  SessionEncWrapper intent_wrap = SessionEncWrapper(
+      reinterpret_cast<unsigned char *>(&intent), sizeof(intent), client_tx);
 
   intent_wrap.send_data_length(client_sock);
   intent_wrap.send_nonce(client_sock);
@@ -102,9 +97,9 @@ int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
 
   std::cout << "\n";
 
-  SessionEncWrapper file_name_wrapper = SessionEncWrapper(
-      reinterpret_cast<unsigned char *>(file_name.data()),
-      file_name.length() + 1, CA->get_client_tx(), CA->get_nonce());
+  SessionEncWrapper file_name_wrapper =
+      SessionEncWrapper(reinterpret_cast<unsigned char *>(file_name.data()),
+                        file_name.length() + 1, CA->get_client_tx());
 
   file_name_wrapper.send_data_length(client_sock);
   file_name_wrapper.send_nonce(client_sock);
@@ -136,15 +131,12 @@ int WTFS_Handler(Comms_Agent *CA, Sender_Agent &SA, int client_sock,
   return 0;
 }
 
-int authed_comms(
-    int client_sock,
-    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES],
-    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-    unsigned char client_rx[crypto_kx_SESSIONKEYBYTES], std::string &username,
-    std::string &password) {
+int authed_comms(int client_sock,
+                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                 unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+                 std::string &username, std::string &password) {
 
-  Comms_Agent CA =
-      Comms_Agent(client_tx, client_rx, original_nonce, client_sock);
+  Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
   /// loop from here to the end of the function depending on what the user
   /// syas they want to do. aka if they wish to complete another action, don't
   /// deconstruct the CA, save it for future. REMEMBER in creating CA you
@@ -176,14 +168,12 @@ int authed_comms(
     }
 
     if (intention == READ_FROM_FILESYSTEM) {
-      send_intention(CA.get_client_tx(), original_nonce, client_sock,
-                     intention);
+      send_intention(CA.get_client_tx(), client_sock, intention);
       if (RFFS_Handler(&CA, RA, client_sock, password)) {
         std::cerr << "failed reading from file system\n";
       }
     } else if (intention == WRITE_TO_FILESYSTEM) {
-      send_intention(CA.get_client_tx(), original_nonce, client_sock,
-                     intention);
+      send_intention(CA.get_client_tx(), client_sock, intention);
       if (WTFS_Handler(&CA, SA, client_sock, password)) {
         std::cerr << "failed writing to file system\n";
       };
@@ -233,14 +223,17 @@ int main() {
 
   randombytes_buf(original_nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
-  if (send_credentials(client_sock, original_nonce, client_tx, username,
-                       password)) {
+  // initialize original
+  SessionEncWrapper nonce_init(nullptr, 0, nullptr);
+
+  nonce_init.initialize_nonce(original_nonce);
+
+  if (send_credentials(client_sock, client_tx, username, password)) {
     std::cerr << "exiting login_handle" << std::endl;
     return 2;
   }
 
-  authed_comms(client_sock, original_nonce, client_tx, client_rx, username,
-               password);
+  authed_comms(client_sock, client_tx, client_rx, username, password);
 
 } // this will contain the rest of the follwoing after
 // no signup, this is only done by the admin of the server who can add

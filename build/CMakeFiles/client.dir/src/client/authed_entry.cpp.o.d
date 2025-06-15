@@ -1,8 +1,8 @@
 CMakeFiles/client.dir/src/client/authed_entry.cpp.o: \
- /home/sleepy/vault/MFSC/src/client/authed_entry.cpp \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/client/authed_entry.cpp \
  /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/client/../../include/authed_entry.h \
- /home/sleepy/vault/MFSC/src/client/../../include/./common/constants.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/client/../../include/authed_entry.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/client/../../include/./common/constants.h \
  /usr/include/sodium/crypto_aead_chacha20poly1305.h \
  /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
  /usr/include/sodium/export.h \
@@ -170,9 +170,9 @@ CMakeFiles/client.dir/src/client/authed_entry.cpp.o: \
  /usr/include/asm/socket.h /usr/include/asm-generic/socket.h \
  /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
  /usr/include/bits/types/struct_osockaddr.h \
- /home/sleepy/vault/MFSC/src/client/../../include/common/SessionEnc.h \
- /home/sleepy/vault/MFSC/src/client/../../include/common/./constants.h \
- /home/sleepy/vault/MFSC/src/client/../../include/common/encryption_utils.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/client/../../include/common/SessionEnc.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/client/../../include/common/./constants.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/client/../../include/common/encryption_utils.h \
  /usr/include/netinet/in.h /usr/include/bits/in.h \
  /usr/include/sodium/randombytes.h /usr/include/c++/15/filesystem \
  /usr/include/c++/15/bits/fs_fwd.h /usr/include/c++/15/cstdint \

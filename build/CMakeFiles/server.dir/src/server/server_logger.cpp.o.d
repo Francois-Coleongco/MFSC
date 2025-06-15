@@ -1,7 +1,7 @@
 CMakeFiles/server.dir/src/server/server_logger.cpp.o: \
- /home/sleepy/vault/MFSC/src/server/server_logger.cpp \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/server_logger.cpp \
  /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/server/../../include/server_logger.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/server_logger.h \
  /usr/include/c++/15/atomic /usr/include/c++/15/bits/version.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \

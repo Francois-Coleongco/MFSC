@@ -176,8 +176,11 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
   randombytes_buf(original_nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
+  SessionEncWrapper nonce_init = SessionEncWrapper(nullptr, 0, nullptr);
+  nonce_init.initialize_nonce(original_nonce);
+
   FS_Operator OP =
-      FS_Operator(client_sock, username, server_rx, server_tx, original_nonce);
+      FS_Operator(client_sock, username, server_rx, server_tx);
 
   bool perform_next = false;
 

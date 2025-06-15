@@ -5,12 +5,15 @@
 #include <sodium/crypto_kx.h>
 #include <sodium/utils.h>
 
+bool SessionEncWrapper::nonce_initialized = false;
+unsigned char SessionEncWrapper::nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = { 0 };
+
 SessionEncWrapper::SessionEncWrapper(
     const unsigned char *data, unsigned long long data_length,
-    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES])
+    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES])
     : session_encrypted_data_length(0) { // for writers
 
+  if (data == nullptr || client_tx == nullptr) {return;}
   if (encrypt_stream_buffer(client_tx, this->nonce, data, data_length,
                             this->session_encrypted_data,
                             &this->session_encrypted_data_length)) {
@@ -20,6 +23,16 @@ SessionEncWrapper::SessionEncWrapper(
   };
   this->corrupted = false;
 };
+
+void SessionEncWrapper::initialize_nonce(
+    unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES]) {
+  if (nonce_initialized) {
+    std::cerr << "cannot reinitialize the nonce" << std::endl;
+    return;
+  }
+  this->nonce_initialized = true;
+  std::memcpy(this->nonce, nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
+}
 
 SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
   std::cerr << "started reading construction\n";

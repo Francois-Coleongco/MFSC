@@ -1,6 +1,7 @@
 CMakeFiles/server.dir/src/server/server.cpp.o: \
- /home/sleepy/vault/MFSC/src/server/server.cpp /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/server/../../include/auth.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/server.cpp \
+ /usr/include/stdc-predef.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/auth.h \
  /usr/include/c++/15/cstdio \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \
@@ -243,17 +244,17 @@ CMakeFiles/server.dir/src/server/server.cpp.o: \
  /usr/include/sodium/crypto_stream_salsa208.h \
  /usr/include/sodium/crypto_stream_xchacha20.h \
  /usr/include/sodium/crypto_pwhash.h /usr/include/sqlite3.h \
- /home/sleepy/vault/MFSC/src/server/../../include/common/constants.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/common/constants.h \
  /usr/include/sodium/crypto_aead_chacha20poly1305.h \
  /usr/include/sodium/crypto_secretstream_xchacha20poly1305.h \
  /usr/include/unistd.h /usr/include/bits/posix_opt.h \
  /usr/include/bits/environments.h /usr/include/bits/confname.h \
  /usr/include/bits/getopt_posix.h /usr/include/bits/getopt_core.h \
  /usr/include/bits/unistd_ext.h /usr/include/linux/close_range.h \
- /home/sleepy/vault/MFSC/src/server/../../include/read_write_handlers.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/SessionEnc.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/./constants.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/encryption_utils.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/read_write_handlers.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/SessionEnc.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/./constants.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/encryption_utils.h \
  /usr/include/netinet/in.h /usr/include/sys/socket.h \
  /usr/include/bits/types/struct_iovec.h /usr/include/bits/socket.h \
  /usr/include/bits/socket_type.h /usr/include/bits/sockaddr.h \
@@ -265,8 +266,8 @@ CMakeFiles/server.dir/src/server/server.cpp.o: \
  /usr/include/c++/15/x86_64-redhat-linux/bits/basic_file.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++io.h \
  /usr/include/c++/15/bits/fstream.tcc \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/encryption_utils.h \
- /home/sleepy/vault/MFSC/src/server/../../include/server_logger.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/encryption_utils.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/server_logger.h \
  /usr/include/c++/15/atomic /usr/include/c++/15/bits/atomic_base.h \
  /usr/include/c++/15/bits/atomic_lockfree_defines.h \
  /usr/include/c++/15/cstdint /usr/include/c++/15/thread \

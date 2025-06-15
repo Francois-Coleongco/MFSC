@@ -13,11 +13,9 @@
 #include <sodium/utils.h>
 #include <sys/socket.h>
 
-Comms_Agent::Comms_Agent(
-    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-    unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES],
-    int client_sock)
+Comms_Agent::Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+                         unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+                         int client_sock)
     : client_sock(client_sock) {
 
   std::memcpy(this->client_tx, client_tx, crypto_kx_SESSIONKEYBYTES);
@@ -31,7 +29,6 @@ Comms_Agent::~Comms_Agent() {
   this->client_sock = -420;
   sodium_memzero(this->client_rx, crypto_kx_SESSIONKEYBYTES);
   sodium_memzero(this->client_tx, crypto_kx_SESSIONKEYBYTES);
-  sodium_memzero(this->original_nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 }
 
 int Comms_Agent::get_socket() { return this->client_sock; }
@@ -40,12 +37,10 @@ unsigned char *Comms_Agent::get_client_tx() { return this->client_tx; }
 
 unsigned char *Comms_Agent::get_client_rx() { return this->client_rx; }
 
-unsigned char *Comms_Agent::get_nonce() { return this->original_nonce; }
-
 int Comms_Agent::notify_server_of_action(int action) {
-  SessionEncWrapper notif = SessionEncWrapper(
-      reinterpret_cast<const unsigned char *>(&action), sizeof(action),
-      this->get_client_tx(), this->original_nonce);
+  SessionEncWrapper notif =
+      SessionEncWrapper(reinterpret_cast<const unsigned char *>(&action),
+                        sizeof(action), this->get_client_tx());
 
   std::cerr << "data length of notif is: " << notif.get_data_length();
   notif.send_data_length(this->client_sock);
@@ -58,8 +53,7 @@ int Comms_Agent::notify_server_of_action(int action) {
 int Sender_Agent::send_buffer() {
   // just sends the buffer
   SessionEncWrapper buf_wrap =
-      SessionEncWrapper(this->buffer, this->size, this->CA->get_client_tx(),
-                        this->CA->get_nonce());
+      SessionEncWrapper(this->buffer, this->size, this->CA->get_client_tx());
   int client_sock = this->CA->get_socket();
   buf_wrap.send_data_length(client_sock); // swapping these
   buf_wrap.send_nonce(
@@ -80,8 +74,8 @@ int Sender_Agent::init_send(
   unsigned char *client_tx = this->CA->get_client_tx();
 
   std::cerr << "sending file_name: " << file_name << " down the wire\n";
-  SessionEncWrapper file_name_wrap = SessionEncWrapper(
-      file_name, file_name_length, client_tx, this->CA->get_nonce());
+  SessionEncWrapper file_name_wrap =
+      SessionEncWrapper(file_name, file_name_length, client_tx);
   file_name_wrap.send_data_length(client_sock);
   file_name_wrap.send_nonce(
       client_sock); // in the future make this access socket itself via
@@ -89,14 +83,13 @@ int Sender_Agent::init_send(
   file_name_wrap.send_data(client_sock);
 
   SessionEncWrapper header_wrap = SessionEncWrapper(
-      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx,
-      this->CA->get_nonce());
+      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx);
   header_wrap.send_data_length(client_sock);
   header_wrap.send_nonce(client_sock);
   header_wrap.send_data(client_sock);
 
-  SessionEncWrapper salt_wrap = SessionEncWrapper(
-      salt, crypto_pwhash_SALTBYTES, client_tx, this->CA->get_nonce());
+  SessionEncWrapper salt_wrap =
+      SessionEncWrapper(salt, crypto_pwhash_SALTBYTES, client_tx);
   salt_wrap.send_data_length(client_sock);
   salt_wrap.send_nonce(client_sock);
   salt_wrap.send_data(client_sock);
@@ -180,12 +173,10 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
         tag == crypto_secretstream_xchacha20poly1305_TAG_FINAL
             ? SessionEncWrapper(
                   reinterpret_cast<const unsigned char *>(&END_CHUNK),
-                  sizeof(END_CHUNK), this->CA->get_client_tx(),
-                  this->CA->get_nonce())
+                  sizeof(END_CHUNK), this->CA->get_client_tx())
             : SessionEncWrapper(
                   reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
-                  sizeof(MEAT_CHUNK), this->CA->get_client_tx(),
-                  this->CA->get_nonce());
+                  sizeof(MEAT_CHUNK), this->CA->get_client_tx());
 
     prefix.send_data_length(this->CA->get_socket());
     prefix.send_nonce(this->CA->get_socket());

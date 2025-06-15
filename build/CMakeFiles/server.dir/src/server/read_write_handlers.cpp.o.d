@@ -1,9 +1,9 @@
 CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: \
- /home/sleepy/vault/MFSC/src/server/read_write_handlers.cpp \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/read_write_handlers.cpp \
  /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/server/../../include/read_write_handlers.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/SessionEnc.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/./constants.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/read_write_handlers.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/SessionEnc.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/./constants.h \
  /usr/include/sodium/crypto_aead_chacha20poly1305.h \
  /usr/lib/gcc/x86_64-redhat-linux/15/include/stddef.h \
  /usr/include/sodium/export.h \
@@ -31,7 +31,7 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: \
  /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
  /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
  /usr/include/linux/close_range.h \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/encryption_utils.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/encryption_utils.h \
  /usr/include/c++/15/iostream /usr/include/c++/15/bits/requires_hosted.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/os_defines.h \
@@ -167,7 +167,7 @@ CMakeFiles/server.dir/src/server/read_write_handlers.cpp.o: \
  /usr/include/c++/15/x86_64-redhat-linux/bits/basic_file.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++io.h \
  /usr/include/c++/15/bits/fstream.tcc \
- /home/sleepy/vault/MFSC/src/server/../../include/../include/common/encryption_utils.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/../include/common/encryption_utils.h \
  /usr/include/sodium/crypto_pwhash.h \
  /usr/include/sodium/crypto_pwhash_argon2i.h \
  /usr/include/sodium/crypto_pwhash_argon2id.h /usr/include/c++/15/cstring \

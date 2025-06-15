@@ -1,6 +1,7 @@
 CMakeFiles/server.dir/src/server/auth.cpp.o: \
- /home/sleepy/vault/MFSC/src/server/auth.cpp /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/server/../../include/auth.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/auth.cpp \
+ /usr/include/stdc-predef.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/server/../../include/auth.h \
  /usr/include/c++/15/cstdio \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \

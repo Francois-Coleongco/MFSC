@@ -27,7 +27,6 @@ class Comms_Agent {
   // to complete so it's SA/RA goes out of scope and destructor is callsed
   unsigned char client_tx[crypto_kx_SESSIONKEYBYTES];
   unsigned char client_rx[crypto_kx_SESSIONKEYBYTES];
-  unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
 
 public:
   int get_socket();
@@ -36,7 +35,6 @@ public:
 
   unsigned char *get_client_tx();
   unsigned char *get_client_rx();
-  unsigned char *get_nonce();
 
   // these will be
   int set_client_tx(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]);
@@ -46,7 +44,6 @@ public:
   Comms_Agent(
       unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
       unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-      unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES],
       int client_sock);
   ~Comms_Agent();
 };

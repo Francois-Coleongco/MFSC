@@ -1,7 +1,7 @@
 CMakeFiles/common_lib.dir/src/encryption_utils/encryption_utils.cpp.o: \
- /home/sleepy/vault/MFSC/src/encryption_utils/encryption_utils.cpp \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/encryption_utils/encryption_utils.cpp \
  /usr/include/stdc-predef.h \
- /home/sleepy/vault/MFSC/src/encryption_utils/../../include/common/encryption_utils.h \
+ /home/sleepy/vault/__MVPs__/MEFSC/src/encryption_utils/../../include/common/encryption_utils.h \
  /usr/include/c++/15/iostream /usr/include/c++/15/bits/requires_hosted.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \
