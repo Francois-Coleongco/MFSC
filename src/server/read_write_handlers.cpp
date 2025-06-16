@@ -189,6 +189,7 @@ int FS_Operator::WTFS_Handler__Server() {
 
 int FS_Operator::RFFS_Handler__Server() {
 
+  randombytes_buf(this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
   char file_name_buf[MAX_FILE_NAME_LENGTH];
 
   unsigned long long decrypted_file_name_length;
@@ -265,6 +266,7 @@ int FS_Operator::RFFS_Handler__Server() {
     unsigned long long file_chunk_len = file.gcount();
 
     std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
+
     SessionEncWrapper prefix_wrap =
         file.eof() ? SessionEncWrapper(
                          reinterpret_cast<const unsigned char *>(&END_CHUNK),

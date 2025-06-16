@@ -5,17 +5,30 @@
 #include <sodium/crypto_kx.h>
 #include <sodium/utils.h>
 
+bool recv_fully(int fd, void *buf, size_t len) {
+  uint8_t *dest = reinterpret_cast<uint8_t *>(buf);
+  while (len > 0) {
+    ssize_t received = recv(fd, dest, len, MSG_WAITALL);
+    if (received <= 0) {
+      if (errno == EINTR)
+        continue;
+      return false;
+    }
+    dest += received;
+    len -= received;
+  }
+  return true;
+}
+
 SessionEncWrapper::SessionEncWrapper(
     const unsigned char *data, unsigned long long data_length,
     unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
     unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES])
     : session_encrypted_data_length(0) { // for writers
 
-  if (data == nullptr || client_tx == nullptr) {
-    return;
-  }
-
-  // IMPORTANT the nonce used by encrypt_stream_buffer is the one that gets incremented. this should be accessible past the lifetime of this SessionEncWrapper
+  // IMPORTANT the nonce used by encrypt_stream_buffer is the one that gets
+  // incremented. this should be accessible past the lifetime of this
+  // SessionEncWrapper
   if (encrypt_stream_buffer(client_tx, nonce, data, data_length,
                             this->session_encrypted_data,
                             &this->session_encrypted_data_length)) {
@@ -26,34 +39,46 @@ SessionEncWrapper::SessionEncWrapper(
 
   std::memcpy(this->nonce, nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
+  for (size_t i = 0; i < crypto_aead_chacha20poly1305_NPUBBYTES; ++i) {
+    std::printf("%02x ", static_cast<unsigned char>(this->nonce[i]));
+  }
+
   this->corrupted = false;
 };
 
-SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
-  if (recv(client_sock, &this->session_encrypted_data_length,
-           sizeof(this->session_encrypted_data_length), 0) <= 0) {
-    std::cerr << "error in 1 was caused by datalength of: "
-              << session_encrypted_data_length << "\n";
-  };
-
-  if (session_encrypted_data_length > stream_chunk_size) {
-    std::cerr << "error in 2\n";
+SessionEncWrapper::SessionEncWrapper(int client_sock) {
+  if (!recv_fully(client_sock, &this->session_encrypted_data_length,
+                  sizeof(this->session_encrypted_data_length))) {
+    std::cerr << "Failed to receive data length\n";
+    this->corrupted = true;
     return;
   }
 
-  if (recv(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES,
-           0) <= 0) {
-    std::cerr << "error in 3\n";
+  if (session_encrypted_data_length > stream_chunk_size) {
+    std::cerr << "Data length exceeds stream_chunk_size: "
+              << session_encrypted_data_length << " > " << stream_chunk_size
+              << "\n";
+    this->corrupted = true;
     return;
-  };
-  if (recv(client_sock, this->session_encrypted_data,
-           this->session_encrypted_data_length, 0) <= 0) {
-    std::cerr << "error in 4\n";
+  }
+
+  if (!recv_fully(client_sock, this->nonce,
+                  crypto_aead_chacha20poly1305_NPUBBYTES)) {
+    std::cerr << "Failed to receive nonce\n";
+    this->corrupted = true;
     return;
-  };
+  }
+
+  if (!recv_fully(client_sock, this->session_encrypted_data,
+                  this->session_encrypted_data_length)) {
+    std::cerr << "Failed to receive encrypted data ("
+              << this->session_encrypted_data_length << " bytes)\n";
+    this->corrupted = true;
+    return;
+  }
 
   this->corrupted = false;
-};
+}
 
 int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
                               unsigned long long decrypted_data_capacity,
@@ -86,11 +111,27 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   }
 
   std::cerr << this->session_encrypted_data_length << std::endl;
+  std::cerr << "in unwrap" << std::endl;
+
+  std::cerr << "this call's nonce" << std::endl;
+  for (size_t i = 0; i < crypto_aead_chacha20poly1305_NPUBBYTES; ++i) {
+    std::printf("%02x ", static_cast<unsigned char>(this->nonce[i]));
+  }
+
+  std::cerr << "this call's rx" << std::endl;
+  for (size_t i = 0; i < crypto_kx_SESSIONKEYBYTES; ++i) {
+    std::printf("%02x ", static_cast<unsigned char>(rx[i]));
+  }
 
   if (crypto_aead_chacha20poly1305_decrypt(decrypted_data, decrypted_data_len,
                                            NULL, this->session_encrypted_data,
                                            this->session_encrypted_data_length,
                                            NULL, 0, this->nonce, rx) != 0) {
+
+    std::cerr << "failed\n" << std::endl;
+
+    std::cerr << this->session_encrypted_data_length << "\n\n";
+
     std::cerr << "error decrypting in unwrap" << std::endl;
     this->corrupted = true;
     return 1;
@@ -101,8 +142,8 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
 SessionEncWrapper::~SessionEncWrapper() {
   // maybe just zero everything regardless of whether it's corrupt or not
   this->session_encrypted_data_length = 0;
-  sodium_memzero(this->session_encrypted_data,
-                 this->session_encrypted_data_length);
+
+  sodium_memzero(this->session_encrypted_data, stream_chunk_size);
   sodium_memzero(this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 }
 
