@@ -5,37 +5,31 @@
 #include <sodium/crypto_kx.h>
 #include <sodium/utils.h>
 
-bool SessionEncWrapper::nonce_initialized = false;
-unsigned char SessionEncWrapper::nonce[crypto_aead_chacha20poly1305_NPUBBYTES] = { 0 };
-
 SessionEncWrapper::SessionEncWrapper(
     const unsigned char *data, unsigned long long data_length,
-    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES])
+    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+    unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES])
     : session_encrypted_data_length(0) { // for writers
 
-  if (data == nullptr || client_tx == nullptr) {return;}
-  if (encrypt_stream_buffer(client_tx, this->nonce, data, data_length,
+  if (data == nullptr || client_tx == nullptr) {
+    return;
+  }
+
+  // IMPORTANT the nonce used by encrypt_stream_buffer is the one that gets incremented. this should be accessible past the lifetime of this SessionEncWrapper
+  if (encrypt_stream_buffer(client_tx, nonce, data, data_length,
                             this->session_encrypted_data,
                             &this->session_encrypted_data_length)) {
     std::cerr << "encryption inside SessionEncWrapper <for writers> "
                  "construction failed\n";
     return;
   };
+
+  std::memcpy(this->nonce, nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
+
   this->corrupted = false;
 };
 
-void SessionEncWrapper::initialize_nonce(
-    unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES]) {
-  if (nonce_initialized) {
-    std::cerr << "cannot reinitialize the nonce" << std::endl;
-    return;
-  }
-  this->nonce_initialized = true;
-  std::memcpy(this->nonce, nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
-}
-
 SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
-  std::cerr << "started reading construction\n";
   if (recv(client_sock, &this->session_encrypted_data_length,
            sizeof(this->session_encrypted_data_length), 0) <= 0) {
     std::cerr << "error in 1 was caused by datalength of: "
@@ -58,11 +52,7 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
     return;
   };
 
-  std::cerr << "this is the length of this->session_encrypted_data_length: "
-            << this->session_encrypted_data_length << "\n";
-
   this->corrupted = false;
-  std::cerr << "finished reading construction\n";
 };
 
 int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
@@ -72,6 +62,7 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   // the data returned within here is up to the caller's interpretation. if the
   // underlying data is encrypted aka was file encrypted or something of the
   // sort, it is the caller's responsibility to decrypt that.
+
   if (this->corrupted) {
     std::cerr << "this wrapper already contains corrupted data\n";
     return 4;
@@ -94,6 +85,8 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
     return 2;
   }
 
+  std::cerr << this->session_encrypted_data_length << std::endl;
+
   if (crypto_aead_chacha20poly1305_decrypt(decrypted_data, decrypted_data_len,
                                            NULL, this->session_encrypted_data,
                                            this->session_encrypted_data_length,
@@ -108,6 +101,9 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
 SessionEncWrapper::~SessionEncWrapper() {
   // maybe just zero everything regardless of whether it's corrupt or not
   this->session_encrypted_data_length = 0;
+  sodium_memzero(this->session_encrypted_data,
+                 this->session_encrypted_data_length);
+  sodium_memzero(this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 }
 
 int SessionEncWrapper::send_data(int client_sock) {
@@ -115,19 +111,14 @@ int SessionEncWrapper::send_data(int client_sock) {
               this->session_encrypted_data_length, 0);
 }
 int SessionEncWrapper::send_nonce(int client_sock) {
-  std::cerr << "\n\n";
   return send(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES,
               0);
 }
 
 int SessionEncWrapper::send_data_length(int client_sock) {
-  std::cerr << "datalength sent " << this->session_encrypted_data_length
-            << "\n";
   return send(client_sock, &this->session_encrypted_data_length,
               sizeof(this->session_encrypted_data_length), 0);
 }
-
-unsigned char *SessionEncWrapper::get_nonce() { return this->nonce; }
 
 unsigned long long SessionEncWrapper::get_data_length() {
   return this->session_encrypted_data_length;

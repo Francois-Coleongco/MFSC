@@ -3,7 +3,6 @@
 #include "../../include/authed_entry.h"
 #include "../../include/common/SessionEnc.h"
 #include <cstring>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sodium/crypto_aead_chacha20poly1305.h> // for session encryption
@@ -37,12 +36,13 @@ unsigned char *Comms_Agent::get_client_tx() { return this->client_tx; }
 
 unsigned char *Comms_Agent::get_client_rx() { return this->client_rx; }
 
-int Comms_Agent::notify_server_of_action(int action) {
+int Comms_Agent::notify_server_of_action(
+    int action,
+    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]) {
   SessionEncWrapper notif =
       SessionEncWrapper(reinterpret_cast<const unsigned char *>(&action),
-                        sizeof(action), this->get_client_tx());
+                        sizeof(action), this->get_client_tx(), original_nonce);
 
-  std::cerr << "data length of notif is: " << notif.get_data_length();
   notif.send_data_length(this->client_sock);
   notif.send_nonce(this->client_sock);
   notif.send_data(this->client_sock);
@@ -52,15 +52,13 @@ int Comms_Agent::notify_server_of_action(int action) {
 
 int Sender_Agent::send_buffer() {
   // just sends the buffer
-  SessionEncWrapper buf_wrap =
-      SessionEncWrapper(this->buffer, this->size, this->CA->get_client_tx());
+  SessionEncWrapper buf_wrap = SessionEncWrapper(
+      this->buffer, this->size, this->CA->get_client_tx(), this->nonce);
   int client_sock = this->CA->get_socket();
   buf_wrap.send_data_length(client_sock); // swapping these
   buf_wrap.send_nonce(
       client_sock); // around because i need to return if data lenght is 0
   buf_wrap.send_data(client_sock);
-  std::cerr << "this is the data length sent via send_buffer "
-            << buf_wrap.get_data_length() << "\n";
 
   return 0;
 }
@@ -73,9 +71,8 @@ int Sender_Agent::init_send(
   int client_sock = this->CA->get_socket();
   unsigned char *client_tx = this->CA->get_client_tx();
 
-  std::cerr << "sending file_name: " << file_name << " down the wire\n";
   SessionEncWrapper file_name_wrap =
-      SessionEncWrapper(file_name, file_name_length, client_tx);
+      SessionEncWrapper(file_name, file_name_length, client_tx, this->nonce);
   file_name_wrap.send_data_length(client_sock);
   file_name_wrap.send_nonce(
       client_sock); // in the future make this access socket itself via
@@ -83,13 +80,14 @@ int Sender_Agent::init_send(
   file_name_wrap.send_data(client_sock);
 
   SessionEncWrapper header_wrap = SessionEncWrapper(
-      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx);
+      header, crypto_secretstream_xchacha20poly1305_HEADERBYTES, client_tx,
+      this->nonce);
   header_wrap.send_data_length(client_sock);
   header_wrap.send_nonce(client_sock);
   header_wrap.send_data(client_sock);
 
   SessionEncWrapper salt_wrap =
-      SessionEncWrapper(salt, crypto_pwhash_SALTBYTES, client_tx);
+      SessionEncWrapper(salt, crypto_pwhash_SALTBYTES, client_tx, this->nonce);
   salt_wrap.send_data_length(client_sock);
   salt_wrap.send_nonce(client_sock);
   salt_wrap.send_data(client_sock);
@@ -119,9 +117,6 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
     return -1;
   }
 
-  std::cerr << "starting encrypt_and_send_to_server\n";
-  std::cerr << "test: \n" << this->CA->get_socket() << "\n";
-
   crypto_secretstream_xchacha20poly1305_state state;
 
   // this->salt; // 16 bytes
@@ -146,23 +141,18 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
 
   do {
 
-    std::cout << "encrypting a chunk wee woo" << std::endl;
+    std::cout << "encrypting a chunk" << std::endl;
 
     file.read(reinterpret_cast<char *>(file_chunk), CHUNK_SIZE);
 
     unsigned long long file_chunk_len = file.gcount();
 
-    std::cerr << "read file_chunk_len " << file_chunk_len << "\n";
-
     unsigned long long ciphertext_len =
         crypto_secretstream_xchacha20poly1305_ABYTES + file_chunk_len;
 
-    std::cerr << "this is ciphertext_len " << ciphertext_len << std::endl;
     this->size = ciphertext_len;
 
     tag = file.eof() ? crypto_secretstream_xchacha20poly1305_TAG_FINAL : 0;
-
-    std::cerr << "tag is " << tag << "\n";
 
     crypto_secretstream_xchacha20poly1305_push(
         &state, this->buffer, &ciphertext_len, file_chunk, file_chunk_len, NULL,
@@ -173,10 +163,10 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
         tag == crypto_secretstream_xchacha20poly1305_TAG_FINAL
             ? SessionEncWrapper(
                   reinterpret_cast<const unsigned char *>(&END_CHUNK),
-                  sizeof(END_CHUNK), this->CA->get_client_tx())
+                  sizeof(END_CHUNK), this->CA->get_client_tx(), this->nonce)
             : SessionEncWrapper(
                   reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
-                  sizeof(MEAT_CHUNK), this->CA->get_client_tx());
+                  sizeof(MEAT_CHUNK), this->CA->get_client_tx(), this->nonce);
 
     prefix.send_data_length(this->CA->get_socket());
     prefix.send_nonce(this->CA->get_socket());
@@ -213,8 +203,6 @@ int Sender_Agent::set_crypto(std::string &password) {
                                 // supplies password which is combined with salt
                                 // to create hash and if it matches they are in
 
-  std::cout << "made salt, creating key" << std::endl;
-
   if (crypto_pwhash(this->key, crypto_box_SEEDBYTES, password.data(),
                     password.size(), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE,
                     crypto_pwhash_MEMLIMIT_INTERACTIVE,
@@ -228,6 +216,8 @@ int Sender_Agent::set_crypto(std::string &password) {
 
 Sender_Agent::Sender_Agent(Comms_Agent *CA, std::string &password)
     : size{0}, CA(CA) {
+
+  randombytes_buf(this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
   if (set_crypto(password)) {
     std::cerr << "error in set_crypto\n";
@@ -246,7 +236,6 @@ int Receiver_Agent::init_read(
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
   SessionEncWrapper header_wrap = SessionEncWrapper(this->CA->get_socket());
-  std::cerr << "reading header" << std::endl;
 
   unsigned long long decrypted_header_len;
   if (header_wrap.unwrap(this->CA->get_client_rx(),
@@ -257,7 +246,6 @@ int Receiver_Agent::init_read(
   };
 
   SessionEncWrapper salt_wrap = SessionEncWrapper(this->CA->get_socket());
-  std::cerr << "reading salt" << std::endl;
   unsigned long long decrypted_salt_len;
   if (salt_wrap.unwrap(this->CA->get_client_rx(), crypto_pwhash_SALTBYTES, salt,
                        &decrypted_salt_len)) {
@@ -289,8 +277,6 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
 
   crypto_secretstream_xchacha20poly1305_state state;
 
-  std::cerr << "this was key used to decrypt: " << this->key;
-
   if (crypto_secretstream_xchacha20poly1305_init_pull(&state, header,
                                                       this->key) != 0) {
     std::cerr << "invalid header\n";
@@ -315,8 +301,6 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
                        reinterpret_cast<unsigned char *>(&prefix),
                        &decrypted_prefix_len);
 
-    std::cerr << "read prefix was: " << prefix << std::endl;
-
     SessionEncWrapper file_chunk_wrap =
         SessionEncWrapper(this->CA->get_socket());
 
@@ -336,9 +320,7 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
       return 2;
     }
 
-    std::cerr << "SUCCESSFUL DECRYPTION IN FILE CHUNK\n";
-
-    std::cerr << file_chunk << "\n";
+    std::cout << "SUCCESSFUL DECRYPTION IN FILE CHUNK OF SIZE: " << decrypted_file_chunk_len << " \n";
 
     file.write(reinterpret_cast<char *>(decrypted_file_chunk),
                decrypted_file_chunk_len -
@@ -349,10 +331,13 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
   return 0;
 }
 
-Receiver_Agent::Receiver_Agent(Comms_Agent *CA) : size(0), CA(CA) {}
+unsigned char *Receiver_Agent::get_nonce() { return this->nonce; }
+
+Receiver_Agent::Receiver_Agent(Comms_Agent *CA) : size(0), CA(CA) {
+  randombytes_buf(this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
+}
 
 Receiver_Agent::~Receiver_Agent() {
-
   this->size = 0;
   this->CA = nullptr;
   sodium_memzero(this->key, crypto_box_SEEDBYTES);

@@ -159,8 +159,6 @@ void handle_conn(sqlite3 *DB, int client_sock) {
 
   // make sure the last character the 4095th index is not overwritten
   // cuz this is the null pointer for you cstring
-  std::cerr << " WE ARE STARTING VERYIFY CREDSSS\n";
-
   std::string username;
 
   if (verify_credentials(DB, username, client_sock, server_rx)) {
@@ -172,15 +170,8 @@ void handle_conn(sqlite3 *DB, int client_sock) {
     send(client_sock, &ACK_SUC, sizeof(int), 0); // successful login
   }
 
-  unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
-
-  randombytes_buf(original_nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
-
-  SessionEncWrapper nonce_init = SessionEncWrapper(nullptr, 0, nullptr);
-  nonce_init.initialize_nonce(original_nonce);
-
   FS_Operator OP =
-      FS_Operator(client_sock, username, server_rx, server_tx);
+      FS_Operator(client_sock, username, server_rx, server_tx); // creates it's own nonce within
 
   bool perform_next = false;
 

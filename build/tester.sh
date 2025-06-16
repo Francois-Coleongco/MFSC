@@ -14,12 +14,14 @@ sleep 2
 
 cd client_fs
 client_pid=-1
+
 for test_input in $tests; do
     echo "starting client"
     cat ../$test_input
     ./client < ../$test_input & client_pid=$!
 done
 
+echo "waiting on client"
 wait $client_pid
 
 echo "q" >&3

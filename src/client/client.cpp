@@ -3,7 +3,6 @@
 #include "../../include/common/constants.h"
 #include "../../include/common/encryption_utils.h"
 #include <cassert>
-#include <filesystem>
 #include <iostream>
 #include <netinet/in.h>
 #include <sodium/crypto_aead_chacha20poly1305.h>
@@ -13,6 +12,7 @@
 #include <sodium/crypto_secretstream_xchacha20poly1305.h>
 #include <sodium/utils.h>
 #include <sys/socket.h>
+#include <termios.h>
 #include <unistd.h>
 
 // intentions
@@ -23,38 +23,55 @@ const int CONFUSION = -420;
 const int READ_FROM_FILESYSTEM = 1;
 const int WRITE_TO_FILESYSTEM = 2;
 
-template <typename T> void get_stuff(T &stuff_holder) {
-  do {
-    std::cin.clear();
-    std::cin.ignore();
-    std::cin >> stuff_holder;
-  } while (std::cin.fail());
+void disable_echo() {
+  termios oldt;
+  tcgetattr(STDIN_FILENO, &oldt);
+  termios newt = oldt;
+  newt.c_lflag &= ~ECHO;
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 }
 
-int send_credentials(int client_sock, unsigned char *client_tx,
-                     std::string &username, std::string &password) {
+void enable_echo() {
+  termios oldt;
+  tcgetattr(STDIN_FILENO, &oldt);
+  oldt.c_lflag |= ECHO;
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
 
-  std::cout << "enter username:" << std::endl;
-  std::cin >> username;
-  std::cerr << "this was username length " << username.length() << "\n";
-  std::cout << "enter password:" << std::endl;
-  std::cin >> password;
-  std::cerr << "this was password length " << password.length() << "\n";
+template <typename T> void get_stuff(T &stuff_holder) {
+  while (!(std::cin >> stuff_holder)) {
+    std::cin.clear();  // clear error flags
+    std::cin.ignore(); // ignore rest of line
+    std::cerr << "Invalid input, please try again (failed in get_stuff): ";
+  }
+}
 
+int send_credentials(
+    int client_sock, unsigned char *client_tx, std::string &username,
+    std::string &password,
+    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]) {
+
+  std::cout << "enter username: " << std::flush;
+  get_stuff(username);
+  std::cout << "enter password: " << std::flush;
+  disable_echo();
+  get_stuff(password);
+  enable_echo();
   // encrypt the username and password and send it over to the server and wait
   //
   // for a response
 
   SessionEncWrapper username_wrapper =
       SessionEncWrapper(reinterpret_cast<unsigned char *>(username.data()),
-                        username.length() + 1, client_tx);
+                        username.length() + 1, client_tx, original_nonce);
 
   username_wrapper.send_data_length(client_sock);
   username_wrapper.send_nonce(client_sock);
   username_wrapper.send_data(client_sock);
+
   SessionEncWrapper password_wrapper =
       SessionEncWrapper(reinterpret_cast<unsigned char *>(password.data()),
-                        password.length() + 1, client_tx);
+                        password.length() + 1, client_tx, original_nonce);
 
   password_wrapper.send_data_length(client_sock);
   password_wrapper.send_nonce(client_sock);
@@ -74,11 +91,14 @@ int send_credentials(int client_sock, unsigned char *client_tx,
   return 0;
 }
 
-int send_intention(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-                   int client_sock, int intent) {
+int send_intention(
+    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES], int client_sock,
+    int intent,
+    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]) {
 
-  SessionEncWrapper intent_wrap = SessionEncWrapper(
-      reinterpret_cast<unsigned char *>(&intent), sizeof(intent), client_tx);
+  SessionEncWrapper intent_wrap =
+      SessionEncWrapper(reinterpret_cast<unsigned char *>(&intent),
+                        sizeof(intent), client_tx, original_nonce);
 
   intent_wrap.send_data_length(client_sock);
   intent_wrap.send_nonce(client_sock);
@@ -97,9 +117,9 @@ int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
 
   std::cout << "\n";
 
-  SessionEncWrapper file_name_wrapper =
-      SessionEncWrapper(reinterpret_cast<unsigned char *>(file_name.data()),
-                        file_name.length() + 1, CA->get_client_tx());
+  SessionEncWrapper file_name_wrapper = SessionEncWrapper(
+      reinterpret_cast<unsigned char *>(file_name.data()),
+      file_name.length() + 1, CA->get_client_tx(), RA.get_nonce());
 
   file_name_wrapper.send_data_length(client_sock);
   file_name_wrapper.send_nonce(client_sock);
@@ -116,8 +136,6 @@ int RFFS_Handler(Comms_Agent *CA, Receiver_Agent &RA, int client_sock,
 
 int WTFS_Handler(Comms_Agent *CA, Sender_Agent &SA, int client_sock,
                  std::string &password) {
-  std::cerr << "made it here in WTFS_Handler\n";
-
   std::cout << "enter file name to send to server:\n";
 
   std::string file_name;
@@ -131,10 +149,11 @@ int WTFS_Handler(Comms_Agent *CA, Sender_Agent &SA, int client_sock,
   return 0;
 }
 
-int authed_comms(int client_sock,
-                 unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-                 unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-                 std::string &username, std::string &password) {
+int authed_comms(
+    int client_sock, unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+    unsigned char client_rx[crypto_kx_SESSIONKEYBYTES], std::string &username,
+    std::string &password,
+    unsigned char original_nonce[crypto_aead_chacha20poly1305_NPUBBYTES]) {
 
   Comms_Agent CA = Comms_Agent(client_tx, client_rx, client_sock);
   /// loop from here to the end of the function depending on what the user
@@ -146,7 +165,7 @@ int authed_comms(int client_sock,
   char perform_next = 'n';
 
   do {
-    if (CA.notify_server_of_action(NEW_ACTION)) {
+    if (CA.notify_server_of_action(NEW_ACTION, original_nonce)) {
       std::cerr << "couldn't notify server of new user action\n";
       break;
     };
@@ -168,12 +187,14 @@ int authed_comms(int client_sock,
     }
 
     if (intention == READ_FROM_FILESYSTEM) {
-      send_intention(CA.get_client_tx(), client_sock, intention);
+      send_intention(CA.get_client_tx(), client_sock, intention,
+                     original_nonce);
       if (RFFS_Handler(&CA, RA, client_sock, password)) {
         std::cerr << "failed reading from file system\n";
       }
     } else if (intention == WRITE_TO_FILESYSTEM) {
-      send_intention(CA.get_client_tx(), client_sock, intention);
+      send_intention(CA.get_client_tx(), client_sock, intention,
+                     original_nonce);
       if (WTFS_Handler(&CA, SA, client_sock, password)) {
         std::cerr << "failed writing to file system\n";
       };
@@ -181,11 +202,11 @@ int authed_comms(int client_sock,
       std::cerr << "invalid intention\n";
     }
 
-    std::cout << "perform another action?\n";
+    std::cout << "perform another action? " << std::flush;
     std::cin >> perform_next;
   } while (perform_next == 'y' || perform_next == 'Y');
 
-  CA.notify_server_of_action(NO_ACTION);
+  CA.notify_server_of_action(NO_ACTION, original_nonce);
 
   // already memzeroed the username during send_credentials
   sodium_memzero(password.data(), password.size());
@@ -223,17 +244,14 @@ int main() {
 
   randombytes_buf(original_nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
-  // initialize original
-  SessionEncWrapper nonce_init(nullptr, 0, nullptr);
-
-  nonce_init.initialize_nonce(original_nonce);
-
-  if (send_credentials(client_sock, client_tx, username, password)) {
+  if (send_credentials(client_sock, client_tx, username, password,
+                       original_nonce)) {
     std::cerr << "exiting login_handle" << std::endl;
     return 2;
   }
 
-  authed_comms(client_sock, client_tx, client_rx, username, password);
+  authed_comms(client_sock, client_tx, client_rx, username, password,
+               original_nonce);
 
 } // this will contain the rest of the follwoing after
 // no signup, this is only done by the admin of the server who can add

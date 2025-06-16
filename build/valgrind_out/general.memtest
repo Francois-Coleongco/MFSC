@@ -1,0 +1,98 @@
+==15908== Memcheck, a memory error detector
+==15908== Copyright (C) 2002-2024, and GNU GPL'd, by Julian Seward et al.
+==15908== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==15908== Command: ./server
+==15908== 
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS     => 0[0m
+[0;33mCURRENT CONNECTIONS => 0[0m
+[0;36mCLIENTS                => 0[0m
+file descriptors:
+
+DIDNT BAIL WE HAVE VALID KEYSSS YAYYY
+ WE ARE STARTING VERYIFY CREDSSS
+starting username construction
+started reading construction
+this is the length of this->session_encrypted_data_length: 22
+finished reading construction
+this was username henry
+starting password construction
+started reading construction
+this is the length of this->session_encrypted_data_length: 24
+finished reading construction
+this was password swabber
+grabbed username was henry
+ this was password swabber
+this was DB 0x500a140
+db  val: 0x500a140
+==15908== Warning: set address range perms: large range [0x7bfd000, 0x47bfd000) (defined)
+==15908== Warning: set address range perms: large range [0x7bfd000, 0x47bfd000) (noaccess)
+made past login
+--------------------------------
+[38;5;10mTOTAL CONNECTIONS     => 2[0m
+[0;33mCURRENT CONNECTIONS => 2[0m
+[0;36mCLIENTS                => 2[0m
+file descriptors:
+6    5    
+DIDNT BAIL WE HAVE VALID KEYSSS YAYYY
+ WE ARE STARTING VERYIFY CREDSSS
+starting username construction
+started reading construction
+couldn't create user_dir: MEF_S/henry/
+asking for notice of new action
+started reading construction
+this is the length of this->session_encrypted_data_length: 22
+finished reading construction
+error decrypting in unwrap
+this was username 
+starting password construction
+started reading construction
+this is the length of this->session_encrypted_data_length: 20
+finished reading construction
+error decrypting in unwrap
+did not receive a notice of new action
+this is the length of this->session_encrypted_data_length: 24
+finished reading construction
+this was password swabber
+grabbed username was 
+ this was password swabber
+this was DB 0x500a140
+db  val: 0x500a140
+no match in DATABASE
+returned 1 from login
+couldn't verify creds, ignoringcleanup inter
+cleanup fd: 6
+cleanup fd: 5
+==15908== Warning: invalid file descriptor -1 in syscall close()
+stopped accepting clients
+starting clean_all
+completed log_thread
+completed kill_server_listener
+completed clean_intermittent_thread
+==15908== 
+==15908== HEAP SUMMARY:
+==15908==     in use at exit: 150,480 bytes in 138 blocks
+==15908==   total heap usage: 178 allocs, 40 frees, 2,331,880 bytes allocated
+==15908== 
+==15908== 150,360 (848 direct, 149,512 indirect) bytes in 1 blocks are definitely lost in loss record 108 of 108
+==15908==    at 0x483EB26: malloc (vg_replace_malloc.c:446)
+==15908==    by 0x487A286: sqlite3MemMalloc.lto_priv.0 (sqlite3.c:26998)
+==15908==    by 0x48760E7: UnknownInlinedFun (sqlite3.c:30732)
+==15908==    by 0x48760E7: UnknownInlinedFun (sqlite3.c:30778)
+==15908==    by 0x48760E7: sqlite3Malloc.lto_priv.0 (sqlite3.c:30772)
+==15908==    by 0x4945C2D: UnknownInlinedFun (sqlite3.c:31058)
+==15908==    by 0x4945C2D: openDatabase (sqlite3.c:184409)
+==15908==    by 0x407CF1: initialize_server(sqlite3**) (in /home/sleepy/vault/__MVPs__/MEFSC/build/server)
+==15908==    by 0x401468: main (in /home/sleepy/vault/__MVPs__/MEFSC/build/server)
+==15908== 
+==15908== LEAK SUMMARY:
+==15908==    definitely lost: 848 bytes in 1 blocks
+==15908==    indirectly lost: 149,512 bytes in 135 blocks
+==15908==      possibly lost: 0 bytes in 0 blocks
+==15908==    still reachable: 120 bytes in 2 blocks
+==15908==         suppressed: 0 bytes in 0 blocks
+==15908== Reachable blocks (those to which a pointer was found) are not shown.
+==15908== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==15908== 
+==15908== For lists of detected and suppressed errors, rerun with: -s
+==15908== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)

@@ -13,19 +13,17 @@ class SessionEncWrapper {
   // the next by session
   bool corrupted = true;
   unsigned char session_encrypted_data[stream_chunk_size];
-  static unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
+  unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned long long session_encrypted_data_length;
-  static bool nonce_initialized;
 
 public:
-  unsigned char *get_nonce();
   unsigned long long get_data_length();
 
-  void initialize_nonce(unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES]);
-
   SessionEncWrapper(int client_sock); // for readers
-  SessionEncWrapper(const unsigned char *data, unsigned long long data_length,
-                    unsigned char client_tx[crypto_kx_SESSIONKEYBYTES]);
+  SessionEncWrapper(
+      const unsigned char *data, unsigned long long data_length,
+      unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+      unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES]);
   // for writers
   // both of these constructors will use the encrypt_stream_buffer function in
   // encryption_utils.

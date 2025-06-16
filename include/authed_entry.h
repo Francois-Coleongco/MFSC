@@ -31,7 +31,8 @@ class Comms_Agent {
 public:
   int get_socket();
 
-  int notify_server_of_action(int action);
+  int notify_server_of_action(
+      int action, unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES]);
 
   unsigned char *get_client_tx();
   unsigned char *get_client_rx();
@@ -41,15 +42,15 @@ public:
   int set_client_rx(unsigned char client_rx[crypto_kx_SESSIONKEYBYTES]);
   // used to rotate the keys
 
-  Comms_Agent(
-      unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
-      unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
-      int client_sock);
+  Comms_Agent(unsigned char client_tx[crypto_kx_SESSIONKEYBYTES],
+              unsigned char client_rx[crypto_kx_SESSIONKEYBYTES],
+              int client_sock);
   ~Comms_Agent();
 };
 
 class Sender_Agent {
 
+  unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned char
       buffer[CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
   unsigned long long
@@ -83,6 +84,8 @@ public:
 };
 
 class Receiver_Agent {
+
+  unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES];
   unsigned char
       buffer[CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
   unsigned long long
@@ -95,6 +98,8 @@ public:
       std::ofstream &file,
       std::string &password); // internally handles set_crypto for itself
   Receiver_Agent(Comms_Agent *CA);
+
+  unsigned char *get_nonce();
 
   int init_read(
       unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],

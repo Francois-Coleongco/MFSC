@@ -20,6 +20,9 @@ FS_Operator::FS_Operator(int client_sock, std::string username,
   if (!std::filesystem::create_directories(this->user_dir)) {
     std::cerr << "couldn't create user_dir: " << this->user_dir << std::endl;
   };
+
+  randombytes_buf(this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
+
   std::memcpy(this->server_tx, server_tx, crypto_kx_SESSIONKEYBYTES);
   std::memcpy(this->server_rx, server_rx, crypto_kx_SESSIONKEYBYTES);
 
@@ -29,8 +32,10 @@ FS_Operator::FS_Operator(int client_sock, std::string username,
 
 FS_Operator::~FS_Operator() {
   this->client_sock = -420;
+  sodium_memzero(this->user_dir.data(), this->user_dir.size());
   sodium_memzero(this->server_tx, crypto_kx_SESSIONKEYBYTES);
   sodium_memzero(this->server_rx, crypto_kx_SESSIONKEYBYTES);
+  sodium_memzero(this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 }
 
 int FS_Operator::init_read(
@@ -224,7 +229,7 @@ int FS_Operator::RFFS_Handler__Server() {
 
   SessionEncWrapper header_wrap = SessionEncWrapper(
       header, crypto_secretstream_xchacha20poly1305_HEADERBYTES,
-      this->server_tx);
+      this->server_tx, this->nonce);
 
   header_wrap.send_data_length(this->client_sock);
   header_wrap.send_nonce(this->client_sock);
@@ -233,7 +238,7 @@ int FS_Operator::RFFS_Handler__Server() {
   file.read(reinterpret_cast<char *>(salt), crypto_pwhash_SALTBYTES);
 
   SessionEncWrapper salt_wrap = SessionEncWrapper(salt, crypto_pwhash_SALTBYTES,
-                                                  this->server_tx);
+                                                  this->server_tx, this->nonce);
 
   salt_wrap.send_data_length(this->client_sock);
   salt_wrap.send_nonce(this->client_sock);
@@ -263,10 +268,10 @@ int FS_Operator::RFFS_Handler__Server() {
     SessionEncWrapper prefix_wrap =
         file.eof() ? SessionEncWrapper(
                          reinterpret_cast<const unsigned char *>(&END_CHUNK),
-                         sizeof(END_CHUNK), this->server_tx)
+                         sizeof(END_CHUNK), this->server_tx, this->nonce)
                    : SessionEncWrapper(
                          reinterpret_cast<const unsigned char *>(&MEAT_CHUNK),
-                         sizeof(MEAT_CHUNK), this->server_tx);
+                         sizeof(MEAT_CHUNK), this->server_tx, this->nonce);
 
     prefix_wrap.send_data_length(this->client_sock);
     prefix_wrap.send_nonce(this->client_sock);
@@ -278,7 +283,7 @@ int FS_Operator::RFFS_Handler__Server() {
                         FILE_ENCRYPTED_CHUNK_SIZE);
 
     SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
-        file_chunk, file_chunk_len, this->server_tx);
+        file_chunk, file_chunk_len, this->server_tx, this->nonce);
 
     file_chunk_wrap.send_data_length(this->client_sock);
     file_chunk_wrap.send_nonce(this->client_sock);

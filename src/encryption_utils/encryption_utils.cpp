@@ -22,8 +22,6 @@ int encrypt_stream_buffer(
   return 0;
 }
 
-// kiiiinda violating DRY past here
-
 int server_crypt_gen(int client_sock, unsigned char *server_pk,
                      unsigned char *server_sk, unsigned char *server_rx,
                      unsigned char *server_tx) {
@@ -33,8 +31,6 @@ int server_crypt_gen(int client_sock, unsigned char *server_pk,
   std::cout << std::endl;
 
   send(client_sock, server_pk, crypto_kx_PUBLICKEYBYTES, 0);
-
-  // receive client_pk from client
 
   unsigned char client_pk[crypto_kx_PUBLICKEYBYTES];
 
@@ -49,7 +45,7 @@ int server_crypt_gen(int client_sock, unsigned char *server_pk,
     return 1;
   }
 
-  std::cerr << "DIDNT BAIL WE HAVE VALID KEYSSS YAYYY" << std::endl;
+  std::cerr << "SUCCESSFUL SERVER KEY GENERATION" << std::endl;
 
   return 0;
 }
@@ -79,6 +75,6 @@ int client_crypt_gen(int client_sock, unsigned char *client_pk,
     /* Suspicious server public key, bail out */
   }
 
-  std::cerr << "DIDNT BAIL WE HAVE VALID KEYSSS YAYAYYYYY" << std::endl;
+  std::cerr << "SUCCESSFUL CLIENT KEY GENERATION" << std::endl;
   return 0;
 }
