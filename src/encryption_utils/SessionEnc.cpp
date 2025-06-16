@@ -46,7 +46,8 @@ SessionEncWrapper::SessionEncWrapper(
   this->corrupted = false;
 };
 
-SessionEncWrapper::SessionEncWrapper(int client_sock) {
+SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
+  // 1. Receive data length (using recv_fully)
   if (!recv_fully(client_sock, &this->session_encrypted_data_length,
                   sizeof(this->session_encrypted_data_length))) {
     std::cerr << "Failed to receive data length\n";
@@ -54,6 +55,7 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) {
     return;
   }
 
+  // 2. Validate length
   if (session_encrypted_data_length > stream_chunk_size) {
     std::cerr << "Data length exceeds stream_chunk_size: "
               << session_encrypted_data_length << " > " << stream_chunk_size
@@ -62,6 +64,7 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) {
     return;
   }
 
+  // 3. Receive nonce (using recv_fully)
   if (!recv_fully(client_sock, this->nonce,
                   crypto_aead_chacha20poly1305_NPUBBYTES)) {
     std::cerr << "Failed to receive nonce\n";
@@ -69,6 +72,7 @@ SessionEncWrapper::SessionEncWrapper(int client_sock) {
     return;
   }
 
+  // 4. Receive encrypted data (using recv_fully)
   if (!recv_fully(client_sock, this->session_encrypted_data,
                   this->session_encrypted_data_length)) {
     std::cerr << "Failed to receive encrypted data ("
