@@ -33,7 +33,7 @@ sudo dnf install sqlite-devel libsodium-devel libsodium-devel make cmake
 cmake ..
 make
 ```
-## using
+## usage
 
 terminal 1
 ```./server```
@@ -50,3 +50,8 @@ password: `swabber`
 Don't ask why I picked the names, for some reason I was thinking of superman then shortly after, cotton swabs.
 
 Follow the prompts given on client side and quit server by pressing `q` and `enter` when done :)
+
+## demos
+![Multiple Clients](https://youtu.be/PQA4yznFVWY)
+
+![Single Client)](https://youtu.be/TBv4GaU5X20)
