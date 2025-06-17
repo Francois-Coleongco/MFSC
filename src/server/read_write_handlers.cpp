@@ -245,14 +245,6 @@ int FS_Operator::RFFS_Handler__Server() {
   salt_wrap.send_nonce(this->client_sock);
   salt_wrap.send_data(this->client_sock);
 
-  std::ofstream header_file_server("header_file_server", std::ios::binary);
-  header_file_server.write(reinterpret_cast<char *>(header),
-                           crypto_secretstream_xchacha20poly1305_HEADERBYTES);
-
-  std::ofstream salt_file_server("salt_file_server", std::ios::binary);
-  salt_file_server.write(reinterpret_cast<char *>(salt),
-                         crypto_pwhash_SALTBYTES);
-
   if (!file) {
     std::cerr << "file not valid\n";
   } else if (file.eof()) {
@@ -278,11 +270,6 @@ int FS_Operator::RFFS_Handler__Server() {
     prefix_wrap.send_data_length(this->client_sock);
     prefix_wrap.send_nonce(this->client_sock);
     prefix_wrap.send_data(this->client_sock);
-
-    std::ofstream file_out_test("test_out_server", std::ios::binary);
-
-    file_out_test.write(reinterpret_cast<char *>(file_chunk),
-                        FILE_ENCRYPTED_CHUNK_SIZE);
 
     SessionEncWrapper file_chunk_wrap = SessionEncWrapper(
         file_chunk, file_chunk_len, this->server_tx, this->nonce);
