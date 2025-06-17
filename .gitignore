@@ -1,1 +1,1 @@
-./tests/valgrind_out/*
+./build/CMakeCache.txt
