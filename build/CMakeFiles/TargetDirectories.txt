@@ -1,5 +1,0 @@
-/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles/common_lib.dir
-/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles/server.dir
-/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles/client.dir
-/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles/edit_cache.dir
-/home/sleepy/vault/__MVPs__/MEFSC/build/CMakeFiles/rebuild_cache.dir
