@@ -53,4 +53,4 @@ Follow the prompts given on client side and quit server by pressing `q` and `ent
 
 ## demos
 [![Multiple Clients](https://img.youtube.com/vi/PQA4yznFVWY/0.jpg)](https://www.youtube.com/watch?v=PQA4yznFVWY)
-![Single Client)](https://youtu.be/TBv4GaU5X20)
+[![Single Client](https://img.youtube.com/vi/TBv4GaU5X20/0.jpg)](https://www.youtube.com/watch?v=TBv4GaU5X20)
