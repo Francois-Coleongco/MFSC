@@ -39,10 +39,6 @@ SessionEncWrapper::SessionEncWrapper(
 
   std::memcpy(this->nonce, nonce, crypto_aead_chacha20poly1305_NPUBBYTES);
 
-  for (size_t i = 0; i < crypto_aead_chacha20poly1305_NPUBBYTES; ++i) {
-    std::printf("%02x ", static_cast<unsigned char>(this->nonce[i]));
-  }
-
   this->corrupted = false;
 };
 
@@ -112,19 +108,6 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
               << decrypted_data_capacity << "\n";
     this->corrupted = true;
     return 2;
-  }
-
-  std::cerr << this->session_encrypted_data_length << std::endl;
-  std::cerr << "in unwrap" << std::endl;
-
-  std::cerr << "this call's nonce" << std::endl;
-  for (size_t i = 0; i < crypto_aead_chacha20poly1305_NPUBBYTES; ++i) {
-    std::printf("%02x ", static_cast<unsigned char>(this->nonce[i]));
-  }
-
-  std::cerr << "this call's rx" << std::endl;
-  for (size_t i = 0; i < crypto_kx_SESSIONKEYBYTES; ++i) {
-    std::printf("%02x ", static_cast<unsigned char>(rx[i]));
   }
 
   if (crypto_aead_chacha20poly1305_decrypt(decrypted_data, decrypted_data_len,

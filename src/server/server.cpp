@@ -170,8 +170,8 @@ void handle_conn(sqlite3 *DB, int client_sock) {
     send(client_sock, &ACK_SUC, sizeof(int), 0); // successful login
   }
 
-  FS_Operator OP =
-      FS_Operator(client_sock, username, server_rx, server_tx); // creates it's own nonce within
+  FS_Operator OP = FS_Operator(client_sock, username, server_rx,
+                               server_tx); // creates it's own nonce within
 
   bool perform_next = false;
 
@@ -272,13 +272,14 @@ int main() {
 
   std::cout << "accepting\n";
 
+  std::thread kill_server_listener =
+      std::thread(kill_server, std::ref(server_alive), server_sock);
+
   std::thread log_thread =
       std::thread(logger, std::ref(server_alive), std::ref(clients),
                   std::ref(live_connections), std::ref(total_connections));
   std::thread cleanup_intermittent_thread =
       std::thread(cleanup_intermittent, std::ref(server_alive));
-  std::thread kill_server_listener =
-      std::thread(kill_server, std::ref(server_alive), server_sock);
 
   while (server_alive) {
 
