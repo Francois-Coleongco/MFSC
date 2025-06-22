@@ -50,6 +50,10 @@ void zombify(int client_sock) {
   clients.find(client_sock)->second.zombie = true;
   ++zombies_counter;
   --live_connections;
+  std::cerr << "end of zombify" << std::endl;
+  std::cerr << "end of zombify" << std::endl;
+  std::cerr << "end of zombify" << std::endl;
+  std::cerr << "end of zombify" << std::endl;
 }
 
 void cleanup_intermittent(std::atomic<bool> &server_alive) {
@@ -77,21 +81,37 @@ void cleanup_intermittent(std::atomic<bool> &server_alive) {
       clients.erase(i);
     }
   }
+
+  std::cerr << "NOT ALIV cleanup inter" << std::endl;
+  std::cerr << "NOT ALIV cleanup inter" << std::endl;
+  std::cerr << "NOT ALIV cleanup inter" << std::endl;
+  std::cerr << "NOT ALIV cleanup inter" << std::endl;
+
+  std::vector<int> to_erase;
+  for (auto &[fd, inf] : clients) {
+    if (inf.client_thread.joinable()) {
+      std::cerr << "cleanup fd: " << fd << std::endl;
+      inf.client_thread.join();
+      close(fd);
+      to_erase.push_back(fd);
+      --zombies_counter;
+    }
+  }
+
+  for (int i : to_erase) {
+    std::cerr << "erasing now" << std::endl;
+    clients.erase(i);
+  }
 }
 
 void clean_all(std::thread &log_thread, std::thread &kill_server_listener,
                std::thread &clean_intermittent_thread) {
   std::cerr << "starting clean_all\n";
 
-  std::lock_guard<std::mutex> client_lock(clients_mutex);
-
-  for (auto &[fd, inf] : clients) {
-    if (inf.client_thread.joinable()) {
-      inf.client_thread.join();
-    }
+  if (clean_intermittent_thread.joinable()) {
+    clean_intermittent_thread.join();
+    std::cerr << "completed clean_intermittent_thread\n";
   }
-
-  clients.clear();
 
   if (log_thread.joinable()) {
     log_thread.join();
@@ -100,10 +120,6 @@ void clean_all(std::thread &log_thread, std::thread &kill_server_listener,
   if (kill_server_listener.joinable()) {
     kill_server_listener.join();
     std::cerr << "completed kill_server_listener\n";
-  }
-  if (clean_intermittent_thread.joinable()) {
-    clean_intermittent_thread.join();
-    std::cerr << "completed clean_intermittent_thread\n";
   }
 }
 
@@ -294,6 +310,8 @@ int main() {
       std::cerr << "Failed to accept connection" << std::endl;
       continue;
     }
+
+    std::cout << "loopy" << std::endl;
 
     std::lock_guard<std::mutex> client_lock(clients_mutex);
     clients[client_sock].client_thread =
