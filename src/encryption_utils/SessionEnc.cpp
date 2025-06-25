@@ -26,9 +26,11 @@ SessionEncWrapper::SessionEncWrapper(
     unsigned char nonce[crypto_aead_chacha20poly1305_NPUBBYTES])
     : session_encrypted_data_length(0) { // for writers
 
+  this->enc_wrap_type = SENDER;
+
   // IMPORTANT the nonce used by encrypt_stream_buffer is the one that gets
   // incremented. this should be accessible past the lifetime of this
-  // SessionEncWrapper
+
   if (encrypt_stream_buffer(client_tx, nonce, data, data_length,
                             this->session_encrypted_data,
                             &this->session_encrypted_data_length)) {
@@ -44,6 +46,7 @@ SessionEncWrapper::SessionEncWrapper(
 
 SessionEncWrapper::SessionEncWrapper(int client_sock) { // for readers
   // 1. Receive data length (using recv_fully)
+  this->enc_wrap_type = READER;
   if (!recv_fully(client_sock, &this->session_encrypted_data_length,
                   sizeof(this->session_encrypted_data_length))) {
     std::cerr << "Failed to receive data length\n";
@@ -87,6 +90,10 @@ int SessionEncWrapper::unwrap(unsigned char rx[crypto_kx_SESSIONKEYBYTES],
   // the data returned within here is up to the caller's interpretation. if the
   // underlying data is encrypted aka was file encrypted or something of the
   // sort, it is the caller's responsibility to decrypt that.
+
+  if (this->enc_wrap_type != READER) {
+    return -1;
+  }
 
   if (this->corrupted) {
     std::cerr << "this wrapper already contains corrupted data\n";
@@ -135,20 +142,30 @@ SessionEncWrapper::~SessionEncWrapper() {
 }
 
 int SessionEncWrapper::send_data(int client_sock) {
+  if (this->enc_wrap_type != SENDER) {
+    return -1;
+  }
   return send(client_sock, this->session_encrypted_data,
               this->session_encrypted_data_length, 0);
 }
 int SessionEncWrapper::send_nonce(int client_sock) {
+  if (this->enc_wrap_type != SENDER) {
+    return -1;
+  }
   return send(client_sock, this->nonce, crypto_aead_chacha20poly1305_NPUBBYTES,
               0);
 }
 
 int SessionEncWrapper::send_data_length(int client_sock) {
+  if (this->enc_wrap_type != SENDER) {
+    return -1;
+  }
   return send(client_sock, &this->session_encrypted_data_length,
               sizeof(this->session_encrypted_data_length), 0);
 }
 
 unsigned long long SessionEncWrapper::get_data_length() {
+  // this one is universal to both SENDER and READER
   return this->session_encrypted_data_length;
 };
 
