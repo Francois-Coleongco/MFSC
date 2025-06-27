@@ -43,10 +43,29 @@ int FS_Operator::init_read(
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
+  SessionEncWrapper confirm_client_side_file_exists_wrapper =
+      SessionEncWrapper(client_sock);
+
+  bool confirm_file_exists = false;
+  unsigned long long confirm_file_exists_bytes;
+
+  if (confirm_client_side_file_exists_wrapper.unwrap(
+          this->server_rx, sizeof(confirm_file_exists),
+          reinterpret_cast<unsigned char *>(&confirm_file_exists),
+          &confirm_file_exists_bytes)) {
+    std::cerr << "confirm_client_side_file_exists_wrapper failed in unwrap\n";
+    return 6;
+  }
+
+  if (!confirm_file_exists) {
+    std::cerr << "file " << file_name_buf << " does not exist\n";
+    return 5;
+  }
+
   SessionEncWrapper file_name_wrap = SessionEncWrapper(client_sock);
   if (file_name_wrap.is_corrupted()) {
     std::cerr << "file_name_wrap in init_read was corrupted\n";
-    return 7;
+    return 9;
   }
 
   unsigned long long decrypted_file_name_length;
@@ -55,14 +74,14 @@ int FS_Operator::init_read(
                             reinterpret_cast<unsigned char *>(file_name_buf),
                             &decrypted_file_name_length) == 2) {
     std::cerr << "couldn't read file name, ABORT\n";
-    return 6;
+    return 8;
   }
 
   // decrypted file length will be NOT null terminated. so i need to null
   // terminate it before it leaves int_read
 
   if (decrypted_file_name_length + strlen(ext) > MAX_FILE_NAME_LENGTH) {
-    return 5;
+    return 7;
   }
 
   file_name_buf[decrypted_file_name_length] = '\0';

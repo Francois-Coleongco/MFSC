@@ -63,7 +63,7 @@ private:
   int send_buffer();
   void send_end_buffer();
   int init_send(
-      unsigned char file_name[255], unsigned long long file_name_length,
+      std::ifstream &file, unsigned char file_name[255], unsigned long long file_name_length,
       unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
       unsigned char salt[crypto_pwhash_SALTBYTES]);
 

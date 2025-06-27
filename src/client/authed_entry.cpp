@@ -64,19 +64,32 @@ int Sender_Agent::send_buffer() {
 }
 
 int Sender_Agent::init_send(
-    unsigned char file_name[255], unsigned long long file_name_length,
+    std::ifstream &file, unsigned char file_name[255],
+    unsigned long long file_name_length,
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES],
     unsigned char salt[crypto_pwhash_SALTBYTES]) {
 
   int client_sock = this->CA->get_socket();
   unsigned char *client_tx = this->CA->get_client_tx();
 
+  bool file_exist = !file ? false : true;
+
+  SessionEncWrapper file_status_confirm_wrapper =
+      SessionEncWrapper(reinterpret_cast<unsigned char *>(&file_exist),
+                        sizeof(file_exist), client_tx, this->nonce);
+  file_status_confirm_wrapper.send_data_length(client_sock);
+  file_status_confirm_wrapper.send_nonce(client_sock);
+  file_status_confirm_wrapper.send_data(client_sock);
+
+  if (!file_exist) {
+    std::cerr << "file does not exist exiting init_send\n";
+    return 1;
+  }
+
   SessionEncWrapper file_name_wrap =
       SessionEncWrapper(file_name, file_name_length, client_tx, this->nonce);
   file_name_wrap.send_data_length(client_sock);
-  file_name_wrap.send_nonce(
-      client_sock); // in the future make this access socket itself via
-                    // this->CA->get_socket() internally
+  file_name_wrap.send_nonce(client_sock);
   file_name_wrap.send_data(client_sock);
 
   SessionEncWrapper header_wrap = SessionEncWrapper(
@@ -111,12 +124,6 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
   std::ifstream file(file_name, std::ios::binary);
   // the file that is passed must be an already encrypted file done by another
   // func;
-
-  if (!file) {
-    std::cerr << "couldn't open the file" << std::endl;
-    return -1;
-  }
-
   crypto_secretstream_xchacha20poly1305_state state;
 
   // this->salt; // 16 bytes
@@ -130,17 +137,18 @@ int Sender_Agent::encrypt_and_send_to_server(std::string &file_name,
                   //  password to recreate this exact key which is what's needed
                   //  for decryption
 
-  int init_stat = init_send(
-      reinterpret_cast<unsigned char *>(file_name.data()), file_name.length(),
-      header, this->salt); // no need to plus one here as on server side i check
-                           // the length properly
+  if (init_send(file, reinterpret_cast<unsigned char *>(file_name.data()),
+                file_name.length(), header, this->salt)) {
+    std::cerr << "error within init_send\n";
+    return 1;
+  } // no need to plus one here as on server side i
+    // check the length properly
 
   unsigned char file_chunk[CHUNK_SIZE];
 
   unsigned char tag = 0;
 
   do {
-
     std::cout << "encrypting a chunk" << std::endl;
 
     file.read(reinterpret_cast<char *>(file_chunk), CHUNK_SIZE);
@@ -320,7 +328,8 @@ int Receiver_Agent::decrypt_and_read_from_server(std::ofstream &file,
       return 2;
     }
 
-    std::cout << "SUCCESSFUL DECRYPTION IN FILE CHUNK OF SIZE: " << decrypted_file_chunk_len << " \n";
+    std::cout << "SUCCESSFUL DECRYPTION IN FILE CHUNK OF SIZE: "
+              << decrypted_file_chunk_len << " \n";
 
     file.write(reinterpret_cast<char *>(decrypted_file_chunk),
                decrypted_file_chunk_len -

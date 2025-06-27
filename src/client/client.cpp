@@ -56,6 +56,7 @@ int send_credentials(
   std::cout << "enter password: " << std::flush;
   disable_echo();
   get_stuff(password);
+  std::cout << "\n";
   enable_echo();
   // encrypt the username and password and send it over to the server and wait
   //
@@ -144,6 +145,7 @@ int WTFS_Handler(Comms_Agent *CA, Sender_Agent &SA, int client_sock,
 
   if (SA.encrypt_and_send_to_server(file_name, password) != 0) {
     std::cerr << "error in encrypt_and_send_to_server\n";
+    return 1;
   }
 
   return 0;
