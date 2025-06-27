@@ -132,18 +132,14 @@ int verify_credentials(sqlite3 *DB, std::string &username, int client_sock,
   unsigned long long decrypted_username_len;
   unsigned long long decrypted_password_len;
 
-  std::cerr << "starting username construction\n";
   SessionEncWrapper username_wrapper = SessionEncWrapper(client_sock);
   username_wrapper.unwrap(server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
                           decrypted_username, &decrypted_username_len);
 
-  std::cerr << "this was username " << decrypted_username << "\n";
   username = reinterpret_cast<char *>(decrypted_username);
-  std::cerr << "starting password construction\n";
   SessionEncWrapper password_wrapper = SessionEncWrapper(client_sock);
   password_wrapper.unwrap(server_rx, FILE_ENCRYPTED_CHUNK_SIZE,
                           decrypted_password, &decrypted_password_len);
-  std::cerr << "this was password " << decrypted_password << "\n";
 
   if (login(DB, reinterpret_cast<char *>(decrypted_username),
             decrypted_username_len,

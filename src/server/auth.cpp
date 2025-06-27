@@ -11,19 +11,10 @@ int login(sqlite3 *DB, char username[], unsigned long long username_len, char pa
     /* out of memory */
   }
 
-  std::cerr << hashed_password << std::endl;
-
-
   sqlite3_stmt *stmt;
 
   const char *retrieve_hashed_pswd =
       "SELECT hashed_pswd FROM users WHERE username = ?";
-
-  std::cerr << "grabbed username was " << username << "\n ";
-  std::cerr << "this was password " << password << "\n";
-  std::cerr << "this was DB " << DB << "\n";
-
-  std::cerr << "db  val: " << DB << "\n";
 
 
   if (sqlite3_prepare_v2(DB, retrieve_hashed_pswd, -1, &stmt, nullptr) !=
