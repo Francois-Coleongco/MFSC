@@ -55,4 +55,4 @@ Don't ask why I picked the names, for some reason I was thinking of superman the
 Follow the prompts given on client side and quit server by pressing `q` and `enter` when done :)
 
 ## demo
-https://youtu.be/6Q8EOyWfPSA
+[![Single Client](https://img.youtube.com/vi/6Q8EOyWfPSA/0.jpg)](https://www.youtube.com/watch?v=6Q8EOyWfPSA)
